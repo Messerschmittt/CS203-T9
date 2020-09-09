@@ -1,0 +1,16 @@
+GET http://localhost:8080/employees
+
+###
+GET http://localhost:8080/customers
+
+###
+GET http://localhost:8080/contents
+
+###
+GET http://localhost:8080/customers/1
+
+###
+POST http://localhost:8080/empolyee/customerstatus/1/deactivate
+
+###
+POST http://localhost:8080/content/approvecontent/1
