@@ -20,20 +20,20 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Account {
+public class Trans {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private long customer_id;
-    private double balance;
-    private double available_balance;
+    private long from_acc;
+    private long to_acc;
+    private double amount;
 
     
-    public Account(long customer_id, double balance, double available_balance){
-        this.customer_id = customer_id;
-        this.balance = balance;
-        this.available_balance = available_balance;
+    public Trans(long from, long to, double amount){
+        this.from_acc = from;
+        this.to_acc = to;
+        this.amount = amount;
     }
 
     

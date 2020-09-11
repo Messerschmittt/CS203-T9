@@ -27,7 +27,7 @@ public class Application {
         EmployeeRepository empRepo = ctx.getBean(EmployeeRepository.class);
         CustomerRepository cusRepo = ctx.getBean(CustomerRepository.class);
         ContentRepository contRepo = ctx.getBean(ContentRepository.class);
-
+        
         List<Employee> initEmployee = Arrays.asList(
             new Employee("Manager 1", "ROLE_MANAGER", "manager_1", "01_manager_01"),
             new Employee("Analyst 1", "ROLE_ANALYST", "analyst_1", "01_analyst_01"),
