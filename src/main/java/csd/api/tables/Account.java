@@ -34,6 +34,11 @@ public class Account {
     private String address;
     private String authorities;
     private String active;
+
+    private long Accountnumber;
+    private double balance;
+    private double available_balance;
+    private long customer_id;
     
     public Account(String full_name, String authorities, String username, String password){
         this.full_name = full_name;
@@ -42,5 +47,22 @@ public class Account {
         this.password = password;
     }
 
+    //get user account number
+    public Long getaccountnumber(){
+        return Accountnumber;
+    }
+    //get balance
+    public double getbalance(){
+        return balance;
+    }
+    // add an amount to the balance
+	public void add(double amt) {
+		balance += amt;
+	}
+	// deduct an amount to the balance
+	public void deduct(double amt) {
+		balance -= amt;
+    }
     
+  
 }
