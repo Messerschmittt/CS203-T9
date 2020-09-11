@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AccountController {
     private AccountRepository accounts;
-    private TransRepository transactions;
+    private TransRepository transfers;
 
-    public AccountController(AccountRepository accounts, TransRepository transactions){
+    public AccountController(AccountRepository accounts, TransRepository transfers){
         this.accounts = accounts;
-        this.transactions = transactions;
+        this.transfers = transfers;
     }
 
     @GetMapping("/accounts")
@@ -32,9 +32,9 @@ public class AccountController {
         return accounts.findAll();
     }
 
-    @GetMapping("/transactions")
+    @GetMapping("/transfers")
     public List<Trans> getTransactions(){
-        return transactions.findAll();
+        return transfers.findAll();
     }
 
     @PostMapping("/account/createAccount")
@@ -43,7 +43,12 @@ public class AccountController {
         
     }
 
-    @PostMapping("/transaction/makeTransaction")
+    /**
+     * Allows users to make a transfer between accounts
+     * @param newTrans
+     * @return the successful transaction object
+     */
+    @PostMapping("/transfer/makeTransfer")
     public Trans makeTransaction(@RequestBody Trans newTrans){
         if(accounts.findById(newTrans.getFrom_acc()).isEmpty()){
             throw new AccountNotFoundException(newTrans.getFrom_acc());
@@ -56,6 +61,9 @@ public class AccountController {
         Account from_acc = accounts.findById(newTrans.getFrom_acc()).get();
         Account to_acc = accounts.findById(newTrans.getTo_acc()).get();
         double amt = newTrans.getAmount();
+        if(amt > from_acc.getAvailable_balance()){
+            throw new ExceedAvailableBalanceException(from_acc.getId());
+        }
 
         from_acc.setBalance(from_acc.getBalance() - amt);
         to_acc.setBalance(to_acc.getBalance() + amt);
@@ -63,7 +71,7 @@ public class AccountController {
         accounts.save(from_acc);
         accounts.save(to_acc);
 
-        return transactions.save(newTrans);
+        return transfers.save(newTrans);
     }
 
     

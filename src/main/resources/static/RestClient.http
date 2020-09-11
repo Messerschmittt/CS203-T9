@@ -41,14 +41,14 @@ Content-Type: application/json
 
 
 ###
-GET http://localhost:8080/transactions
+GET http://localhost:8080/transfers
 
 ###
-POST http://localhost:8080/transaction/makeTransaction
+POST http://localhost:8080/transfer/makeTransfer
 Content-Type: application/json
 
 {
     "from_acc": 1,
     "to_acc": 2,
-    "amount": 1000
+    "amount": 8000
 }
