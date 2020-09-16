@@ -13,4 +13,52 @@ GET http://localhost:8080/customers/1
 POST http://localhost:8080/empolyee/customerstatus/1/deactivate
 
 ###
+POST http://localhost:8080/employee/customerstatus
+Content-Type: application/json
+
+{
+    "customer_id":1,
+    "active": false
+}
+
+###
 POST http://localhost:8080/content/approvecontent/1
+
+
+###
+GET http://localhost:8080/accounts
+
+###
+POST http://localhost:8080/account/createAccount
+Content-Type: application/json
+
+{
+    "customer_id": 1,
+    "balance": 10000,
+    "available_balance": 5000
+}
+
+###
+POST http://localhost:8080/account/createAccount
+Content-Type: application/json
+
+{
+    "customer_id": 2,
+    "balance": 2000,
+    "available_balance": 1000
+}
+
+
+###
+GET http://localhost:8080/transfers
+
+###
+POST http://localhost:8080/transfer/makeTransfer
+Content-Type: application/json
+
+{
+    "from_acc": 1,
+    "to_acc": 2,
+    "amount": 2000
+}
+
