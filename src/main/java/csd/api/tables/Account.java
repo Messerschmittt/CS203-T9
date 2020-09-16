@@ -23,46 +23,18 @@ import lombok.*;
 public class Account {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     
-    private String username;
-    private String password;
-
-    private String full_name;
-    private String nric;
-    private String phone;
-    private String address;
-    private String authorities;
-    private String active;
-
-    private long Accountnumber;
+    private long customer_id;
     private double balance;
     private double available_balance;
-    private long customer_id;
+
     
-    public Account(String full_name, String authorities, String username, String password){
-        this.full_name = full_name;
-        this.authorities = authorities;
-        this.username = username;
-        this.password = password;
+    public Account(long customer_id, double balance, double available_balance){
+        this.customer_id = customer_id;
+        this.balance = balance;
+        this.available_balance = available_balance;
     }
 
-    //get user account number
-    public Long getaccountnumber(){
-        return Accountnumber;
-    }
-    //get balance
-    public double getbalance(){
-        return balance;
-    }
-    // add an amount to the balance
-	public void add(double amt) {
-		balance += amt;
-	}
-	// deduct an amount to the balance
-	public void deduct(double amt) {
-		balance -= amt;
-    }
     
-  
 }
