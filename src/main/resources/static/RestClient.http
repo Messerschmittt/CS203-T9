@@ -81,3 +81,30 @@ Content-Type: application/json
     "amount": 2000
 }
 
+###
+GET http://localhost:8080/trades
+
+###
+POST http://localhost:8080/trades
+Content-Type: application/json
+
+{
+    "action": "buy",
+    "symbol":"A17U",
+    "quantity":1000, 
+    "bid":3.28, 
+    "ask":3.27, 
+    "avg_price":3.30,
+    "filled_quantity":0,
+    "date": "2020-09-17 06:43:19.77",
+    "account_id":1234, 
+    "customer_id":1234,
+    "status":"open"
+}
+
+###
+GET http://localhost:8080/trades/1
+
+###
+DELETE http://localhost:8080/trades/1
+
