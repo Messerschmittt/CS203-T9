@@ -6,11 +6,11 @@
 
 
 ###
-POST http://localhost:8080/perform_logout
+GET http://localhost:8080/logout
 
 ###
 POST http://localhost:8080/login_page
-Authorization: Basic Admin_1 bad_password
+Authorization: Basic Admin_1 Admin_password
 Content-Type: application/json
 
 {

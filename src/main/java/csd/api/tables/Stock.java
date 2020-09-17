@@ -21,12 +21,15 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode
 
-public class Portfolio {
+public class Stock {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long customer_id;
-    private double unrealised;
-    private double total;
+    private String symbol;
+    private double last_price;
+    private int bid_volume;
+    private double bid;
+    private int ask_volume;
+    private double ask;
     
 }

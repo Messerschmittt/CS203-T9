@@ -41,5 +41,11 @@ public class UserController {
         Optional<User> login = users.findByUsername(user.getUsername());
         return login;
     }
+
+    @PostMapping("/logoutSuccess")
+    @ResponseBody
+    public String successLogout(){
+        return "Successfully logged out";
+    }
    
 }
