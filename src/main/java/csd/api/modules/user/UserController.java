@@ -3,79 +3,43 @@ package csd.api.modules.user;
 import csd.api.tables.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import javax.validation.Valid;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserController {
-    private CustomerRepository customers;
-    private EmployeeRepository employees;
+    private UserRepository users;
+    private BCryptPasswordEncoder encoder;
 
-    public UserController(EmployeeRepository employees, CustomerRepository customers){
-        this.employees = employees;
-        this.customers = customers;
+    public UserController(UserRepository users, BCryptPasswordEncoder encoder){
+        this.users = users;
+        this.encoder = encoder;
+    }
+
+    @GetMapping("/users")
+    public List<User> getUsers() {
+        return users.findAll();
     }
 
     /**
-     * Return information of all customers
+    * Using BCrypt encoder to encrypt the password for storage 
+    * @param user
      * @return
      */
-    @GetMapping("/customers")
-    public List<Customer> getCustomers(){
-        return customers.findAll();
+    @PostMapping("/user/createUser")
+    public User addUser(@Valid @RequestBody User user){
+        user.setPassword(encoder.encode(user.getPassword()));
+        return users.save(user);
     }
 
-    /**
-     * Return customer with the given id
-     * Throws a CustomerNotFoundException if there is no customer with the given id
-     * @param id
-     * @return
-     */
-    @GetMapping("/customers/{id}")
-    public Optional<Customer> getCustomer(@PathVariable Long id){
-        Optional<Customer> customer = customers.findById(id);
-        if(!customer.isPresent()){
-            throw new CustomerNotFoundException(id);
-        }
-        return customer;
+    @PostMapping("/login_page")
+    public Optional<User> loginUser(@RequestBody User user){
+        Optional<User> login = users.findByUsername(user.getUsername());
+        return login;
     }
-
-    /**
-     * Return information of all employees
-     * @return
-     */
-    @GetMapping("/employees")
-    public List<Employee> getEmployees(){
-        return employees.findAll();
-    }
-
-    /**
-     * Set the customerstatus
-     * @param id
-     * @param status
-     * @return the customer record that was changed
-     */
-    @PostMapping("/empolyee/customerstatus/{id}/deactivate")
-    public Customer setCustomerStatus(@PathVariable Long id){
-        Optional<Customer> c = customers.findById(id);
-        if(!c.isPresent()){
-            throw new CustomerNotFoundException(id);
-        }
-
-        Customer customer = c.get();
-        customer.setActive("false");
-        return customers.save(customer);
-    }
-
-    
+   
 }

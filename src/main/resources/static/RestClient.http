@@ -1,7 +1,26 @@
-GET http://localhost:8080/employees
+###
+#GET http://localhost:8080/employees
 
 ###
-GET http://localhost:8080/customers
+#GET http://localhost:8080/customers
+
+
+###
+POST http://localhost:8080/perform_logout
+
+###
+POST http://localhost:8080/login_page
+Authorization: Basic Admin_1 bad_password
+Content-Type: application/json
+
+{
+    "username": "Admin_1"
+}
+
+
+###
+GET http://localhost:8080/users
+Authorization: Basic Admin_1:Admin_password
 
 ###
 GET http://localhost:8080/contents
@@ -22,7 +41,7 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:8080/content/approvecontent/1
+PUT http://localhost:8080/content/approveContent/1
 
 
 ###

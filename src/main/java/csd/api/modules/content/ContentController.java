@@ -37,7 +37,14 @@ public class ContentController {
         return contents.findAll();
     }
 
-    @PostMapping("/content/approvecontent/{id}")
+    @GetMapping("/content/approvedContents")
+    public List<Content> getApprovedContents(){
+        List<Content> approvedContent = contents.findAll();
+        approvedContent.removeIf(c -> !(c.isApproved()));
+        return approvedContent;
+    }
+
+    @PutMapping("/content/approveContent/{id}")
     public Content setContentStatus(@PathVariable Long id){
         Optional<Content> c = contents.findById(id);
         if(!c.isPresent()){

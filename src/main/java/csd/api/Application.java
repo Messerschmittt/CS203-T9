@@ -7,13 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import csd.api.tables.*;
-import csd.api.modules.user.*;
-import csd.api.modules.account.*;
-import csd.api.modules.content.*;
-
 
 @SpringBootApplication
 public class Application {
@@ -27,7 +23,20 @@ public class Application {
         EmployeeRepository empRepo = ctx.getBean(EmployeeRepository.class);
         CustomerRepository cusRepo = ctx.getBean(CustomerRepository.class);
         ContentRepository contRepo = ctx.getBean(ContentRepository.class);
-        
+        UserRepository userRepo = ctx.getBean(UserRepository.class);
+        BCryptPasswordEncoder encoder = ctx.getBean(BCryptPasswordEncoder.class);
+
+        List<User> initUsers = Arrays.asList(
+            new User("Admin_1", encoder.encode("Admin_password"), "ROLE_ADMIN"),
+            new User("Manager_1", encoder.encode("Manager_password"), "ROLE_MANAGER"),
+            new User("Analyst_1", encoder.encode("Analyst_password"), "ROLE_ANALYST"),
+            new User("User_1", encoder.encode("User_password"), "ROLE_USER")
+        );
+
+        initUsers.forEach(user -> {
+            System.out.println("[User Initialised]" + userRepo.save(user).getUsername());
+        });
+
         List<Employee> initEmployee = Arrays.asList(
             new Employee("Manager 1", "ROLE_MANAGER", "manager_1", "01_manager_01"),
             new Employee("Analyst 1", "ROLE_ANALYST", "analyst_1", "01_analyst_01"),
