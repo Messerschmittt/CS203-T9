@@ -27,6 +27,7 @@ public class AccountController {
         this.transfers = transfers;
     }
 
+    
     @GetMapping("/accounts")
     public List<Account> getAccounts(){
         return accounts.findAll();

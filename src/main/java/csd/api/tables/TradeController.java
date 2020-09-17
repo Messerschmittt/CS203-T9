@@ -5,6 +5,7 @@ import csd.api.tables.*;
 import java.util.List;
 import java.util.Optional;
 
+
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,11 +19,31 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TradeController {
-    private TradeRepository trade;
+    private TradeRepository trades;
 
-    public TradeController(TradeRepository trade){
-        this.trade = trade;
+    public TradeController(TradeRepository trades){
+        this.trades = trades;
     }
 
-    
+     /**
+     * List all trades in the system
+     * @return list of all trades
+     */
+    @GetMapping("/trades")
+    public List<Trade> getTrade(){
+        return trades.findAll();
+    }
+    /**
+     * Add a new trade with POST request to "/trades"
+     * Note the use of @RequestBody
+     * @param Trade
+     * @return list of all trades
+     */
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/trades")
+    public Trade addTrade(@RequestBody Trade trade) {
+        return trades.save(trade);
+    }
+
+
 }
