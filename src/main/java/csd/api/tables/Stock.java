@@ -21,6 +21,9 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class Stock {
+    @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
+    private Long id;
+    
     private String symbol;
     private double last_price;
     private int bid_volume;

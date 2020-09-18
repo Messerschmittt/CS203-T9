@@ -22,8 +22,8 @@ import lombok.*;
 @EqualsAndHashCode
 public class Assest {
     
-    // @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    // private Long id;
+    @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String code;
     private int quantity;
