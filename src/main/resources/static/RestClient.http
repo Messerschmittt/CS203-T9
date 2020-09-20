@@ -6,6 +6,12 @@
 
 
 ###
+GET http://localhost:8080/pricetest?stock=MSFT
+
+###
+POST http://localhost:8080/generatefake
+
+###
 GET http://localhost:8080/logout
 
 ###
