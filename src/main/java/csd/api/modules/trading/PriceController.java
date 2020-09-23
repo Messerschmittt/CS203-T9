@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import csd.api.tables.TradeRepository;
+import csd.api.tables.AccountRepository;
 import csd.api.tables.Trade;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -19,8 +20,11 @@ import yahoofinance.YahooFinance;
 @RestController
 public class PriceController{
     private TradeRepository tradeRepo;
-    public PriceController(TradeRepository trades){
+    private AccountRepository accRepo;
+
+    public PriceController(TradeRepository trades, AccountRepository accRepo){
         this.tradeRepo = trades;
+        this.accRepo = accRepo;
     }
 
     @GetMapping("/pricetest")
@@ -52,12 +56,41 @@ public class PriceController{
 
     }
 
-    @PostMapping("/generatefake")
-    public void testGenerate(){
-        generateOrder("bid", "INTC");
+    //Weijie
+    // @PostMapping("/generatefake")  //
+    // public void testGenerate(){
+    //     generateOrder("bid", "INTC");
+    //     generateOrder("ask", "MSFT");
+    // }
+
+    @PostMapping("/buy/{acc_id}")
+    public void BuyGenerate(@PathVariable Long acc_id){
+        //to check have enough balance
+        if(checkBalance(acc_id, total_bid_price)){
+            generateOrder("bid", "INTC");
+        }
+        
         generateOrder("ask", "MSFT");
     }
 
+
+    @PostMapping("/sell/{acc_id}")
+    public void SellGenerate(@PathVariable Long acc_id){
+        generateOrder("ask", "MSFT");
+    }
+    
+
+    //check the customer have enough balance for trading (buying)
+    public boolean checkBalance(long acc_id, double total_bid_price){
+        Account acc = accRepo.findByAccID(acc_id);
+        int balance = acc.getAvalible_Balance();
+        if(balance >= total_bid_price){
+            return true;
+        }
+        return false;
+    }
+
+    //means trade match -> proceed order
     public Trade generateOrder(String action, String symbol){
         HashMap<String, String> info = getPrice(symbol);
         Trade newTrade = new Trade();

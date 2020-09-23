@@ -1,4 +1,4 @@
-package csd.api.tables;
+package csd.api.modules.trading;
 
 import java.util.List;
 
@@ -21,15 +21,13 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode
 
-public class Stock {
+public class OrderInfo{
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String action;
     private String symbol;
-    private double last_price;
-    private int bid_volume;
+    private int quantity;
     private double bid;
-    private int ask_volume;
     private double ask;
-    
 }
