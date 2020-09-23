@@ -21,14 +21,11 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 
-/* Implementations of UserDetails to provide user information to Spring Security, 
-e.g., what authorities (roles) are granted to the user and whether the account is enabled or not
-*/
-public class User implements UserDetails{
+public class ApplicationUser implements UserDetails{
     private static final long serialVersionUID = 1L;
 
     private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
@@ -46,17 +43,12 @@ public class User implements UserDetails{
     private String authorities;
 
     @Autowired
-    public User(String username, String password, String authorities){
+    public ApplicationUser(String username, String password, String authorities){
         this.username = username;
         this.password = password;
         this.authorities = authorities;
     }
-
-    public User(String username){
-        this.username = username;
-    }
-
-
+    
     /* Return a collection of authorities (roles) granted to the user.
     */
     @Override

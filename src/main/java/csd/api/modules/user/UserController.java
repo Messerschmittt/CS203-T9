@@ -21,7 +21,7 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public List<User> getUsers() {
+    public List<ApplicationUser> getUsers() {
         return users.findAll();
     }
 
@@ -31,15 +31,21 @@ public class UserController {
      * @return
      */
     @PostMapping("/user/createUser")
-    public User addUser(@Valid @RequestBody User user){
+    public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
         user.setPassword(encoder.encode(user.getPassword()));
         return users.save(user);
     }
 
     @PostMapping("/login_page")
-    public Optional<User> loginUser(@RequestBody User user){
-        Optional<User> login = users.findByUsername(user.getUsername());
+    public ApplicationUser loginUser(@RequestBody ApplicationUser user){
+        ApplicationUser login = users.findByUsername(user.getUsername());
         return login;
+    }
+
+    @PostMapping("/logoutSuccess")
+    @ResponseBody
+    public String successLogout(){
+        return "Successfully logged out";
     }
    
 }

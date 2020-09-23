@@ -6,25 +6,30 @@
 
 
 ###
-POST http://localhost:8080/perform_logout
+GET http://localhost:8080/pricetest?stock=MSFT
 
 ###
-POST http://localhost:8080/login_page
-Authorization: Basic Admin_1 Admin_password
+POST http://localhost:8080/generatefake
+
+###
+GET http://localhost:8080/logout
+
+###
+POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-    "username": "Admin_1"
+    "username": "Analyst_1",
+    "password": "Analyst_password"
 }
 
 
 ###
 GET http://localhost:8080/users
-Authorization: Basic Admin_1:Admin_password
-
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBbmFseXN0XzEiLCJleHAiOjE2MDE3MDY4MDN9.syfV4v05ja45y_FqJ0m_OQD4YvRomQZhEqqOE9XpvoYO5h7Xwm8aByOnYQbbkipwxkNTRrwxPlw2SKcxqkkgdg
 ###
 GET http://localhost:8080/contents
-
+Authorization: Basic Admin_1:Admin_password
 ###
 GET http://localhost:8080/customers/1
 
@@ -80,31 +85,4 @@ Content-Type: application/json
     "to_acc": 2,
     "amount": 2000
 }
-
-###
-GET http://localhost:8080/trades
-
-###
-POST http://localhost:8080/trades
-Content-Type: application/json
-
-{
-    "action": "buy",
-    "symbol":"A17U",
-    "quantity":1000, 
-    "bid":3.28, 
-    "ask":3.27, 
-    "avg_price":3.30,
-    "filled_quantity":0,
-    "date": "2020-09-17 06:43:19.77",
-    "account_id":1234, 
-    "customer_id":1234,
-    "status":"open"
-}
-
-###
-GET http://localhost:8080/trades/1
-
-###
-DELETE http://localhost:8080/trades/1
 

@@ -20,6 +20,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
+<<<<<<< HEAD
 public class Stock {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,4 +33,18 @@ public class Stock {
     private double askprice;
 
 
+=======
+
+public class Stock {
+    @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String symbol;
+    private double last_price;
+    private int bid_volume;
+    private double bid;
+    private int ask_volume;
+    private double ask;
+    
+>>>>>>> master
 }

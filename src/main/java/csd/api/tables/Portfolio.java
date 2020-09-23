@@ -26,11 +26,7 @@ public class Portfolio {
     private Long id;
 
     private Long customer_id;
-    private String code;
-    private int quantity;
-    private double avg_price;
-    private double current_price;
-    private double value;
-    private double gain_loss;
+    private double unrealised;
+    private double total;
     
 }
