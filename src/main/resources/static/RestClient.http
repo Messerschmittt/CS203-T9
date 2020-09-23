@@ -19,14 +19,19 @@ POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-    "username": "Analyst_1",
-    "password": "Analyst_password"
+    "username": "manager_1",
+    "password": "01_manager_01"
 }
 
 
 ###
 GET http://localhost:8080/users
-Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBbmFseXN0XzEiLCJleHAiOjE2MDE3MDY4MDN9.syfV4v05ja45y_FqJ0m_OQD4YvRomQZhEqqOE9XpvoYO5h7Xwm8aByOnYQbbkipwxkNTRrwxPlw2SKcxqkkgdg
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYW5hZ2VyXzEiLCJleHAiOjE2MDE3NTc1Mjl9.aHkSegLutTQvRdHbHbPa48Xpe6ioMpUg5venXDKcwUC2ryJqkdL8Fn1gGBJoYUPOtvV1oQ5kYzt9eYHMn-FQxQ
+###
+
+GET http://localhost:8080/users
+Authorization: Basic manager_1:01_manager_01
+
 ###
 GET http://localhost:8080/contents
 Authorization: Basic Admin_1:Admin_password

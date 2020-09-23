@@ -58,6 +58,9 @@ public class PriceController{
         generateOrder("ask", "MSFT");
     }
 
+        // public Trade generateOrder(String action, String symbol){
+        //     return new Trade();
+        // }
     public Trade generateOrder(String action, String symbol){
         HashMap<String, String> info = getPrice(symbol);
         Trade newTrade = new Trade();

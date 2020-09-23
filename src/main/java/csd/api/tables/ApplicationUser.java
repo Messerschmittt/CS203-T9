@@ -2,6 +2,7 @@ package csd.api.tables;
 
 import java.util.Arrays;
 import java.util.Collection;
+import javax.persistence.*;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -29,6 +30,13 @@ public class ApplicationUser implements UserDetails{
     private static final long serialVersionUID = 1L;
 
     private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
+
+    @OneToOne(mappedBy = "application_user",  cascade = CascadeType.ALL)
+    private Customer customer;
+
+    @OneToOne(mappedBy = "application_user",  cascade = CascadeType.ALL)
+    private Employee employee;
+
     
     @NotNull(message = "Username should not be null")
     @Size(min = 5, max = 20, message = "Username should be between 5 and 20 characters")
