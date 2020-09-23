@@ -16,14 +16,17 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import static csd.api.modules.security.SecurityConstants.SIGN_UP_URL;
+import csd.api.modules.user.CustomUserDetailsService;
+
 @EnableWebSecurity
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     
-    private UserDetailsService userDetailsService;
+    private CustomUserDetailsService userDetailsService;
 
-    public SecurityConfig(UserDetailsService userSvc){
+    public SecurityConfig(CustomUserDetailsService userSvc){
         this.userDetailsService = userSvc;
     }
     
@@ -51,6 +54,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
         .httpBasic()
         .and() //  "and()"" method allows us to continue configuring the parent
+        .authorizeRequests()
+        .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
+        .and()
+        .addFilter(new JWTAuthenticationFilter(authenticationManager()))
+        .addFilter(new JWTAuthorizationFilter(authenticationManager(), userDetailsService))
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
         .authorizeRequests()
             // User Controller

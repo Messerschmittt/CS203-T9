@@ -26,11 +26,11 @@ public class Application {
         UserRepository userRepo = ctx.getBean(UserRepository.class);
         BCryptPasswordEncoder encoder = ctx.getBean(BCryptPasswordEncoder.class);
 
-        List<User> initUsers = Arrays.asList(
-            new User("Admin_1", encoder.encode("Admin_password"), "ROLE_ADMIN"),
-            new User("Manager_1", encoder.encode("Manager_password"), "ROLE_MANAGER"),
-            new User("Analyst_1", encoder.encode("Analyst_password"), "ROLE_ANALYST"),
-            new User("User_1", encoder.encode("User_password"), "ROLE_USER")
+        List<ApplicationUser> initUsers = Arrays.asList(
+            new ApplicationUser("Admin_1", encoder.encode("Admin_password"), "ROLE_ADMIN"),
+            new ApplicationUser("Manager_1", encoder.encode("Manager_password"), "ROLE_MANAGER"),
+            new ApplicationUser("Analyst_1", encoder.encode("Analyst_password"), "ROLE_ANALYST"),
+            new ApplicationUser("User_1", encoder.encode("User_password"), "ROLE_USER")
         );
 
         initUsers.forEach(user -> {

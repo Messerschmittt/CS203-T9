@@ -15,22 +15,21 @@ POST http://localhost:8080/generatefake
 GET http://localhost:8080/logout
 
 ###
-POST http://localhost:8080/login_page
-Authorization: Basic Admin_1 Admin_password
+POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-    "username": "Admin_1"
+    "username": "Analyst_1",
+    "password": "Analyst_password"
 }
 
 
 ###
 GET http://localhost:8080/users
-Authorization: Basic Admin_1:Admin_password
-
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBbmFseXN0XzEiLCJleHAiOjE2MDE3MDY4MDN9.syfV4v05ja45y_FqJ0m_OQD4YvRomQZhEqqOE9XpvoYO5h7Xwm8aByOnYQbbkipwxkNTRrwxPlw2SKcxqkkgdg
 ###
 GET http://localhost:8080/contents
-
+Authorization: Basic Admin_1:Admin_password
 ###
 GET http://localhost:8080/customers/1
 
