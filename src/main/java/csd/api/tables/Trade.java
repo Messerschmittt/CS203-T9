@@ -2,6 +2,7 @@ package csd.api.tables;
 
 import java.security.Timestamp;
 import java.util.List;
+import javax.persistence.*;
 
 
 import javax.persistence.CascadeType;
@@ -35,10 +36,16 @@ public class Trade {
     private double avg_price;
     private int filled_quantity;
     private String date;
-    private Long account_id;
-    private Long customer_id;
+    private Long account_id; // omit
+    private Long customer_id; // if we know the account, we know the customer
     private String status;
     //for testing
     private String orderdate;
+
+    // 
+    @ManyToOne
+    @JoinTable(name = "account") 
+    private Account account;
+
 
 }

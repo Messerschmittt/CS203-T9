@@ -1,6 +1,7 @@
 package csd.api.tables;
 
 import java.util.List;
+import javax.persistence.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
