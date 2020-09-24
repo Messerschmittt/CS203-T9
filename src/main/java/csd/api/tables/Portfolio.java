@@ -1,5 +1,6 @@
 package csd.api.tables;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -26,7 +27,8 @@ public class Portfolio {
     private Long id;
 
     private Long customer_id;
-    private double unrealised;
-    private double total;
+    private HashMap<String, Assests> assests;       //String = symbol, Assests = Info
+    private double unrealized_gain_loss;
+    private double total_gain_loss;
     
 }

@@ -16,6 +16,7 @@ import csd.api.tables.TradeRepository;
 import csd.api.tables.Account;
 import csd.api.tables.AccountRepository;
 import csd.api.tables.Trade;
+import csd.api.tables.OrderInfo;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 
@@ -67,20 +68,27 @@ public class PriceController{
     
     @PostMapping("/buy/{acc_id}")
     public void BuyGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
+        //to check is the quantity is multiple of 100
+        if(!checkQuantity(oInfo.getQuantity())){
+            System.out.println("Input quantity is not valid");
+            return;
+        }
+
         //to check have enough balance
         double total_bid_price = oInfo.getQuantity()*oInfo.getBid();
-        if(checkBalance(acc_id, total_bid_price)){
-            generateOrder("bid", oInfo.getSymbol());
+        if(checkBalance(acc_id, total_bid_price)){      //have enough balance
+            //need to get the selling stock
+
+            generateOrder("buy", oInfo.getSymbol());
         }
         
-        //generateOrder("ask", "MSFT");
     }
 
 
     @PostMapping("/sell/{acc_id}")
     public void SellGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
         
-        generateOrder("ask", "MSFT");
+        generateOrder("sell", "MSFT");
     }
     
 
@@ -95,6 +103,14 @@ public class PriceController{
         return false;
     }
 
+    //check the input quantity is multiple of 100
+    public boolean checkQuantity(int quantity){
+        if(quantity % 100 == 0){
+            return true;
+        }
+        return false;
+    }
+
     //means trade match -> proceed order
     public Trade generateOrder(String action, String symbol){
         HashMap<String, String> info = getPrice(symbol);
@@ -102,10 +118,10 @@ public class PriceController{
         newTrade.setAction(action);
         newTrade.setSymbol(info.get("symbol"));
         if(action.equals("buy")){
-            newTrade.setBid(Double.parseDouble(info.get("buy")));
+            newTrade.setBid(Double.parseDouble(info.get("bid")));
             newTrade.setQuantity(Integer.parseInt(info.get("bidVol")));
         }else if(action.equals("sell")){
-            newTrade.setBid(Double.parseDouble(info.get("sell")));
+            newTrade.setBid(Double.parseDouble(info.get("ask")));
             newTrade.setQuantity(Integer.parseInt(info.get("askVol")));
         }
         newTrade.setAccount_id(Long.parseLong("-1"));
