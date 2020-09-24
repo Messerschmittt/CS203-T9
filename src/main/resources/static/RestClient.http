@@ -90,4 +90,39 @@ Content-Type: application/json
 GET http://localhost:8080/trades
 
 ###
-GET http://localhost:8080/trades/bid/2020-09-24T20:59:31.091887300/INTC
+GET http://localhost:8080/trades/buy/2020-09-24/INTC
+
+###
+POST http://localhost:8080/account/createAccount
+Content-Type: application/json
+
+{
+    "customer_id": 2,
+    "balance": 2000,
+    "available_balance": 1000
+}
+
+###
+GET http://localhost:8080/users
+
+###
+POST http://localhost:8080/buy/1
+Content-Type: application/json
+
+{
+    "action":"buy",
+    "symbol":"A17U",
+    "quantity":1000,
+    "bid":3.28
+}
+
+###
+POST http://localhost:8080/users
+Content-Type: application/json
+Authorization: Basic admin goodpassword
+
+{
+    "username": "gooduser",
+    "password": "goodpassword",
+    "authorities": "ROLE_USER"
+}

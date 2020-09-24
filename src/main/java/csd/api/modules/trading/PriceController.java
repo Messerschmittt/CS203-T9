@@ -17,6 +17,7 @@ import csd.api.tables.Account;
 import csd.api.tables.AccountRepository;
 import csd.api.tables.Trade;
 import csd.api.tables.OrderInfo;
+import csd.api.tables.TradeController;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 
@@ -24,6 +25,7 @@ import yahoofinance.YahooFinance;
 public class PriceController{
     private TradeRepository tradeRepo;
     private AccountRepository accRepo;
+    private TradeController trades;
 
     public PriceController(TradeRepository trades, AccountRepository accRepo){
         this.tradeRepo = trades;
@@ -63,6 +65,7 @@ public class PriceController{
     @PostMapping("/generatefake")  //
     public void testGenerate(){
         generateOrder("buy", "INTC");
+        generateOrder("buy", "INTC");
         generateOrder("sell", "MSFT");
     }
     
@@ -87,6 +90,14 @@ public class PriceController{
 
     @PostMapping("/sell/{acc_id}")
     public void SellGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
+        //to check is the quantity is multiple of 100
+        if(!checkQuantity(oInfo.getQuantity())){
+            System.out.println("Input quantity is not valid");
+            return;
+        }
+
+        String date = oInfo.getDatetime().substring(0, 10);
+        List<Trade> orders = trades.getAllmatchingorder(oInfo.getAction(),date,oInfo.getSymbol());
         
         generateOrder("sell", "MSFT");
     }
@@ -127,6 +138,7 @@ public class PriceController{
         newTrade.setAccount_id(Long.parseLong("-1"));
         newTrade.setCustomer_id(Long.parseLong("-1"));
         newTrade.setDate(info.get("date"));
+        newTrade.setOrderdate(info.get("date").substring(0,10));
 
         return tradeRepo.save(newTrade);
         

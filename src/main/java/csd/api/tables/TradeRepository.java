@@ -14,5 +14,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface TradeRepository extends JpaRepository <Trade, Long> {
-    List<Trade> findByDateAndSymbol(String date, String symbol);
+    List<Trade> findByActionAndOrderdateAndSymbol(String action, String orderdate, String symbol);
 }

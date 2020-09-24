@@ -32,6 +32,6 @@ public class OrderInfo{
     private int quantity;
     private double bid = -1;
     private double ask = -1;
-    private String now = LocalDateTime.now().toString();
+    private String datetime = LocalDateTime.now().toString();
 }
 

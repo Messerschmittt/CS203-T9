@@ -38,5 +38,7 @@ public class Trade {
     private Long account_id;
     private Long customer_id;
     private String status;
+    //for testing
+    private String orderdate;
 
 }

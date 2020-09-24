@@ -78,8 +78,8 @@ public class TradeController {
         trades.deleteById(id);
     }
 
-    @GetMapping("/trades/bid/{date}/{symbol}")
-    public List<Trade> getAllbuyorder(@PathVariable String date,@PathVariable String symbol) {
-        return trades.findByDateAndSymbol(date, symbol);
+    @GetMapping("/trades/{action}/{orderdate}/{symbol}")
+    public List<Trade> getAllmatchingorder(@PathVariable String action,@PathVariable String orderdate,@PathVariable String symbol) {
+        return trades.findByActionAndOrderdateAndSymbol(action,orderdate, symbol);
     }
 }
