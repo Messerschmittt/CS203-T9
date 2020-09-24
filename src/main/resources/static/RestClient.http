@@ -86,3 +86,8 @@ Content-Type: application/json
     "amount": 2000
 }
 
+###
+GET http://localhost:8080/trades
+
+###
+GET http://localhost:8080/trades/bid/2020-09-24T20:59:31.091887300/INTC

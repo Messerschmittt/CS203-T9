@@ -12,5 +12,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface AccountRepository extends JpaRepository <Account, Long> {
-    Account findByCustomerID(long customer_id);
+    // Account findByCustomerID(long customer_id);
+    // Account findByAccID(long customer_id);
+    
 }

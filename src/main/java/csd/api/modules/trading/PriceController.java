@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import csd.api.tables.TradeRepository;
+import csd.api.tables.Account;
 import csd.api.tables.AccountRepository;
 import csd.api.tables.Trade;
 import yahoofinance.Stock;
@@ -57,34 +59,37 @@ public class PriceController{
     }
 
     //Weijie
-    // @PostMapping("/generatefake")  //
-    // public void testGenerate(){
-    //     generateOrder("bid", "INTC");
-    //     generateOrder("ask", "MSFT");
-    // }
-
+    @PostMapping("/generatefake")  //
+    public void testGenerate(){
+        generateOrder("buy", "INTC");
+        generateOrder("sell", "MSFT");
+    }
+    
     @PostMapping("/buy/{acc_id}")
-    public void BuyGenerate(@PathVariable Long acc_id){
+    public void BuyGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
         //to check have enough balance
+        double total_bid_price = oInfo.getQuantity()*oInfo.getBid();
         if(checkBalance(acc_id, total_bid_price)){
-            generateOrder("bid", "INTC");
+            generateOrder("bid", oInfo.getSymbol());
         }
         
-        generateOrder("ask", "MSFT");
+        //generateOrder("ask", "MSFT");
     }
 
 
     @PostMapping("/sell/{acc_id}")
-    public void SellGenerate(@PathVariable Long acc_id){
+    public void SellGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
+        
         generateOrder("ask", "MSFT");
     }
     
 
     //check the customer have enough balance for trading (buying)
     public boolean checkBalance(long acc_id, double total_bid_price){
-        Account acc = accRepo.findByAccID(acc_id);
-        int balance = acc.getAvalible_Balance();
-        if(balance >= total_bid_price){
+        Optional<Account> acc = accRepo.findById(acc_id);
+        Account account = acc.get();
+        double availbalance = account.getAvailable_balance();
+        if(availbalance >= total_bid_price){
             return true;
         }
         return false;
@@ -96,11 +101,11 @@ public class PriceController{
         Trade newTrade = new Trade();
         newTrade.setAction(action);
         newTrade.setSymbol(info.get("symbol"));
-        if(action.equals("bid")){
-            newTrade.setBid(Double.parseDouble(info.get("bid")));
+        if(action.equals("buy")){
+            newTrade.setBid(Double.parseDouble(info.get("buy")));
             newTrade.setQuantity(Integer.parseInt(info.get("bidVol")));
-        }else if(action.equals("ask")){
-            newTrade.setBid(Double.parseDouble(info.get("ask")));
+        }else if(action.equals("sell")){
+            newTrade.setBid(Double.parseDouble(info.get("sell")));
             newTrade.setQuantity(Integer.parseInt(info.get("askVol")));
         }
         newTrade.setAccount_id(Long.parseLong("-1"));
