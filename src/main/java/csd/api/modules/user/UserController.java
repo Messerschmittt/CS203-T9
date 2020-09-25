@@ -13,11 +13,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class UserController {
     private UserRepository users;
+    private CustomerRepository customers;
     private BCryptPasswordEncoder encoder;
 
-    public UserController(UserRepository users, BCryptPasswordEncoder encoder){
+    public UserController(UserRepository users, BCryptPasswordEncoder encoder, CustomerRepository customers){
         this.users = users;
         this.encoder = encoder;
+        this.customers = customers;
     }
 
     @GetMapping("/users")
@@ -46,6 +48,12 @@ public class UserController {
     @ResponseBody
     public String successLogout(){
         return "Successfully logged out";
+    }
+
+
+    @GetMapping("/customers/{id}")
+    public Customer getCustomerDetails(@PathVariable Long id){
+        return customers.findByApplicationUserId(id).get(0);
     }
    
 }

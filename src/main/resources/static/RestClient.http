@@ -15,26 +15,36 @@ POST http://localhost:8080/generatefake
 GET http://localhost:8080/logout
 
 ###
+POST http://localhost:8080/user/createUser
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "testuserpassword",
+    "authorities": "ROLE_USER"
+}
+
+###
 POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-    "username": "manager_1",
-    "password": "01_manager_01"
+    "username": "good_user_1",
+    "password": "01_user_01"
 }
 
 
 ###
-GET http://localhost:8080/users
-Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYW5hZ2VyXzEiLCJleHAiOjE2MDE3NTc1Mjl9.aHkSegLutTQvRdHbHbPa48Xpe6ioMpUg5venXDKcwUC2ryJqkdL8Fn1gGBJoYUPOtvV1oQ5kYzt9eYHMn-FQxQ
+GET http://localhost:8080/accounts
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJnb29kX3VzZXJfMSIsImV4cCI6MTYwMTc5NjYwN30.iif8gF3FvGft-gizLQMBsGlFPXyZsHkN1R32cmJyPxDp0xDxPgEyKTW4kPz-GWP7fgNPjD57u4u5B7vkBRqCFA
 ###
 
-GET http://localhost:8080/users
+GET http://localhost:8080/accounts
 Authorization: Basic manager_1:01_manager_01
 
 ###
-GET http://localhost:8080/contents
-Authorization: Basic Admin_1:Admin_password
+GET http://localhost:8080/customers/4
+Authorization: Basic manager_1:01_manager_01
 ###
 GET http://localhost:8080/customers/1
 

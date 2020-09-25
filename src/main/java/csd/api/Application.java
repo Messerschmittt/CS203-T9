@@ -47,7 +47,7 @@ public class Application {
 
         initEmployee.forEach(employee -> {
             // empRepo.save(employee);
-            System.out.println("[User Initialised]" + empRepo.save(employee).getApplication_user().getUsername());
+            System.out.println("[User Initialised]" + empRepo.save(employee).getApplicationUser().getUsername());
 
         });
 
@@ -60,7 +60,7 @@ public class Application {
 
         initCustomer.forEach(customer -> {
             // cusRepo.save(customer);
-            System.out.println("[User Initialised]" + cusRepo.save(customer).getApplication_user().getUsername());
+            System.out.println("[User Initialised]" + cusRepo.save(customer).getApplicationUser().getUsername());
 
             // System.out.println(cusRepo.findById(customer.getId()));
 

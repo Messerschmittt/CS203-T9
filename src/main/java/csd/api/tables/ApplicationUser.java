@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -31,10 +33,12 @@ public class ApplicationUser implements UserDetails{
 
     private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
 
-    @OneToOne(mappedBy = "application_user",  cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @JsonIgnore
     private Customer customer;
 
-    @OneToOne(mappedBy = "application_user",  cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @JsonIgnore
     private Employee employee;
 
     

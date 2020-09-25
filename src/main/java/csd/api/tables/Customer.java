@@ -48,8 +48,8 @@ public class Customer {
     private Portfolio portfolio;
     
     @OneToOne
-    @JoinColumn(name = "application_user_id")
-    private ApplicationUser application_user;
+    @JoinColumn(name = "ApplicationUserId")
+    private ApplicationUser applicationUser;
 
 
     // public Customer(String full_name, String authorities, String username, String password){
@@ -59,8 +59,8 @@ public class Customer {
     //     this.password = password;
     // }
 
-    public Customer(ApplicationUser application_user, String full_name) {
-        this.application_user = application_user;
+    public Customer(ApplicationUser applicationUser, String full_name) {
+        this.applicationUser = applicationUser;
         this.full_name = full_name;
 
     }
