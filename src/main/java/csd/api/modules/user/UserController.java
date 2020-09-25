@@ -27,6 +27,11 @@ public class UserController {
         return users.findAll();
     }
 
+    @GetMapping("/customers")
+    public List<Customer> getCustomers() {
+        return customers.findAll();
+    }
+
     /**
     * Using BCrypt encoder to encrypt the password for storage 
     * @param user
@@ -36,6 +41,25 @@ public class UserController {
     public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
         user.setPassword(encoder.encode(user.getPassword()));
         return users.save(user);
+    }
+
+    /**
+    * Using BCrypt encoder to encrypt the password for storage 
+    * @param user
+     * @return
+     */
+    @PostMapping("/user/createUser/customer")    
+    public Customer addCustomer(@Valid @RequestBody Customer customer){
+        String username = customer.getUsername();
+        if (!users.existsByUsername(username)) {
+            throw new UserNotFoundException(username);
+        }
+
+        ApplicationUser user = users.findByUsername(username);
+        customer.setPassword(user.getPassword()); 
+        // if incorrect password was typed, wont matter as it is overwritten
+        customer.setAuthorities(user.getSimpleAuthorities());
+        return customers.save(customer);
     }
 
     @PostMapping("/login_page")

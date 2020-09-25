@@ -15,48 +15,6 @@ POST http://localhost:8080/generatefake
 GET http://localhost:8080/users
 
 ###
-GET http://localhost:8080/accounts
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYW5hZ2VyXzEiLCJleHAiOjE2MDE4ODA1NjV9.9o2YGdM1drrSeki9taZPsygyTzOj9EN1yj2G6dI1sqnANUpBEZDMIWgBxY-Ay4mRd93n6hjVc1ekWFhQ4jbi1A
-###
-###
-POST http://localhost:8080/account/createAccount
-Authorization: Basic good_user_2:02_user_02
-Content-Type: application/json
-
-{
-    "username": "good_user_2",
-    "balance": 1000.0,
-    "available_balance": 1000.0
-}
-
-
-###
-###
-POST http://localhost:8080/user/createUser
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYW5hZ2VyXzEiLCJleHAiOjE2MDE4ODA1NjV9.9o2YGdM1drrSeki9taZPsygyTzOj9EN1yj2G6dI1sqnANUpBEZDMIWgBxY-Ay4mRd93n6hjVc1ekWFhQ4jbi1A
-Content-Type: application/json
-
-{
-    "username": "tiger",
-    "password": "01_manager_01",
-    "authorities": "ROLE_MANAGER",
-    "full_name":"King Tiger"
-}
-
-
-###
-
-###
-POST http://localhost:8080/user/createUser
-Content-Type: application/json
-
-{
-    "username": "testuser",
-    "password": "testuserpassword",
-    "authorities": "ROLE_USER"
-}
-
-###
 POST http://localhost:8080/login
 Content-Type: application/json
 
@@ -65,10 +23,6 @@ Content-Type: application/json
     "password": "01_user_01"
 }
 
-
-###
-GET http://localhost:8080/accounts
-Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJnb29kX3VzZXJfMSIsImV4cCI6MTYwMTc5NjYwN30.iif8gF3FvGft-gizLQMBsGlFPXyZsHkN1R32cmJyPxDp0xDxPgEyKTW4kPz-GWP7fgNPjD57u4u5B7vkBRqCFA
 
 ###
 
@@ -101,27 +55,6 @@ PUT http://localhost:8080/content/approveContent/1
 GET http://localhost:8080/accounts
 
 ###
-POST http://localhost:8080/account/createAccount
-Content-Type: application/json
-
-{
-    "customer_id": 1,
-    "balance": 10000,
-    "available_balance": 5000
-}
-
-###
-POST http://localhost:8080/account/createAccount
-Content-Type: application/json
-
-{
-    "customer_id": 2,
-    "balance": 2000,
-    "available_balance": 1000
-}
-
-
-###
 GET http://localhost:8080/transfers
 
 ###
@@ -139,7 +72,7 @@ Content-Type: application/json
 
 ##Manager
 
-### -- View Users
+### -- View Users 
 
 GET http://localhost:8080/users
 Authorization: Basic manager_1:01_manager_01
@@ -147,6 +80,11 @@ Authorization: Basic manager_1:01_manager_01
 ### -- View Accounts
 
 GET http://localhost:8080/accounts
+Authorization: Basic manager_1:01_manager_01
+
+### -- View Customers
+
+GET http://localhost:8080/customers
 Authorization: Basic manager_1:01_manager_01
 
 ###
@@ -176,3 +114,81 @@ Content-Type: application/json
 }
 
 ###
+### -- Create Invalid Account (invalid username)
+POST http://localhost:8080/account/createAccount
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
+
+{
+    "username": "s_2",
+    "balance": 1000.0,
+    "available_balance": 1000.0
+}
+
+###
+
+
+################ CREATE USER and CUSTOMER
+### Good Case 1
+### -- Create User3
+POST http://localhost:8080/user/createUser
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_3",
+    "password": "testpassword",
+    "authorities": "ROLE_USER"
+}
+
+###
+### -- Create CUSTOMER
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_3",
+    "full_name": "Good User",
+    "nric" : "1234567",
+    "phone" : "999",
+    "address": "123 Still Rd"
+}
+
+###
+### Bad Case Check
+### -- Create User4
+POST http://localhost:8080/user/createUser
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_4",
+    "password": "testpassword",
+    "authorities": "ROLE_USER"
+}
+
+###
+### -- Create CUSTOMER (FAIL, invalid username)
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user4",
+    "full_name": "Good User",
+    "nric" : "1234567",
+    "phone" : "999",
+    "address": "123 Still Rd"
+}
+
+### -- Create CUSTOMER (PASS, minimalist input)
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_4",
+    "full_name": "Good User"
+
+}

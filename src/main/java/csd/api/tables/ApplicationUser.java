@@ -68,6 +68,11 @@ public class ApplicationUser implements UserDetails{
         return Arrays.asList(new SimpleGrantedAuthority(authorities));
     }
 
+    // returns the string format of authorities for creation of user
+    public String getSimpleAuthorities() {
+        return authorities;
+    }
+    
     /*
     The various is___Expired() methods return a boolean to indicate whether
     or not the user’s account is enabled or expired.

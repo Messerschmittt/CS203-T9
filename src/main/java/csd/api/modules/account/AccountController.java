@@ -57,8 +57,8 @@ public class AccountController {
         }
 
 
-        Account newAcc = new Account(customers.findByApplicationUserId(users.findByUsername(username)
-                        .getId()), accountRecord.getBalance(), accountRecord.getAvailable_balance());
+        Account newAcc = new Account(customers.findByUsername(username)
+                        , accountRecord.getBalance(), accountRecord.getAvailable_balance());
         return accounts.save(newAcc);
         
     }

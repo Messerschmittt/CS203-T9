@@ -54,13 +54,13 @@ public class Application {
 
 
         List<Customer> initCustomer = Arrays.asList(
-            new Customer(userRepo.findByUsername("good_user_1"),"Customer 1")  ,
-            new Customer(userRepo.findByUsername("good_user_2"),"Customer 2")
+            new Customer("Customer 1", "good_user_1")  ,
+            new Customer("Customer 2", "good_user_2")
         );
 
         initCustomer.forEach(customer -> {
             // cusRepo.save(customer);
-            System.out.println("[User Initialised]" + cusRepo.save(customer).getApplicationUser().getUsername());
+            System.out.println("[User Initialised]" + cusRepo.save(customer).getUsername());
 
             // System.out.println(cusRepo.findById(customer.getId()));
 
