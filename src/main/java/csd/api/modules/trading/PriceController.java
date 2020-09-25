@@ -17,6 +17,7 @@ import csd.api.tables.Account;
 import csd.api.tables.AccountRepository;
 import csd.api.tables.Trade;
 import csd.api.tables.OrderInfo;
+import csd.api.tables.OrderRepository;
 import csd.api.tables.TradeController;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -64,9 +65,9 @@ public class PriceController{
     //Weijie
     @PostMapping("/generatefake")  //
     public void testGenerate(){
-        generateOrder("buy", "INTC");
-        generateOrder("buy", "INTC");
-        generateOrder("sell", "MSFT");
+        generateTrade("buy", "INTC");
+        generateTrade("buy", "INTC");
+        generateTrade("sell", "MSFT");
     }
     
     @PostMapping("/buy/{acc_id}")
@@ -81,8 +82,8 @@ public class PriceController{
         double total_bid_price = oInfo.getQuantity()*oInfo.getBid();
         if(checkBalance(acc_id, total_bid_price)){      //have enough balance
             //need to get the selling stock
-
-            generateOrder("buy", oInfo.getSymbol());
+            
+            generateTrade("buy", oInfo.getSymbol());
         }
         
     }
@@ -96,13 +97,28 @@ public class PriceController{
             return;
         }
 
-        String date = oInfo.getDatetime().substring(0, 10);
-        List<Trade> orders = trades.getAllmatchingorder(oInfo.getAction(),date,oInfo.getSymbol());
-        
-        generateOrder("sell", "MSFT");
+        generateTrade("sell", oInfo.getSymbol());
     }
     
+    public void matching(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
+        String date = oInfo.getDatetime().substring(0, 10);
+        List<Trade> orders = trades.getAllmatchingorder(oInfo.getAction(),date,oInfo.getSymbol());
 
+        double max = 0;
+        for(Trade t: orders){
+            if(t.getBid() >= oInfo.getAsk() && t.getBid() > max){
+                max = t.getBid();
+            }
+        }
+        List<Trade> mList = tradeRepo.findBySymbolAndBid(oInfo.getSymbol(), max);
+        LocalDateTime edate = LocalDateTime.now();
+
+        for(Trade oinfo: mList){
+            if(LocalDateTime.parse(oinfo.getDate()).compareTo(edate) < 0){
+                edate = LocalDateTime.parse(oinfo.getDate());
+            }
+        }
+    }
     //check the customer have enough balance for trading (buying)
     public boolean checkBalance(long acc_id, double total_bid_price){
         Optional<Account> acc = accRepo.findById(acc_id);
@@ -123,7 +139,7 @@ public class PriceController{
     }
 
     //means trade match -> proceed order
-    public Trade generateOrder(String action, String symbol){
+    public Trade generateTrade(String action, String symbol){
         HashMap<String, String> info = getPrice(symbol);
         Trade newTrade = new Trade();
         newTrade.setAction(action);

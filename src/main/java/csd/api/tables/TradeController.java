@@ -82,4 +82,10 @@ public class TradeController {
     public List<Trade> getAllmatchingorder(@PathVariable String action,@PathVariable String orderdate,@PathVariable String symbol) {
         return trades.findByActionAndOrderdateAndSymbol(action,orderdate, symbol);
     }
+
+    @GetMapping("/trades/{action}/{status}/{symbol}")
+    public List<Trade> getAllvalidorder(@PathVariable String action,@PathVariable String status,@PathVariable String symbol) {
+        return trades.findByActionAndStatusAndSymbol(action,status, symbol);
+    }
+}
 }
