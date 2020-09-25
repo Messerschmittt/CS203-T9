@@ -23,7 +23,7 @@ import lombok.*;
 
 public class Stock {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String symbol;
     private double last_price;

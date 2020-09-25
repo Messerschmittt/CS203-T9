@@ -26,7 +26,7 @@ import lombok.*;
 public class Customer {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private long id;
+    private Integer id;
     
     // private String username;
     // private String password;
@@ -39,12 +39,13 @@ public class Customer {
     private String active;
 
     //
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Account> accounts;
 
 
-    @OneToOne
-    @JoinColumn(name = "customer")
+    @OneToOne(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private Portfolio portfolio;
     
     @OneToOne

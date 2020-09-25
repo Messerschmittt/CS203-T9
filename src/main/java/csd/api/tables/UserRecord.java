@@ -5,18 +5,17 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-@Entity
 
 public class UserRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Integer id;
     private String username;
     private String password;
 
 
 
-    public long getId() {
+    public Integer getId() {
         return id;
     }
 

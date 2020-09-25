@@ -16,8 +16,7 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface CustomerRepository extends JpaRepository <Customer, Long> {
-    // Customer findByApplicationUserId(Long id);
+public interface CustomerRepository extends JpaRepository <Customer, Integer> {
+    Customer findByApplicationUserId(Integer bookId);
 
-    List<Customer> findByApplicationUserId(Long bookId);
 }

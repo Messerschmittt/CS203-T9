@@ -24,10 +24,10 @@ import lombok.*;
 public class Trans {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
      
-    private long from_acc; // omit
-    private long to_acc; // omit
+    private Integer from_acc; // omit
+    private Integer to_acc; // omit
     private double amount;
 
     //
@@ -41,7 +41,7 @@ public class Trans {
     private Account from_account;
     
 
-    public Trans(long from, long to, double amount){
+    public Trans(Integer from, Integer to, double amount){
         this.from_acc = from;
         this.to_acc = to;
         this.amount = amount;

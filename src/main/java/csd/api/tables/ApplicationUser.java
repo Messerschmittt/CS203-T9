@@ -31,7 +31,7 @@ import lombok.*;
 public class ApplicationUser implements UserDetails{
     private static final long serialVersionUID = 1L;
 
-    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
+    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Integer id;
 
     @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
     @JsonIgnore
@@ -39,7 +39,7 @@ public class ApplicationUser implements UserDetails{
 
     @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
     @JsonIgnore
-    private Employee employee;
+     private Employee employee;
 
     
     @NotNull(message = "Username should not be null")

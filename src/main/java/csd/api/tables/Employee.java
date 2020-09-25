@@ -24,7 +24,7 @@ import lombok.*;
 public class Employee {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     //
     @OneToOne
@@ -49,4 +49,9 @@ public class Employee {
         this.applicationUser = applicationUser;
         this.full_name = full_name;
     }
+
+    // public Employee(String user_name, String full_name) {
+    //     this.application_user = application_user;
+    //     this.full_name = full_name;
+    // }
 }

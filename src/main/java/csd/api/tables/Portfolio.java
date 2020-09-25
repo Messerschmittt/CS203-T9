@@ -24,9 +24,8 @@ import lombok.*;
 
 public class Portfolio {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    // private Long customer_id;
     private double unrealised;
     private double total;
 

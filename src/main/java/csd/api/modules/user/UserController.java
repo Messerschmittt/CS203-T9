@@ -32,7 +32,7 @@ public class UserController {
     * @param user
      * @return
      */
-    @PostMapping("/user/createUser")
+    @PostMapping("/user/createUser")    
     public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
         user.setPassword(encoder.encode(user.getPassword()));
         return users.save(user);
@@ -52,8 +52,8 @@ public class UserController {
 
 
     @GetMapping("/customers/{id}")
-    public Customer getCustomerDetails(@PathVariable Long id){
-        return customers.findByApplicationUserId(id).get(0);
+    public Customer getCustomerDetails(@PathVariable Integer id){
+        return customers.findByApplicationUserId(id);
     }
    
 }

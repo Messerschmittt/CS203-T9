@@ -24,15 +24,15 @@ import lombok.*;
 public class Account {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;    
     
-    // private long customer_id;
     private double balance;
     private double available_balance;
 
 
     // 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "account", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Trade> trades;
 
     //
@@ -41,11 +41,13 @@ public class Account {
     private Customer customer;
 
     //
-    @OneToMany(mappedBy = "to_account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "to_account", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Trans> transactions_to;
 
     //
-    @OneToMany(mappedBy = "from_account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "from_account", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Trans> transactions_from;
 
     
@@ -55,13 +57,7 @@ public class Account {
         this.available_balance = available_balance;
     }
 
-    /**
-     * public Account(long id, double balance, double available_balance){
-        this.customer = customer;
-        this.balance = balance;
-        this.available_balance = available_balance;
-    }
-     */
+
 
     
 }
