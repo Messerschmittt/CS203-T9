@@ -1,6 +1,7 @@
 package csd.api.tables;
 
 import java.util.List;
+import javax.persistence.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -32,6 +33,21 @@ public class Assests {
     private double value;
     private double gain_loss;
 
-    private int nric;
+    // //
+    // @ManyToOne
+    // @JoinColumn(name = "customer_id")
+    // private Customer customer;
+
+    //calculate gain_loss
+    public double CalculateGain_loss(){
+        gain_loss = (current_price - avg_price) * quantity;
+        return gain_loss;
+    }
+
+    //calculate value
+    public double CalculateValue(){
+        value = current_price * quantity;
+        return value;
+    }
     
 }

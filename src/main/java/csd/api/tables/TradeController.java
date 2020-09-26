@@ -88,4 +88,4 @@ public class TradeController {
         return trades.findByActionAndStatusAndSymbol(action,status, symbol);
     }
 }
-}
+

@@ -27,13 +27,22 @@ public class Portfolio {
     private Long id;
 
     // private Long customer_id;
+    
+    //one Portfolio can has many assests
+    // private List<Assests> assests;
     private double unrealised;
     private double total;
-
-
     
     @OneToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
-    
+
+    // //calculate unrealised gain and loss from current stock
+    // public double CalculateUnrealised(){
+    //     unrealised = 0;
+    //     for(Assests a: assests){
+    //         unrealised += a.getGain_loss();
+    //     }
+    //     return unrealised;
+    // }
 }

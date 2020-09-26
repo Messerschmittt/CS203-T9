@@ -46,6 +46,10 @@ public class Customer {
     @OneToOne
     @JoinColumn(name = "customer")
     private Portfolio portfolio;
+
+    // //
+    // @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    // private List<Assests> assests;
     
     @OneToOne
     @JoinColumn(name = "application_user_id")
