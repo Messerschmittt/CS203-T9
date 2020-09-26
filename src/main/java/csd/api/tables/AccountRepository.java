@@ -11,8 +11,6 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface AccountRepository extends JpaRepository <Account, Long> {
-    // Account findByCustomerID(long customer_id);
-    // Account findByAccID(long customer_id);
-    
+public interface AccountRepository extends JpaRepository <Account, Integer> {
+
 }

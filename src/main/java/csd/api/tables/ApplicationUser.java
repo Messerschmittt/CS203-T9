@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,13 +31,15 @@ import lombok.*;
 public class ApplicationUser implements UserDetails{
     private static final long serialVersionUID = 1L;
 
-    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
+    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Integer id;
 
-    @OneToOne(mappedBy = "application_user",  cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @JsonIgnore
     private Customer customer;
 
-    @OneToOne(mappedBy = "application_user",  cascade = CascadeType.ALL)
-    private Employee employee;
+    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @JsonIgnore
+     private Employee employee;
 
     
     @NotNull(message = "Username should not be null")
@@ -64,6 +68,11 @@ public class ApplicationUser implements UserDetails{
         return Arrays.asList(new SimpleGrantedAuthority(authorities));
     }
 
+    // returns the string format of authorities for creation of user
+    public String getSimpleAuthorities() {
+        return authorities;
+    }
+    
     /*
     The various is___Expired() methods return a boolean to indicate whether
     or not the user’s account is enabled or expired.

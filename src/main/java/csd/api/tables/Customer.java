@@ -26,25 +26,25 @@ import lombok.*;
 public class Customer {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private long id;
-    
-    // private String username;
-    // private String password;
+    private Integer id;
 
     private String full_name;
     private String nric;
     private String phone;
     private String address;
-    // private String authorities;
-    private String active;
+    private String username;
+    private String password;
+    private String authorities;
+    private boolean active;
 
     //
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Account> accounts;
 
 
-    @OneToOne
-    @JoinColumn(name = "customer")
+    @OneToOne(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
     private Portfolio portfolio;
 
     // //
@@ -52,22 +52,47 @@ public class Customer {
     // private List<Assests> assests;
     
     @OneToOne
-    @JoinColumn(name = "application_user_id")
-    private ApplicationUser application_user;
+    @JoinColumn(name = "ApplicationUserId")
+    private ApplicationUser applicationUser;
 
 
-    // public Customer(String full_name, String authorities, String username, String password){
-    //     this.full_name = full_name;
-    //     this.authorities = authorities;
-    //     this.username = username;
-    //     this.password = password;
-    // }
+    //for some reason, active is set to false on default when using rest client
+    // need to enforce one to one
+    // not getting linked with application users either
 
-    public Customer(ApplicationUser application_user, String full_name) {
-        this.application_user = application_user;
-        this.full_name = full_name;
-
+    public Customer(String full_name, String nric, String phone, String address, 
+            String username, String password, String authorities, boolean active) {
+                this.full_name = full_name;
+                this.nric = nric;
+                this.phone = phone;
+                this.address = address;
+                this.username = username;
+                this.password = password;
+                this.authorities = authorities;
+                this.active = active;
     }
+
+    public Customer(String full_name, String nric, String phone, String address, 
+            String username, String password, String authorities) {
+                this(full_name, nric, phone,address, username, password, authorities, true);
+    }
+    
+    public Customer(String full_name, String nric, String phone, String address, 
+            String username) {
+                this(full_name, nric, phone,address, username, null, null);
+    }
+
+    public Customer(String full_name, String username) { // can remove
+
+                this(full_name, null, null ,null , username);
+    }
+    
+
+    // public Customer(ApplicationUser applicationUser, String full_name) {
+    //     this.applicationUser = applicationUser;
+    //     this.full_name = full_name;
+
+    // }
 
     
 }

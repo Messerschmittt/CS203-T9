@@ -26,7 +26,7 @@ import lombok.*;
 public class Trade {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
     
     private String action;
     private String symbol;
@@ -36,15 +36,13 @@ public class Trade {
     private double avg_price;
     private int filled_quantity = 0;
     private String date;
-    private Long account_id; // omit
-    private Long customer_id; // if we know the account, we know the customer
-    private String status = "open";
-    //for testing
-    private String orderdate;
+    private Integer account_id; // omit
+    private Integer customer_id; // if we know the account, we know the customer
+    private String status;
 
     // 
     @ManyToOne
-    @JoinTable(name = "account") 
+    @JoinTable(name = "account_id") 
     private Account account;
 
 

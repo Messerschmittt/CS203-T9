@@ -24,12 +24,12 @@ import lombok.*;
 public class Employee {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     //
     @OneToOne
-    @JoinColumn(name = "application_user_id")
-    private ApplicationUser application_user;
+    @JoinColumn(name = "ApplicationUserId")
+    private ApplicationUser applicationUser;
     
     // private String username;
     // private String password;
@@ -45,8 +45,13 @@ public class Employee {
     //     this.password = password;
     // }
     
-    public Employee(ApplicationUser application_user, String full_name) {
-        this.application_user = application_user;
+    public Employee(ApplicationUser applicationUser, String full_name) {
+        this.applicationUser = applicationUser;
         this.full_name = full_name;
     }
+
+    // public Employee(String user_name, String full_name) {
+    //     this.application_user = application_user;
+    //     this.full_name = full_name;
+    // }
 }

@@ -45,7 +45,7 @@ public class ContentController {
     }
 
     @PutMapping("/content/approveContent/{id}")
-    public Content setContentStatus(@PathVariable Long id){
+    public Content setContentStatus(@PathVariable Integer id){
         Optional<Content> c = contents.findById(id);
         if(!c.isPresent()){
             throw new ContentNotFoundException(id);

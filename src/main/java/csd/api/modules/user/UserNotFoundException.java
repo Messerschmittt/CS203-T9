@@ -4,18 +4,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Error
-public class CustomerNotFoundException extends RuntimeException{
+public class UserNotFoundException extends RuntimeException{
     /**
      *
      */
     private static final long serialVersionUID = 1L;
 
-    public CustomerNotFoundException(Integer id) {
-        super("Could not find customer " + id);
+    public UserNotFoundException(String username) {
+        super("Could not find user " + username);
     }
 
-    public CustomerNotFoundException() {
-        super("Could not find customer ");
+    public UserNotFoundException() {
+        super("Could not find user ");
     }
     
 }

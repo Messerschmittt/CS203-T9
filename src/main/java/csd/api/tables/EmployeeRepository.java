@@ -11,6 +11,6 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface EmployeeRepository extends JpaRepository <Employee, Long> {
+public interface EmployeeRepository extends JpaRepository <Employee, Integer> {
 
 }

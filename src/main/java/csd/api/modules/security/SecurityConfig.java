@@ -45,11 +45,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         // Security classifications
-        String[] allUsers = new String[]{"ADMIN", "MANAGER", "ANALYST", "USER"};
-        String[] onlyEmp = new String[]{"ADMIN", "MANAGER", "ANALYST"};
-        String[] onlyManager = new String[]{"ADMIN", "MANAGER"};
-        String[] onlyUser = new String[]{"ADMIN", "USER"};
-        String[] onlyAdmin = new String[]{"ADMIN"};
+        String[] allUsers = new String[]{ "MANAGER", "ANALYST", "USER"};
+        String[] onlyEmp = new String[]{ "MANAGER", "ANALYST"};
+        String[] onlyManager = new String[]{ "MANAGER"};
+        String[] onlyUser = new String[]{ "USER"};
         
         http
         .httpBasic()
@@ -62,7 +61,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
         .authorizeRequests()
             // User Controller
-            .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyAdmin)
+            .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyManager   )
             .antMatchers(HttpMethod.POST, "/user/createUser").hasAnyRole(onlyManager)
             
             // Account Controller
@@ -80,13 +79,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .and()
 
         // Control Logging in and out
-        .formLogin().loginPage("/login_page").permitAll().and()
-        .logout()
-            .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-            .invalidateHttpSession(true)
-            .deleteCookies("JSESSIONID")
-            .logoutSuccessUrl("/logoutSuccess")
-            .and()
+        // .formLogin().loginPage("/login_page").permitAll().and()
+        // .logout()
+        //     .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+        //     .invalidateHttpSession(true)
+        //     .deleteCookies("JSESSIONID")
+        //     .logoutSuccessUrl("/logoutSuccess")
+        //     .and()
 
         .csrf().disable() // CSRF protection is needed only for browser based attacks
         .formLogin().disable()

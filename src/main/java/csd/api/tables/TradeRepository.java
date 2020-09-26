@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface TradeRepository extends JpaRepository <Trade, Long> {
+public interface TradeRepository extends JpaRepository <Trade, Integer> {
     List<Trade> findByActionAndOrderdateAndSymbol(String action, String orderdate, String symbol);
     List<Trade> findBySymbolAndBid(String Symbol, double bid);
 	List<Trade> findByActionAndStatusAndSymbol(String action, String status, String symbol);

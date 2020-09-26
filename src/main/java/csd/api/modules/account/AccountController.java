@@ -1,6 +1,8 @@
 package csd.api.modules.account;
 
 import csd.api.tables.*;
+import csd.api.modules.user.*;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -21,10 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
     private AccountRepository accounts;
     private TransRepository transfers;
+    private CustomerRepository customers;
+    private UserRepository users;
 
-    public AccountController(AccountRepository accounts, TransRepository transfers){
+    public AccountController(AccountRepository accounts, TransRepository transfers, CustomerRepository customers, UserRepository users){
         this.accounts = accounts;
         this.transfers = transfers;
+        this.users = users;
+        this.customers = customers;
     }
 
     
@@ -38,11 +44,26 @@ public class AccountController {
         return transfers.findAll();
     }
 
+    // @PostMapping("/account/createAccount")
+    // public Account createAccount(@RequestBody Account newAcc){
+    //     return accounts.save(newAcc);
+        
+    // }
+
     @PostMapping("/account/createAccount")
-    public Account createAccount(@RequestBody Account newAcc){
+    public Account createAccount(@RequestBody AccountRecord accountRecord){
+        String username = accountRecord.getUsername();
+        if (!users.existsByUsername(username)) {
+            throw new CustomerNotFoundException();
+        }
+
+
+        Account newAcc = new Account(customers.findByUsername(username)
+                        , accountRecord.getBalance(), accountRecord.getAvailable_balance());
         return accounts.save(newAcc);
         
     }
+
 
     /**
      * Allows users to make a transfer between accounts

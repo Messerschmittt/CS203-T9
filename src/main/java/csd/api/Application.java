@@ -39,28 +39,28 @@ public class Application {
         });
 
         List<Employee> initEmployee = Arrays.asList(
-            new Employee(userRepo.findByUsername("manager_1"), "Manager 1"),
-            new Employee(userRepo.findByUsername("analyst_1"), "Analyst 1"),
-            new Employee(userRepo.findByUsername("analyst_2"), "Analyst 2")
+            // new Employee(userRepo.findByUsername("manager_1"), "Manager 1"),
+            // new Employee(userRepo.findByUsername("analyst_1"), "Analyst 1"),
+            // new Employee(userRepo.findByUsername("analyst_2"), "Analyst 2")
 
         );
 
         initEmployee.forEach(employee -> {
             // empRepo.save(employee);
-            System.out.println("[User Initialised]" + empRepo.save(employee).getApplication_user().getUsername());
+            System.out.println("[User Initialised]" + empRepo.save(employee).getApplicationUser().getUsername());
 
         });
 
 
 
         List<Customer> initCustomer = Arrays.asList(
-            new Customer(userRepo.findByUsername("good_user_1"),"Customer 1"),
-            new Customer(userRepo.findByUsername("good_user_2"),"Customer 2")
+            new Customer("Customer 1", "good_user_1")  ,
+            new Customer("Customer 2", "good_user_2")
         );
 
         initCustomer.forEach(customer -> {
             // cusRepo.save(customer);
-            System.out.println("[User Initialised]" + cusRepo.save(customer).getApplication_user().getUsername());
+            System.out.println("[User Initialised]" + cusRepo.save(customer).getUsername());
 
             // System.out.println(cusRepo.findById(customer.getId()));
 
@@ -68,12 +68,12 @@ public class Application {
 
 
         List<Content> initContent = Arrays.asList(
-            new Content("Content Title 1", "Content Summary 1", "Content Content 1", "Content Link 1"),
-            new Content("Content Title 2", "Content Summary 2", "Content Content 2", "Content Link 2")
+            // new Content("Content Title 1", "Content Summary 1", "Content Content 1", "Content Link 1"),
+            // new Content("Content Title 2", "Content Summary 2", "Content Content 2", "Content Link 2")
         );
         initContent.forEach(content -> {
             // contRepo.save(content);
-            System.out.println("[User Initialised]" + contRepo.save(content).getTitle());
+            // System.out.println("[User Initialised]" + contRepo.save(content).getTitle());
 
             // System.out.println(contRepo.findById(customer.getId()));
 
