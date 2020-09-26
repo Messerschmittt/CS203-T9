@@ -6,7 +6,7 @@
 
 
 ###
-GET http://localhost:8080/pricetest?stock=MSFT
+GET http://localhost:8080/pricetest?stock=S68.SI
 
 ###
 POST http://localhost:8080/generatefake
@@ -192,3 +192,14 @@ Content-Type: application/json
     "full_name": "Good User"
 
 }
+
+### -- Initialise Stock Repository (SGX Top 30 - Quantity: 20,000)
+POST http://localhost:8080/stock/initialiseStock
+
+
+### -- View Stock Repository
+GET http://localhost:8080/stocks
+
+### -- View Trade Repository
+GET http://localhost:8080/trades
+

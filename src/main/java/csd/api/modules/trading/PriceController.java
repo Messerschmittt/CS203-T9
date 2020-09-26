@@ -1,5 +1,6 @@
 package csd.api.modules.trading;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -34,7 +35,9 @@ public class PriceController{
     @GetMapping("/pricetest")
     public static HashMap<String, String> getPrice(@RequestParam(name = "stock") String symbol){
         try{
+            System.out.println(symbol);
             Stock stock = YahooFinance.get(symbol);
+            // stock.setStockExchange("SI");
             BigDecimal ask = stock.getQuote().getAsk();
             Long askVol = stock.getQuote().getAskSize();
             BigDecimal bid = stock.getQuote().getBid();
@@ -53,7 +56,7 @@ public class PriceController{
 
             return info;
             
-        }catch(Exception e){
+        }catch(IOException e){
             System.out.println("Getting prices from API failed");
         }
         return null;

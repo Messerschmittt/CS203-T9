@@ -45,5 +45,4 @@ public class Trade {
     @JoinTable(name = "account_id") 
     private Account account;
 
-
 }

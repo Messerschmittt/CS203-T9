@@ -31,5 +31,15 @@ public class Stock {
     private double bid;
     private int ask_volume;
     private double ask;
+
+    public Stock(String symbol, double last_price, int bid_volume, double bid, 
+                    int ask_volume, double ask){
+        this.symbol = symbol;
+        this.last_price = last_price;
+        this.bid_volume = bid_volume;
+        this.bid = bid;
+        this.ask_volume = ask_volume;
+        this.ask = ask;
+    }
     
 }
