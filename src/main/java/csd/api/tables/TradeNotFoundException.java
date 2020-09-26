@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class TradeNotFoundException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
-    public TradeNotFoundException(Long id) {
+    public TradeNotFoundException(Integer id) {
         super("Could not find trade " + id);
     }
 }

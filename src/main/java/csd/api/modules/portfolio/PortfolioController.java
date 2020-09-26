@@ -28,7 +28,7 @@ public class PortfolioController {
     }
 
     @GetMapping("/portfolio/{id}")
-    public Portfolio getPortfolio(@PathVariable Long id){
+    public Portfolio getPortfolio(@PathVariable Integer id){
         Optional<Portfolio> p = portfolioRepo.findById(id);
         if(!p.isPresent()){
             throw new PortfolioNotFoundException(id);

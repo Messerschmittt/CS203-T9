@@ -54,7 +54,7 @@ public class TradeController {
      * @return book with the given id
      */
     @GetMapping("/trades/{id}")
-    public Trade getTrade(@PathVariable Long id){
+    public Trade getTrade(@PathVariable Integer id){
         Optional<Trade> trade = trades.findById(id);
         if(!trade.isPresent()){
             throw new TradeNotFoundException(id);
@@ -70,7 +70,7 @@ public class TradeController {
      * @param id
      */
     @DeleteMapping("/trades/{id}")
-    public void deleteTrade(@PathVariable Long id){
+    public void deleteTrade(@PathVariable Integer id){
         if(!trades.existsById(id)) {
             throw new TradeNotFoundException(id);
         }
@@ -78,9 +78,9 @@ public class TradeController {
         trades.deleteById(id);
     }
 
-    @GetMapping("/trades/{action}/{orderdate}/{symbol}")
-    public List<Trade> getAllmatchingorder(@PathVariable String action,@PathVariable String orderdate,@PathVariable String symbol) {
-        return trades.findByActionAndOrderdateAndSymbol(action,orderdate, symbol);
+    @GetMapping("/trades/{action}/{date}/{symbol}")
+    public List<Trade> getAllmatchingorder(@PathVariable String action,@PathVariable String date,@PathVariable String symbol) {
+        return trades.findByActionAndDateAndSymbol(action,date,symbol);
     }
 
     @GetMapping("/trades/{action}/{status}/{symbol}")

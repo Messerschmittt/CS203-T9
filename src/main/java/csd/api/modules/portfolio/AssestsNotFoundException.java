@@ -8,7 +8,7 @@ public class AssestsNotFoundException extends RuntimeException{
 
     private static final long serialVersionUID = 1L;
 
-    public AssestsNotFoundException(Long id) {
+    public AssestsNotFoundException(Integer id) {
         super("Could not find Assests of " + id);
     }
     

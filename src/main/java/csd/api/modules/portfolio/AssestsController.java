@@ -28,7 +28,7 @@ public class AssestsController {
     }
 
     @GetMapping("/Assests/{id}")
-    public Assests getAssests(@PathVariable Long id){
+    public Assests getAssests(@PathVariable Integer id){
         Optional<Assests> a = assestsRepo.findById(id);
         if(!a.isPresent()){
             throw new AssestsNotFoundException(id);

@@ -8,7 +8,7 @@ public class PortfolioNotFoundException extends RuntimeException{
 
     private static final long serialVersionUID = 1L;
 
-    public PortfolioNotFoundException(Long id) {
+    public PortfolioNotFoundException(Integer id) {
         super("Could not find Portfolio of " + id);
     }
     

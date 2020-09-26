@@ -16,8 +16,6 @@ import csd.api.tables.TradeRepository;
 import csd.api.tables.Account;
 import csd.api.tables.AccountRepository;
 import csd.api.tables.Trade;
-import csd.api.tables.OrderInfo;
-import csd.api.tables.OrderRepository;
 import csd.api.tables.TradeController;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -71,46 +69,46 @@ public class PriceController{
     }
     
     @PostMapping("/buy/{acc_id}")
-    public void BuyGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
+    public void BuyGenerate(@PathVariable Integer acc_id,@Valid @RequestBody Trade trade){
         //to check is the quantity is multiple of 100
-        if(!checkQuantity(oInfo.getQuantity())){
+        if(!checkQuantity(trade.getQuantity())){
             System.out.println("Input quantity is not valid");
             return;
         }
 
         //to check have enough balance
-        double total_bid_price = oInfo.getQuantity()*oInfo.getBid();
+        double total_bid_price = trade.getQuantity()*trade.getBid();
         if(checkBalance(acc_id, total_bid_price)){      //have enough balance
             //need to get the selling stock
             
-            generateTrade("buy", oInfo.getSymbol());
+            generateTrade("buy", trade.getSymbol());
         }
         
     }
 
 
     @PostMapping("/sell/{acc_id}")
-    public void SellGenerate(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
+    public void SellGenerate(@PathVariable Long acc_id,@Valid @RequestBody Trade trade){
         //to check is the quantity is multiple of 100
-        if(!checkQuantity(oInfo.getQuantity())){
+        if(!checkQuantity(trade.getQuantity())){
             System.out.println("Input quantity is not valid");
             return;
         }
 
-        generateTrade("sell", oInfo.getSymbol());
+        generateTrade("sell", trade.getSymbol());
     }
     
-    public void matching(@PathVariable Long acc_id,@Valid @RequestBody OrderInfo oInfo){
-        String date = oInfo.getDatetime().substring(0, 10);
-        List<Trade> orders = trades.getAllmatchingorder(oInfo.getAction(),date,oInfo.getSymbol());
+    public void matching(@PathVariable Long acc_id,@Valid @RequestBody Trade trade){
+        String date = trade.getDate().substring(0, 10);
+        List<Trade> orders = trades.getAllmatchingorder(trade.getAction(),date,trade.getSymbol());
 
         double max = 0;
         for(Trade t: orders){
-            if(t.getBid() >= oInfo.getAsk() && t.getBid() > max){
+            if(t.getBid() >= trade.getAsk() && t.getBid() > max){
                 max = t.getBid();
             }
         }
-        List<Trade> mList = tradeRepo.findBySymbolAndBid(oInfo.getSymbol(), max);
+        List<Trade> mList = tradeRepo.findBySymbolAndBid(trade.getSymbol(), max);
         LocalDateTime edate = LocalDateTime.now();
 
         for(Trade oinfo: mList){
@@ -120,7 +118,7 @@ public class PriceController{
         }
     }
     //check the customer have enough balance for trading (buying)
-    public boolean checkBalance(long acc_id, double total_bid_price){
+    public boolean checkBalance(Integer acc_id, double total_bid_price){
         Optional<Account> acc = accRepo.findById(acc_id);
         Account account = acc.get();
         double availbalance = account.getAvailable_balance();
@@ -154,7 +152,7 @@ public class PriceController{
         newTrade.setAccount_id(Integer.parseInt("-1"));
         newTrade.setCustomer_id(Integer.parseInt("-1"));
         newTrade.setDate(info.get("date"));
-        newTrade.setOrderdate(info.get("date").substring(0,10));
+        //newTrade.setDate(info.get("date").substring(0, 10));
 
         return tradeRepo.save(newTrade);
         
