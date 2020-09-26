@@ -10,7 +10,7 @@ public class ExceedAvailableBalanceException extends RuntimeException{
      */
     private static final long serialVersionUID = 1L;
 
-    public ExceedAvailableBalanceException(Long id) {
+    public ExceedAvailableBalanceException(Integer id) {
         super("Attempted transfer amount exceeds the available balance for account " + id);
     }
     

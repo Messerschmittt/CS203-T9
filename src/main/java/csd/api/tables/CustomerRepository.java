@@ -1,6 +1,11 @@
 package csd.api.tables;
 
+import java.util.List;
+
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -11,6 +16,8 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface CustomerRepository extends JpaRepository <Customer, Long> {
+public interface CustomerRepository extends JpaRepository <Customer, Integer> {
+    Customer findByApplicationUserId(Integer bookId);
+    Customer findByUsername(String username);
 
 }

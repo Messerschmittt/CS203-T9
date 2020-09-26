@@ -12,25 +12,26 @@ GET http://localhost:8080/pricetest?stock=MSFT
 POST http://localhost:8080/generatefake
 
 ###
-GET http://localhost:8080/logout
+GET http://localhost:8080/users
 
 ###
-POST http://localhost:8080/login_page
-Authorization: Basic Admin_1 Admin_password
+POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-    "username": "Admin_1"
+    "username": "good_user_1",
+    "password": "01_user_01"
 }
 
 
 ###
+
 GET http://localhost:8080/users
-Authorization: Basic Admin_1:Admin_password
+Authorization: Basic manager_1:01_manager_01
 
 ###
-GET http://localhost:8080/contents
-
+GET http://localhost:8080/customers/4
+Authorization: Basic manager_1:01_manager_01
 ###
 GET http://localhost:8080/customers/1
 
@@ -54,27 +55,6 @@ PUT http://localhost:8080/content/approveContent/1
 GET http://localhost:8080/accounts
 
 ###
-POST http://localhost:8080/account/createAccount
-Content-Type: application/json
-
-{
-    "customer_id": 1,
-    "balance": 10000,
-    "available_balance": 5000
-}
-
-###
-POST http://localhost:8080/account/createAccount
-Content-Type: application/json
-
-{
-    "customer_id": 2,
-    "balance": 2000,
-    "available_balance": 1000
-}
-
-
-###
 GET http://localhost:8080/transfers
 
 ###
@@ -87,3 +67,128 @@ Content-Type: application/json
     "amount": 2000
 }
 
+
+## Ezekiel's test section
+
+##Manager
+
+### -- View Users 
+
+GET http://localhost:8080/users
+Authorization: Basic manager_1:01_manager_01
+
+### -- View Accounts
+
+GET http://localhost:8080/accounts
+Authorization: Basic manager_1:01_manager_01
+
+### -- View Customers
+
+GET http://localhost:8080/customers
+Authorization: Basic manager_1:01_manager_01
+
+###
+
+### Customer
+
+### -- Create Account From Customer1
+POST http://localhost:8080/account/createAccount
+Authorization: Basic good_user_1:01_user_01
+Content-Type: application/json
+
+{
+    "username": "good_user_1",
+    "balance": 1000.0,
+    "available_balance": 1000.0
+}
+
+### -- Create Account From Customer2
+POST http://localhost:8080/account/createAccount
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
+
+{
+    "username": "good_user_2",
+    "balance": 1000.0,
+    "available_balance": 1000.0
+}
+
+###
+### -- Create Invalid Account (invalid username)
+POST http://localhost:8080/account/createAccount
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
+
+{
+    "username": "s_2",
+    "balance": 1000.0,
+    "available_balance": 1000.0
+}
+
+###
+
+
+################ CREATE USER and CUSTOMER
+### Good Case 1
+### -- Create User3
+POST http://localhost:8080/user/createUser
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_3",
+    "password": "testpassword",
+    "authorities": "ROLE_USER"
+}
+
+###
+### -- Create CUSTOMER
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_3",
+    "full_name": "Good User",
+    "nric" : "1234567",
+    "phone" : "999",
+    "address": "123 Still Rd"
+}
+
+###
+### Bad Case Check
+### -- Create User4
+POST http://localhost:8080/user/createUser
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_4",
+    "password": "testpassword",
+    "authorities": "ROLE_USER"
+}
+
+###
+### -- Create CUSTOMER (FAIL, invalid username)
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user4",
+    "full_name": "Good User",
+    "nric" : "1234567",
+    "phone" : "999",
+    "address": "123 Still Rd"
+}
+
+### -- Create CUSTOMER (PASS, minimalist input)
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_4",
+    "full_name": "Good User"
+
+}

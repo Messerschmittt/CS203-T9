@@ -13,16 +13,23 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class UserController {
     private UserRepository users;
+    private CustomerRepository customers;
     private BCryptPasswordEncoder encoder;
 
-    public UserController(UserRepository users, BCryptPasswordEncoder encoder){
+    public UserController(UserRepository users, BCryptPasswordEncoder encoder, CustomerRepository customers){
         this.users = users;
         this.encoder = encoder;
+        this.customers = customers;
     }
 
     @GetMapping("/users")
-    public List<User> getUsers() {
+    public List<ApplicationUser> getUsers() {
         return users.findAll();
+    }
+
+    @GetMapping("/customers")
+    public List<Customer> getCustomers() {
+        return customers.findAll();
     }
 
     /**
@@ -30,15 +37,34 @@ public class UserController {
     * @param user
      * @return
      */
-    @PostMapping("/user/createUser")
-    public User addUser(@Valid @RequestBody User user){
+    @PostMapping("/user/createUser")    
+    public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
         user.setPassword(encoder.encode(user.getPassword()));
         return users.save(user);
     }
 
+    /**
+    * Using BCrypt encoder to encrypt the password for storage 
+    * @param user
+     * @return
+     */
+    @PostMapping("/user/createUser/customer")    
+    public Customer addCustomer(@Valid @RequestBody Customer customer){
+        String username = customer.getUsername();
+        if (!users.existsByUsername(username)) {
+            throw new UserNotFoundException(username);
+        }
+
+        ApplicationUser user = users.findByUsername(username);
+        customer.setPassword(user.getPassword()); 
+        // if incorrect password was typed, wont matter as it is overwritten
+        customer.setAuthorities(user.getSimpleAuthorities());
+        return customers.save(customer);
+    }
+
     @PostMapping("/login_page")
-    public Optional<User> loginUser(@RequestBody User user){
-        Optional<User> login = users.findByUsername(user.getUsername());
+    public ApplicationUser loginUser(@RequestBody ApplicationUser user){
+        ApplicationUser login = users.findByUsername(user.getUsername());
         return login;
     }
 
@@ -46,6 +72,12 @@ public class UserController {
     @ResponseBody
     public String successLogout(){
         return "Successfully logged out";
+    }
+
+
+    @GetMapping("/customers/{id}")
+    public Customer getCustomerDetails(@PathVariable Integer id){
+        return customers.findByApplicationUserId(id);
     }
    
 }

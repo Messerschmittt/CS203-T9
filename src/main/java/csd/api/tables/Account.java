@@ -1,6 +1,7 @@
 package csd.api.tables;
 
 import java.util.List;
+import javax.persistence.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -23,18 +24,40 @@ import lombok.*;
 public class Account {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;    
     
-    private long customer_id;
     private double balance;
     private double available_balance;
 
+
+    // 
+    @OneToMany(mappedBy = "account", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Trade> trades;
+
+    //
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    //
+    @OneToMany(mappedBy = "to_account", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Trans> transactions_to;
+
+    //
+    @OneToMany(mappedBy = "from_account", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Trans> transactions_from;
+
     
-    public Account(long customer_id, double balance, double available_balance){
-        this.customer_id = customer_id;
+    public Account(Customer customer, double balance, double available_balance){
+        this.customer = customer;
         this.balance = balance;
         this.available_balance = available_balance;
     }
+
+
 
     
 }

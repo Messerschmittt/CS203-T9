@@ -1,6 +1,7 @@
 package csd.api.tables;
 
 import java.util.List;
+import javax.persistence.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -23,7 +24,7 @@ import lombok.*;
 public class Content {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
     
     private String title;
     private String summary;

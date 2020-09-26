@@ -1,6 +1,7 @@
 package csd.api.tables;
 
 import java.util.List;
+import javax.persistence.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -23,10 +24,15 @@ import lombok.*;
 
 public class Portfolio {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    private Long customer_id;
     private double unrealised;
     private double total;
+
+
+    
+    @OneToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
     
 }

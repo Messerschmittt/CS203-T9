@@ -58,6 +58,9 @@ public class PriceController{
         generateOrder("ask", "MSFT");
     }
 
+        // public Trade generateOrder(String action, String symbol){
+        //     return new Trade();
+        // }
     public Trade generateOrder(String action, String symbol){
         HashMap<String, String> info = getPrice(symbol);
         Trade newTrade = new Trade();
@@ -70,8 +73,8 @@ public class PriceController{
             newTrade.setBid(Double.parseDouble(info.get("ask")));
             newTrade.setQuantity(Integer.parseInt(info.get("askVol")));
         }
-        newTrade.setAccount_id(Long.parseLong("-1"));
-        newTrade.setCustomer_id(Long.parseLong("-1"));
+        newTrade.setAccount_id(Integer.parseInt("-1"));
+        newTrade.setCustomer_id(Integer.parseInt("-1"));
         newTrade.setDate(info.get("date"));
 
         return tradeRepo.save(newTrade);

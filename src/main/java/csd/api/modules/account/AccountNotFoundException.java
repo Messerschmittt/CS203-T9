@@ -10,7 +10,7 @@ public class AccountNotFoundException extends RuntimeException{
      */
     private static final long serialVersionUID = 1L;
 
-    public AccountNotFoundException(Long id) {
+    public AccountNotFoundException(Integer id) {
         super("Could not find account " + id);
     }
     

@@ -2,6 +2,7 @@ package csd.api.tables;
 
 import java.util.Arrays;
 import java.util.Collection;
+import javax.persistence.*;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,6 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,17 +24,23 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 
-/* Implementations of UserDetails to provide user information to Spring Security, 
-e.g., what authorities (roles) are granted to the user and whether the account is enabled or not
-*/
-public class User implements UserDetails{
+public class ApplicationUser implements UserDetails{
     private static final long serialVersionUID = 1L;
 
-    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
+    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Integer id;
+
+    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Customer customer;
+
+    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @JsonIgnore
+     private Employee employee;
+
     
     @NotNull(message = "Username should not be null")
     @Size(min = 5, max = 20, message = "Username should be between 5 and 20 characters")
@@ -46,17 +55,12 @@ public class User implements UserDetails{
     private String authorities;
 
     @Autowired
-    public User(String username, String password, String authorities){
+    public ApplicationUser(String username, String password, String authorities){
         this.username = username;
         this.password = password;
         this.authorities = authorities;
     }
-
-    public User(String username){
-        this.username = username;
-    }
-
-
+    
     /* Return a collection of authorities (roles) granted to the user.
     */
     @Override
@@ -64,6 +68,11 @@ public class User implements UserDetails{
         return Arrays.asList(new SimpleGrantedAuthority(authorities));
     }
 
+    // returns the string format of authorities for creation of user
+    public String getSimpleAuthorities() {
+        return authorities;
+    }
+    
     /*
     The various is___Expired() methods return a boolean to indicate whether
     or not the user’s account is enabled or expired.

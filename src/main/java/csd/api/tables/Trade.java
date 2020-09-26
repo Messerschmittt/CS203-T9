@@ -1,6 +1,7 @@
 package csd.api.tables;
 
 import java.util.List;
+import javax.persistence.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -23,7 +24,7 @@ import lombok.*;
 public class Trade {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
     
     private String action;
     private String symbol;
@@ -33,8 +34,14 @@ public class Trade {
     private double avg_price;
     private int filled_quantity;
     private String date;
-    private Long account_id;
-    private Long customer_id;
+    private Integer account_id; // omit
+    private Integer customer_id; // if we know the account, we know the customer
     private String status;
+
+    // 
+    @ManyToOne
+    @JoinTable(name = "account_id") 
+    private Account account;
+
 
 }
