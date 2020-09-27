@@ -61,7 +61,7 @@ public class StockController {
             // Create new sell trade
             Trade newSellTrade = new Trade();
             newSellTrade.setSymbol(symbol);
-            newSellTrade.setAction("buy");
+            newSellTrade.setAction("sell");
             newSellTrade.setDate(now);
             newSellTrade.setStatus("open");
             newSellTrade.setQuantity(quantity);

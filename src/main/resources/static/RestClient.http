@@ -203,3 +203,35 @@ GET http://localhost:8080/stocks
 ### -- View Trade Repository
 GET http://localhost:8080/trades
 
+### - matching
+Post http://localhost:8080/trade/2
+Content-Type: application/json
+
+{
+    "action":"buy", 
+    "symbol":"A17U.SI",
+    "quantity":500,  
+    "bid":3.30, 
+    "account_id":2, 
+    "customer_id":2, 
+    "status":"open"
+}
+
+### - matching
+Post http://localhost:8080/trade/1
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17U.SI",
+    "quantity":500,  
+    "bid":3.27, 
+    "account_id":1, 
+    "customer_id":1, 
+    "status":"open"
+}
+
+
+
+### -- View assest 
+GET http://localhost:8080/assests

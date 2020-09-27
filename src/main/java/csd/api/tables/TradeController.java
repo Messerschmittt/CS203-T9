@@ -128,8 +128,9 @@ public class TradeController {
             System.out.println("Input quantity is not valid");
             return;
         }
-        tradeRepo.save(trade);
+        tradeRepo.save(trade); 
         matching(trade,acc_id);
+          
     }
 
     //find the matching trade    
@@ -281,6 +282,7 @@ public class TradeController {
                 //update stock function ..
                 //update avg_price to trade
 
+                
         }
         //update customer's assest 
         if(fill){
@@ -315,11 +317,11 @@ public class TradeController {
             for(Assests ast: aList){
                 unrealised += ast.getGain_loss();
             }
+
             p.setUnrealised(unrealised);
             //update total gain and lost ??
 
         }
-
     }
     } 
 
