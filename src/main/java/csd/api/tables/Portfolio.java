@@ -26,9 +26,12 @@ public class Portfolio {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private double unrealised;
+    private double unrealised = 0;
     private double total;
-    
+
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL)
+    private List<Assests> assests;
+
     @OneToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;

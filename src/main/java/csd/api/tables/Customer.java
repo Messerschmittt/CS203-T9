@@ -47,9 +47,10 @@ public class Customer {
     @JsonIgnore
     private Portfolio portfolio;
 
-    // //
-    // @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    // private List<Assests> assests;
+    //
+    @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Assests> assests;
     
     @OneToOne
     @JoinColumn(name = "ApplicationUserId")

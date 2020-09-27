@@ -33,10 +33,25 @@ public class Assests {
     private double value;
     private double gain_loss;
 
-    // //
-    // @ManyToOne
-    // @JoinColumn(name = "customer_id")
-    // private Customer customer;
+    //
+    @ManyToOne
+    @JoinColumn(name = "portfolio_id")
+    @JsonIgnore
+    private Portfolio portfolio;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    @JsonIgnore
+    private Customer customer;
+
+    public Assests(String code, int quantity, double avg_price, double current_price){
+        this.code = code;
+        this.quantity = quantity;
+        this.avg_price = avg_price;
+        this.current_price = current_price;
+        CalculateValue();
+        CalculateGain_loss();
+    }
 
     //calculate gain_loss
     public double CalculateGain_loss(){
