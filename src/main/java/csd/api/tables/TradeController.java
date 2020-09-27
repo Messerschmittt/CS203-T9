@@ -128,7 +128,7 @@ public class TradeController {
             System.out.println("Input quantity is not valid");
             return;
         }
-        tradeRepo.save(trade); 
+        // tradeRepo.save(trade); 
         matching(trade,acc_id);
           
     }
@@ -162,8 +162,11 @@ public class TradeController {
         int i = 0;
         double matchedPrice = 0;
         int updatequantity = 0;
+        
         //for buying matching
-        if(trade.getSymbol().equals("buy")){
+        if(trade.getAction().equals("buy")){
+            trade.setIn("In If");
+            tradeRepo.save(trade);
             while(!fill || i < sTrades.size()){
                 Trade s = sTrades.get(i);       //ascending order
                 int squantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
@@ -173,6 +176,9 @@ public class TradeController {
                 matchedPrice = askPrice;
                 if(askPrice < currBid){         //not sure
                     matchedPrice = currBid;
+                } else if(askPrice > trade.getBid()){      //cannot buy
+                    tradeRepo.save(trade);
+                    return;
                 }
 
                 // if selling quantity equal to buying quantity
@@ -206,7 +212,7 @@ public class TradeController {
                 }
                 
                 //Make transaction 
-                try{
+                // try{
                     Trans trans = new Trans(acc_id, s.getAccount_id(), total_price);  //from, to , ammount
                     Trans makeTrans = accController.makeTransaction(trans);
 
@@ -214,17 +220,21 @@ public class TradeController {
                     s.setStatus(sStatus);
                     trade.setFilled_quantity(tradeFilled_quantity);
                     trade.setStatus(tradeStatus);
-                } catch (AccountNotFoundException e){
-                    System.out.println(e.toString());
-                } catch(ExceedAvailableBalanceException e){
-                    System.out.println(e.toString());
-                }
+                    tradeRepo.save(trade);
+                    tradeRepo.save(s);
+                // } catch (AccountNotFoundException e){
+                //     System.out.println(e.toString());
+                // } catch(ExceedAvailableBalanceException e){
+                //     System.out.println(e.toString());
+                // }
             }
             //update stock function ..
             //update avg_price to trade
 
             
-        }else if(trade.getSymbol().equals("sell")){
+        }else if(trade.getAction().equals("sell")){
+            trade.setIn("In If");
+            tradeRepo.save(trade);
             while(!fill || i < bTrades.size()){
                 Trade b = bTrades.get(i);       //descending order
                 int bquantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
@@ -234,6 +244,9 @@ public class TradeController {
                 matchedPrice = bidPrice;
                 if(bidPrice > currAsk){         //not sure
                     matchedPrice = currAsk;
+                } else if(bidPrice < trade.getAsk()){      //will not sell
+                    tradeRepo.save(trade);
+                    return;
                 }
 
                 // if selling quantity equal to buying quantity
@@ -274,6 +287,8 @@ public class TradeController {
                     b.setStatus(bStatus);
                     trade.setFilled_quantity(tradeFilled_quantity);
                     trade.setStatus(tradeStatus);
+                    tradeRepo.save(trade);
+                    tradeRepo.save(b);
                 } catch (AccountNotFoundException e){
                     System.out.println(e.toString());
                 } catch(ExceedAvailableBalanceException e){
@@ -281,9 +296,10 @@ public class TradeController {
                 }
                 //update stock function ..
                 //update avg_price to trade
-
+            }
                 
         }
+        tradeRepo.save(trade);
         //update customer's assest 
         if(fill){
 
@@ -311,6 +327,7 @@ public class TradeController {
                 }  
                 //update the current stock price            
                 a.setCurrent_price(matchedPrice);  
+                assestsRepo.save(a);
             }
             //update the unrealized stock price of portfolio
             double unrealised = 0;
@@ -319,10 +336,10 @@ public class TradeController {
             }
 
             p.setUnrealised(unrealised);
+            portfolioRepo.save(p);
             //update total gain and lost ??
 
         }
-    }
     } 
 
     // //check the customer have enough balance for trading (buying)

@@ -225,7 +225,7 @@ Content-Type: application/json
     "action":"sell", 
     "symbol":"A17U.SI",
     "quantity":500,  
-    "bid":3.27, 
+    "ask":3.27, 
     "account_id":1, 
     "customer_id":1, 
     "status":"open"

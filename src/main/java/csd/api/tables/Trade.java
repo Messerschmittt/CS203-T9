@@ -39,7 +39,7 @@ public class Trade implements Comparable<Trade> {
     private Integer account_id; // omit
     private Integer customer_id; // if we know the account, we know the customer
     private String status;
-
+    private String in = "not in if";
     // 
     @ManyToOne
     @JoinTable(name = "account_id") 
