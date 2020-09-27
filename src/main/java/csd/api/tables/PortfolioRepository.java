@@ -12,5 +12,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface PortfolioRepository extends JpaRepository <Portfolio, Integer> {
-
+    Portfolio findByCustomer_Id(Integer customer_id);
 }

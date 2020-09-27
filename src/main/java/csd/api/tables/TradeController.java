@@ -31,6 +31,12 @@ import csd.api.tables.Stock;
 import csd.api.tables.StockRepository;
 import csd.api.tables.Trans;
 import csd.api.modules.account.AccountController;
+import csd.api.tables.PortfolioRepository;
+import csd.api.tables.Portfolio;
+import csd.api.tables.Assests;
+import csd.api.tables.AssestsRepository;
+import csd.api.tables.CustomerRepository;
+import csd.api.tables.Customer;
 
 @RestController
 public class TradeController {
@@ -39,6 +45,9 @@ public class TradeController {
     private TradeController tradesController;
     private StockRepository stockRepo;
     private AccountController accController;
+    private PortfolioRepository portfolioRepo;
+    private AssestsRepository assestsRepo;
+    private CustomerRepository cRepository;
 
     public TradeController(TradeRepository trades, AccountRepository accRepo, StockRepository stockRepo){
         this.tradeRepo = trades;
@@ -112,46 +121,19 @@ public class TradeController {
     
 
     
-    @PostMapping("/buy/{acc_id}")
-    public void BuyGenerate(@PathVariable Integer acc_id,@Valid @RequestBody Trade trade){
+    @PostMapping("/trade/{acc_id}")
+    public void TradeGenerate(@PathVariable Integer acc_id,@Valid @RequestBody Trade trade){
         //to check is the quantity is multiple of 100
         if(!checkQuantity(trade.getQuantity())){
             System.out.println("Input quantity is not valid");
             return;
         }
-        // tradeRepo.save(trade);
+        tradeRepo.save(trade);
+        matching(trade,acc_id);
     }
 
-
-    @PostMapping("/sell/{acc_id}")
-    public void SellGenerate(@PathVariable Integer acc_id,@Valid @RequestBody Trade trade){
-        //to check is the quantity is multiple of 100
-        if(!checkQuantity(trade.getQuantity())){
-            System.out.println("Input quantity is not valid");
-            return;
-        }
-
-        //tradeRepo.save(trade);
-    }
-    
+    //find the matching trade    
     public void matching(Trade trade, Integer acc_id){
-        // String date = trade.getDate().substring(0, 10);
-        // List<Trade> orders = trades.getAllmatchingorder(trade.getAction(),date,trade.getSymbol());
-
-        // double max = 0;
-        // for(Trade t: orders){
-        //     if(t.getBid() >= trade.getAsk() && t.getBid() > max){
-        //         max = t.getBid();
-        //     }
-        // }
-        // List<Trade> mList = tradeRepo.findBySymbolAndBid(trade.getSymbol(), max);
-        // LocalDateTime edate = LocalDateTime.now();
-
-        // for(Trade oinfo: mList){
-        //     if(LocalDateTime.parse(oinfo.getDate()).compareTo(edate) < 0){
-        //         edate = LocalDateTime.parse(oinfo.getDate());
-        //     }
-        // }
 
         List<Trade> bTrades = tradeRepo.findByActionAndStatusAndSymbol("buy","open",trade.getSymbol());
         List<Trade> bTrades2 = tradeRepo.findByActionAndStatusAndSymbol("buy","partial-filled",trade.getSymbol());
@@ -177,15 +159,17 @@ public class TradeController {
         Boolean fill = false;
         int tradequantity = trade.getQuantity() - trade.getFilled_quantity();
         int i = 0;
+        double matchedPrice = 0;
+        int updatequantity = 0;
         //for buying matching
         if(trade.getSymbol().equals("buy")){
-            while(!fill){
+            while(!fill || i < sTrades.size()){
                 Trade s = sTrades.get(i);       //ascending order
                 int squantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
                 // *   + Sell trades having limit price below market price (current bid) will be matched at current bid.
                 // *   Example: a sell trade for A17U with price of $3 will be match at $3.26 (current bid)
                 double askPrice = s.getAsk();
-                double matchedPrice = askPrice;
+                matchedPrice = askPrice;
                 if(askPrice < currBid){         //not sure
                     matchedPrice = currBid;
                 }
@@ -202,31 +186,32 @@ public class TradeController {
                     sFilled_quantity = s.getQuantity();
                     tradeFilled_quantity = trade.getFilled_quantity() + squantity;
                     i++;
-                    if(i == sTrades.size()){
-                        fill = true;        //end the loop, but not filled
-                    }
+
+                    updatequantity = squantity;
                 } else if(squantity > tradequantity){//partially filled in sell trade, but buy trade -> "filled"
                     sStatus = "partial-filled";
                     tradeStatus = "filled";
                     sFilled_quantity = s.getFilled_quantity() + squantity;
                     tradeFilled_quantity = trade.getQuantity();
                     fill = true;
+                    updatequantity = tradequantity;
                 } else if(squantity == tradequantity){
                     sStatus = "filled";
                     tradeStatus = "filled";
                     sFilled_quantity = s.getQuantity();
                     tradeFilled_quantity = trade.getQuantity();
                     fill = true;
+                    updatequantity = tradequantity;
                 }
-
+                
                 //Make transaction 
                 try{
                     Trans trans = new Trans(acc_id, s.getAccount_id(), total_price);  //from, to , ammount
                     Trans makeTrans = accController.makeTransaction(trans);
 
-                    s.setFilled_quantity(s.getQuantity());
+                    s.setFilled_quantity(sFilled_quantity);
                     s.setStatus(sStatus);
-                    trade.setFilled_quantity(trade.getFilled_quantity() + squantity);
+                    trade.setFilled_quantity(tradeFilled_quantity);
                     trade.setStatus(tradeStatus);
                 } catch (AccountNotFoundException e){
                     System.out.println(e.toString());
@@ -234,15 +219,18 @@ public class TradeController {
                     System.out.println(e.toString());
                 }
             }
+            //update stock function ..
+            //update avg_price to trade
+
             
         }else if(trade.getSymbol().equals("sell")){
-            while(!fill){
+            while(!fill || i < bTrades.size()){
                 Trade b = bTrades.get(i);       //descending order
                 int bquantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
                 //*   + Buy trades having limit price above market price (current ask) will be matched at current ask.
     //*      * Example: a buy trade for A17U with price of $4 will be matched at $3.29 (current ask)
                 double bidPrice = b.getBid();
-                double matchedPrice = bidPrice;
+                matchedPrice = bidPrice;
                 if(bidPrice > currAsk){         //not sure
                     matchedPrice = currAsk;
                 }
@@ -259,21 +247,21 @@ public class TradeController {
                     bFilled_quantity = b.getQuantity();
                     tradeFilled_quantity = trade.getFilled_quantity() + bquantity;
                     i++;
-                    if(i == bTrades.size()){
-                        fill = true;        //end the loop, but not filled
-                    }
+                    updatequantity = bquantity;
                 } else if(bquantity > tradequantity){//partially filled in buy trade, but sell trade -> "filled"
                     bStatus = "partial-filled";
                     tradeStatus = "filled";
                     bFilled_quantity = b.getFilled_quantity() + bquantity;
                     tradeFilled_quantity = trade.getQuantity();
                     fill = true;
+                    updatequantity = tradequantity;
                 } else if(bquantity == tradequantity){
                     bStatus = "filled";
                     tradeStatus = "filled";
                     bFilled_quantity = b.getQuantity();
                     tradeFilled_quantity = trade.getQuantity();
                     fill = true;
+                    updatequantity = tradequantity;
                 }
 
                 //Make transaction 
@@ -281,18 +269,58 @@ public class TradeController {
                     Trans trans = new Trans(acc_id, b.getAccount_id(), total_price);  //from, to , ammount
                     Trans makeTrans = accController.makeTransaction(trans);
 
-                    b.setFilled_quantity(b.getQuantity());
+                    b.setFilled_quantity(bFilled_quantity);
                     b.setStatus(bStatus);
-                    trade.setFilled_quantity(trade.getFilled_quantity() + bquantity);
+                    trade.setFilled_quantity(tradeFilled_quantity);
                     trade.setStatus(tradeStatus);
                 } catch (AccountNotFoundException e){
                     System.out.println(e.toString());
                 } catch(ExceedAvailableBalanceException e){
                     System.out.println(e.toString());
                 }
+                //update stock function ..
+                //update avg_price to trade
+
         }
+        //update customer's assest 
+        if(fill){
+
+            int customerid = trade.getCustomer_id();
+            Optional<Customer> customer = cRepository.findById(customerid);
+            Customer c = customer.get();
+            Portfolio p = portfolioRepo.findByCustomer_Id(customerid);
+            List<Assests> aList = p.getAssests();
+            //get assest based on customer id and stock symbol
+            Assests a = assestsRepo.findByCustomer_IdAndCode(customerid, trade.getSymbol());
+            //if assest not exisit, add new assest to assest list 
+            if(a == null){
+                Assests newAssests = new Assests(trade.getSymbol(),trade.getFilled_quantity(),trade.getAvg_price(),matchedPrice);
+                newAssests.setCustomer(c);
+                assestsRepo.save(newAssests);
+            //assest exisits, update assest value 
+            }else{
+                a.setAvg_price(trade.getAvg_price());
+                if(trade.getSymbol().equals("buy")){
+                    //if action is buy, add the buying stock quantity to the current stock quantity
+                    a.setQuantity(a.getQuantity() + updatequantity);
+                }else{
+                    //if action is sell, deduct the selling stock quantity from the current stock quantity
+                    a.setQuantity(a.getQuantity() - updatequantity);
+                }  
+                //update the current stock price            
+                a.setCurrent_price(matchedPrice);  
+            }
+            //update the unrealized stock price of portfolio
+            double unrealised = 0;
+            for(Assests ast: aList){
+                unrealised += ast.getGain_loss();
+            }
+            p.setUnrealised(unrealised);
+            //update total gain and lost ??
+
+        }
+
     }
-    
     } 
 
     // //check the customer have enough balance for trading (buying)

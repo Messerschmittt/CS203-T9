@@ -17,4 +17,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AssestsRepository extends JpaRepository <Assests, Integer> {
     // Optional<Assests> findBySymbolAndId(String symbol, Long Id);
+    Assests findByCustomer_IdAndCode(Integer customer_id, String code);
+    
 }
