@@ -159,15 +159,15 @@ public class TradeController {
         Collections.sort(bTrades);
         Collections.reverse(bTrades);   //descending order
 
+
         List<Trade> sTrades = tradeRepo.findByActionAndStatusAndSymbol("sell","open", trade.getSymbol());
         List<Trade> sTrades2 = tradeRepo.findByActionAndStatusAndSymbol("sell","partial-filled", trade.getSymbol());
         sTrades.addAll(sTrades2);
         Collections.sort(sTrades);  //ascending order
         
-        //implement buy 
         
         Stock currstock = stockRepo.findBySymbol(trade.getSymbol());
-        double currask = currstock.getAsk();
+        double currAsk = currstock.getAsk();
         double currBid = currstock.getBid();
 
         // *   + Buy trades having limit price above market price (current ask) will be matched at current ask.
@@ -234,8 +234,67 @@ public class TradeController {
                     System.out.println(e.toString());
                 }
             }
+            
+        }else if(trade.getSymbol().equals("sell")){
+            while(!fill){
+                Trade b = bTrades.get(i);       //descending order
+                int bquantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
+                //*   + Buy trades having limit price above market price (current ask) will be matched at current ask.
+    //*      * Example: a buy trade for A17U with price of $4 will be matched at $3.29 (current ask)
+                double bidPrice = b.getBid();
+                double matchedPrice = bidPrice;
+                if(bidPrice > currAsk){         //not sure
+                    matchedPrice = currAsk;
+                }
+
+                // if selling quantity equal to buying quantity
+                String tradeStatus = null;
+                String bStatus = null;
+                double total_price = bquantity * matchedPrice;
+                int bFilled_quantity = 0;
+                int tradeFilled_quantity = 0;
+                if(bquantity < tradequantity){  //partially filled in sell trade, but buy trade -> "filled"
+                    bStatus = "filled";
+                    tradeStatus = "partial-filled";
+                    bFilled_quantity = b.getQuantity();
+                    tradeFilled_quantity = trade.getFilled_quantity() + bquantity;
+                    i++;
+                    if(i == bTrades.size()){
+                        fill = true;        //end the loop, but not filled
+                    }
+                } else if(bquantity > tradequantity){//partially filled in buy trade, but sell trade -> "filled"
+                    bStatus = "partial-filled";
+                    tradeStatus = "filled";
+                    bFilled_quantity = b.getFilled_quantity() + bquantity;
+                    tradeFilled_quantity = trade.getQuantity();
+                    fill = true;
+                } else if(bquantity == tradequantity){
+                    bStatus = "filled";
+                    tradeStatus = "filled";
+                    bFilled_quantity = b.getQuantity();
+                    tradeFilled_quantity = trade.getQuantity();
+                    fill = true;
+                }
+
+                //Make transaction 
+                try{
+                    Trans trans = new Trans(acc_id, b.getAccount_id(), total_price);  //from, to , ammount
+                    Trans makeTrans = accController.makeTransaction(trans);
+
+                    b.setFilled_quantity(b.getQuantity());
+                    b.setStatus(bStatus);
+                    trade.setFilled_quantity(trade.getFilled_quantity() + bquantity);
+                    trade.setStatus(tradeStatus);
+                } catch (AccountNotFoundException e){
+                    System.out.println(e.toString());
+                } catch(ExceedAvailableBalanceException e){
+                    System.out.println(e.toString());
+                }
         }
     }
+    
+    } 
+
     // //check the customer have enough balance for trading (buying)
     // public boolean checkBalance(Integer acc_id, double total_price){
     //     Optional<Account> acc = accRepo.findById(acc_id);

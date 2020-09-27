@@ -48,10 +48,12 @@ public class Trade implements Comparable<Trade> {
     @Override
     public int compareTo(Trade o) {
         if(o.getAction().equals("buy")){
-            return Double.compare(this.getBid(), o.getBid());
+            return (int)Double.compare(this.getBid(), o.getBid());
         }else{
-            return Double.compare(this.getAsk(), o.getAsk());
+            return (int)Double.compare(this.getAsk(), o.getAsk());
         }
         
     }
+
+
 }
