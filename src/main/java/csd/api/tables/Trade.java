@@ -23,7 +23,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Trade {
+public class Trade implements Comparable<Trade> {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -45,4 +45,13 @@ public class Trade {
     @JoinTable(name = "account_id") 
     private Account account;
 
+    @Override
+    public int compareTo(Trade o) {
+        if(o.getAction().equals("buy")){
+            return Double.compare(this.getBid(), o.getBid());
+        }else{
+            return Double.compare(this.getAsk(), o.getAsk());
+        }
+        
+    }
 }
