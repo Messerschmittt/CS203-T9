@@ -1,4 +1,4 @@
-package csd.api.tables;
+package csd.api.modules.trading;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

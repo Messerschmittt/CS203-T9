@@ -65,8 +65,8 @@ public class StockController {
             newSellTrade.setDate(now);
             newSellTrade.setStatus("open");
             newSellTrade.setQuantity(quantity);
-            newSellTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
-            newSellTrade.setAsk(0.0);
+            newSellTrade.setBid(0.0);
+            newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
             newSellTrade.setFilled_quantity(0);
             newSellTrade.setAccount(null);
             trades.save(newSellTrade);
@@ -86,5 +86,35 @@ public class StockController {
     @GetMapping("/stocks")
     public List<Stock> getAllStocks(){
         return stocks.findAll();
+    }
+
+    public void refreshStockPrice(String symbol, double last_price){
+        Stock s = stocks.findBySymbol(symbol);
+        s.setLast_price(last_price);
+
+        List<Trade> bTrades = trades.findByActionAndStatusAndSymbol("buy","open",symbol);
+        List<Trade> bTrades2 = trades.findByActionAndStatusAndSymbol("buy","partial-filled",symbol);
+        bTrades.addAll(bTrades2);
+        Collections.sort(bTrades);
+        Collections.reverse(bTrades);   //descending order
+        s.setBid(bTrades.get(0).getBid());
+        int bid_volume = 0;
+        for(Trade t : bTrades){
+            bid_volume += t.getQuantity() - t.getFilled_quantity();
+        }
+        s.setBid_volume(bid_volume);
+
+        List<Trade> sTrades = trades.findByActionAndStatusAndSymbol("sell","open", symbol);
+        List<Trade> sTrades2 = trades.findByActionAndStatusAndSymbol("sell","partial-filled", symbol);
+        sTrades.addAll(sTrades2);
+        Collections.sort(sTrades);
+        s.setAsk(sTrades.get(0).getAsk());
+        int ask_volume = 0;
+        for(Trade t : sTrades){
+            ask_volume += t.getQuantity() - t.getFilled_quantity();
+        }
+        s.setAsk_volume(ask_volume);
+
+        stocks.save(s);
     }
 }
