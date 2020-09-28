@@ -203,34 +203,47 @@ GET http://localhost:8080/stocks
 ### -- View Trade Repository
 GET http://localhost:8080/trades
 
-### - matching
-Post http://localhost:8080/trade/2
+###
+GET http://localhost:8080/pricetest?stock=A17U.SI
+
+### - Create Account 1 for Customer 1
+POST http://localhost:8080/account/createAccount
+Authorization: Basic good_user_1:01_user_01
+Content-Type: application/json
+
+{
+    "username": "good_user_1",
+    "balance": 100000.0,
+    "available_balance": 100000.0
+}
+
+### - Create buy trade for Customer 1 - Account 1
+POST http://localhost:8080/trade/createTrade
 Content-Type: application/json
 
 {
     "action":"buy", 
     "symbol":"A17U.SI",
     "quantity":500,  
-    "bid":3.30, 
-    "account_id":2, 
-    "customer_id":2, 
+    "bid":10, 
+    "account_id":1, 
+    "customer_id":1, 
     "status":"open"
 }
 
-### - matching
-Post http://localhost:8080/trade/1
+### - Create sell trade for Customer 1 - Account 1
+POST http://localhost:8080/trade/createTrade
 Content-Type: application/json
 
 {
     "action":"sell", 
     "symbol":"A17U.SI",
     "quantity":500,  
-    "ask":3.27, 
+    "ask":3.23, 
     "account_id":1, 
     "customer_id":1, 
     "status":"open"
 }
-
 
 
 ### -- View assest 

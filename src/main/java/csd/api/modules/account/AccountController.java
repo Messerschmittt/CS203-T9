@@ -1,6 +1,7 @@
 package csd.api.modules.account;
 
 import csd.api.tables.*;
+import csd.api.tables.templates.*;
 import csd.api.modules.user.*;
 
 
@@ -66,22 +67,23 @@ public class AccountController {
 
 
     /**
-     * Allows users to make a transfer between accounts
-     * @param newTrans
-     * @return the successful transaction object
+     * Should not allow the post mapping for this actually
      */
     @PostMapping("/transfer/makeTransfer")
     public Trans makeTransaction(@RequestBody Trans newTrans){
-        if(accounts.findById(newTrans.getFrom_acc()).isEmpty()){
-            throw new AccountNotFoundException(newTrans.getFrom_acc());
-        }
+        System.out.println("In make transaction");
+    
+        // if(accounts.findById(newTrans.getFrom_acc()).isEmpty()){
+        //     throw new AccountNotFoundException(newTrans.getFrom_acc());
+        // }else if(accounts.findById(newTrans.getTo_acc()).isEmpty()){
+        //     throw new AccountNotFoundException(newTrans.getTo_acc());
+        // }else{
+        //     System.out.println("both valid account");
+        // }
 
-        if(accounts.findById(newTrans.getTo_acc()).isEmpty()){
-            throw new AccountNotFoundException(newTrans.getTo_acc());
-        }
+        Account from_acc = newTrans.getFrom_account();
+        Account to_acc = newTrans.getTo_account();
 
-        Account from_acc = accounts.findById(newTrans.getFrom_acc()).get();
-        Account to_acc = accounts.findById(newTrans.getTo_acc()).get();
         double amt = newTrans.getAmount();
         if(amt > from_acc.getAvailable_balance()){
             throw new ExceedAvailableBalanceException(from_acc.getId());
@@ -90,8 +92,12 @@ public class AccountController {
         from_acc.setBalance(from_acc.getBalance() - amt);
         to_acc.setBalance(to_acc.getBalance() + amt);
 
+        System.out.println("from_acc");
         accounts.save(from_acc);
+        System.out.println("to_acc");
         accounts.save(to_acc);
+
+        System.out.println("Transaction");
 
         return transfers.save(newTrans);
     }

@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 
 import csd.api.modules.user.CustomUserDetailsService;
 import csd.api.tables.*;
+import csd.api.tables.templates.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;

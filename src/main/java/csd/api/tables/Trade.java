@@ -36,14 +36,26 @@ public class Trade implements Comparable<Trade> {
     private double avg_price;
     private int filled_quantity = 0;
     private String date;
-    private Integer account_id; // omit
-    private Integer customer_id; // if we know the account, we know the customer
     private String status;
-    private String in = "not in if";
-    // 
+  
     @ManyToOne
     @JoinTable(name = "account_id") 
     private Account account;
+
+    public Trade(String action, String symbol, int quanitity, 
+    double bid, double ask, double avg_price, int filled_quantity,
+    String date, String status, Account account){
+        this.action = action;
+        this.symbol = symbol;
+        this.quantity = quanitity;
+        this.bid = bid;
+        this.ask = ask;
+        this.avg_price = avg_price;
+        this.filled_quantity = filled_quantity;
+        this.date = date;
+        this.status = status;
+        this.account = account;
+    }
 
     @Override
     public int compareTo(Trade o) {

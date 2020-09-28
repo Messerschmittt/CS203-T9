@@ -26,8 +26,8 @@ public class Account {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;    
     
-    private double balance;
-    private double available_balance;
+    private double balance = 0.0;
+    private double available_balance = 0.0;
 
 
     // 
