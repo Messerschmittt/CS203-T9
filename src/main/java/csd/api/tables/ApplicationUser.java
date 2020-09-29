@@ -50,6 +50,7 @@ public class ApplicationUser implements UserDetails{
 
     @NotNull(message = "Authorities should not be null")
     // Roles: ROLE_ADMIN, ROLE_MANAGER, ROLE_ANALYST, ROLE_CUSTOMER
+    @JsonIgnore
     private String authorities;
 
     @Autowired
@@ -67,6 +68,7 @@ public class ApplicationUser implements UserDetails{
     }
 
     // returns the string format of authorities for creation of user
+    
     public String getSimpleAuthorities() {
         return authorities;
     }
@@ -75,18 +77,22 @@ public class ApplicationUser implements UserDetails{
     The various is___Expired() methods return a boolean to indicate whether
     or not the user’s account is enabled or expired.
     */
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
+    @JsonIgnore
     @Override
     public boolean isEnabled() {
         return true;
