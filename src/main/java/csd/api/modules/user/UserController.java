@@ -39,6 +39,12 @@ public class UserController {
      */
     @PostMapping("/user/createUser")    
     public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
+        String username = user.getUsername();
+
+        if (users.existsByUsername(username)) {
+            throw new UsernameAlreadyTakenException(username);
+        }
+
         user.setPassword(encoder.encode(user.getPassword()));
         return users.save(user);
     }
@@ -55,10 +61,17 @@ public class UserController {
             throw new UserNotFoundException(username);
         }
 
+        if (customers.existsByUsername(username)) {
+            throw new CustomerAlreadyExistsException(username);
+        }
+
         ApplicationUser user = users.findByUsername(username);
         customer.setPassword(user.getPassword()); 
         // if incorrect password was typed, wont matter as it is overwritten
         customer.setAuthorities(user.getSimpleAuthorities());
+        customer.setActive(true);
+        customer.setApplicationUser(user);
+
         return customers.save(customer);
     }
 

@@ -2,15 +2,7 @@ package csd.api.tables;
 
 import java.util.List;
 import javax.persistence.*;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 
 
@@ -35,8 +27,12 @@ public class Account {
     @JsonIgnore
     private List<Trade> trades;
 
-    //
-    @ManyToOne
+    //This complex mess is so that it only shows the id instead of the entire object
+    // unsure how much of it is really relevant but whatever
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty("customer_id")
     @JoinColumn(name = "customer_id")
     private Customer customer;
 

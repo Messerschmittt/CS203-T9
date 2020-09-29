@@ -57,9 +57,9 @@ public class Application {
 
 
         List<Customer> initCustomer = Arrays.asList(
-            new Customer("Customer 1", "good_user_1"),
-            new Customer("Customer 2", "good_user_2"),
-            new Customer(BANK_FULL_NAME, BANK_USERNAME)
+            new Customer(userRepo.findByUsername("good_user_1"), "Customer 1"),
+            new Customer(userRepo.findByUsername( "good_user_2"), "Customer 2"),
+            new Customer(userRepo.findByUsername(BANK_USERNAME), BANK_FULL_NAME)
         );
 
         initCustomer.forEach(customer -> {

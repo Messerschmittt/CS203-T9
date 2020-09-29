@@ -54,8 +54,8 @@ public class AccountController {
     @PostMapping("/account/createAccount")
     public Account createAccount(@RequestBody AccountRecord accountRecord){
         String username = accountRecord.getUsername();
-        if (!users.existsByUsername(username)) {
-            throw new CustomerNotFoundException();
+        if (!customers.existsByUsername(username)) {
+            throw new CustomerNotFoundException(username);
         }
 
 

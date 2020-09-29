@@ -1,5 +1,12 @@
 package csd.api.tables;
 
+
+
+
+import com.fasterxml.jackson.annotation.*;
+ 
+
+
 import java.util.List;
 import javax.persistence.*;
 
@@ -52,7 +59,10 @@ public class Customer {
     @JsonIgnore
     private List<Assests> assests;
     
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty("ApplicationUserId")
     @JoinColumn(name = "ApplicationUserId")
     private ApplicationUser applicationUser;
 
@@ -90,11 +100,14 @@ public class Customer {
 
     
 
-    // public Customer(ApplicationUser applicationUser, String full_name) {
-    //     this.applicationUser = applicationUser;
-    //     this.full_name = full_name;
-
-    // }
+    public Customer(ApplicationUser applicationUser, String full_name) {
+        this.applicationUser = applicationUser;
+        this.full_name = full_name;
+        this.password = applicationUser.getPassword();
+        this.username = applicationUser.getUsername();
+        this.authorities = applicationUser.getSimpleAuthorities();
+        this.active = true;
+    }
 
     
 }
