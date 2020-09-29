@@ -248,4 +248,15 @@ Content-Type: application/json
     "status":"open"
 }
 
+### - View all contents
+GET http://localhost:8080/contents
+Authorization: Basic manager_1:01_manager_01
 
+
+### - Approve a content
+PUT http://localhost:8080/content/approveContent/1
+Authorization: Basic manager_1:01_manager_01
+
+### - View approved contents
+GET http://localhost:8080/content/approvedContents
+Authorization: Basic manager_1:01_manager_01

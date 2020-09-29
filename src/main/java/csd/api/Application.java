@@ -75,12 +75,12 @@ public class Application {
         });
 
         List<Content> initContent = Arrays.asList(
-            // new Content("Content Title 1", "Content Summary 1", "Content Content 1", "Content Link 1"),
-            // new Content("Content Title 2", "Content Summary 2", "Content Content 2", "Content Link 2")
+            new Content("Content Title 1", "Content Summary 1", "Content Content 1", "Content Link 1"),
+            new Content("Content Title 2", "Content Summary 2", "Content Content 2", "Content Link 2")
         );
         initContent.forEach(content -> {
-            // contRepo.save(content);
-            // System.out.println("[User Initialised]" + contRepo.save(content).getTitle());
+            contRepo.save(content);
+            System.out.println("[Content Initialised]" + contRepo.save(content).getTitle());
 
             // System.out.println(contRepo.findById(customer.getId()));
 
