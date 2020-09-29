@@ -63,6 +63,7 @@ public class Application {
         );
 
         initCustomer.forEach(customer -> {
+            customer.setPortfolio(new Portfolio(customer));
             System.out.println("[User Initialised]" + cusRepo.save(customer).getUsername());
         });
 

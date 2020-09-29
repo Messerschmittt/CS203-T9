@@ -87,7 +87,22 @@ Authorization: Basic manager_1:01_manager_01
 GET http://localhost:8080/customers
 Authorization: Basic manager_1:01_manager_01
 
-###
+
+### -- View Individual Customers
+
+GET http://localhost:8080/customers/3
+Authorization: Basic manager_1:01_manager_01
+
+
+### -- View Portfolios
+
+GET http://localhost:8080/portfolios
+Authorization: Basic manager_1:01_manager_01
+
+### -- View Individual Portfolio
+
+GET http://localhost:8080/portfolio/2
+Authorization: Basic manager_1:01_manager_01
 
 ### Customer
 
@@ -125,11 +140,7 @@ Content-Type: application/json
     "available_balance": 1000.0
 }
 
-###
-
-
 ################ CREATE USER and CUSTOMER
-### Good Case 1
 ### -- Create User3
 POST http://localhost:8080/user/createUser
 Authorization: Basic manager_1:01_manager_01
@@ -141,7 +152,6 @@ Content-Type: application/json
     "authorities": "ROLE_USER"
 }
 
-###
 ### -- Create CUSTOMER
 POST http://localhost:8080/user/createUser/customer
 Authorization: Basic manager_1:01_manager_01
@@ -150,12 +160,12 @@ Content-Type: application/json
 {
     "username": "good_user_3",
     "full_name": "Good User",
-    "nric" : "1234567",
-    "phone" : "999",
+    "nric" : "S2345678u",
+    "phone" : "99999999",
     "address": "123 Still Rd"
 }
 
-###
+
 ### Bad Case Check
 ### -- Create User4
 POST http://localhost:8080/user/createUser
@@ -179,6 +189,33 @@ Content-Type: application/json
     "full_name": "Good User",
     "nric" : "1234567",
     "phone" : "999",
+    "address": "123 Still Rd"
+}
+
+### -- Create CUSTOMER (FAIL, invalid nric)
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_4",
+    "full_name": "Good User",
+    "nric" : "1234567",
+    "phone" : "999",
+    "address": "123 Still Rd"
+}
+
+
+### -- Create CUSTOMER (FAIL, invalid phone number)
+POST http://localhost:8080/user/createUser/customer
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_4",
+    "full_name": "Good User",
+    "nric" : "S1234567I",
+    "phone" : "12345678",
     "address": "123 Still Rd"
 }
 

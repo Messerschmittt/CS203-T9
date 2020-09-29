@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<ApplicationUser, Integer> {
     // define a derived query to find user by username
     ApplicationUser findByUsername(String username);
+    Optional<ApplicationUser> findById(Integer Id);
 
     boolean existsByUsername(String username);
 }

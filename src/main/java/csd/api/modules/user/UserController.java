@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private UserRepository users;
     private CustomerRepository customers;
+    private PortfolioRepository portfolios;
     private BCryptPasswordEncoder encoder;
 
     public UserController(UserRepository users, BCryptPasswordEncoder encoder, CustomerRepository customers){
@@ -65,12 +66,22 @@ public class UserController {
             throw new CustomerAlreadyExistsException(username);
         }
 
+        if (!customer.checkNRIC()) {
+            throw new InvalidInputException(customer.getNric(), "nric");
+        }
+
+        if (!customer.checkPhone()) {
+            throw new InvalidInputException(customer.getPhone(), "phone number");
+        }
+
+        Portfolio portfolio = new Portfolio(customer);
         ApplicationUser user = users.findByUsername(username);
         customer.setPassword(user.getPassword()); 
         // if incorrect password was typed, wont matter as it is overwritten
         customer.setAuthorities(user.getSimpleAuthorities());
         customer.setActive(true);
-        customer.setApplicationUser(user);
+        customer.setApplication_User(user);
+        customer.setPortfolio(portfolio);
 
         return customers.save(customer);
     }
@@ -90,7 +101,23 @@ public class UserController {
 
     @GetMapping("/customers/{id}")
     public Customer getCustomerDetails(@PathVariable Integer id){
-        return customers.findByApplicationUserId(id);
+        // Optional<ApplicationUser> user = users.findById(id);
+        // System.out.println(user.get().getUsername());
+
+
+        // // Customer found = customers.findByApplication_User_Id(id);
+        // // System.out.println(found.getUsername());
+        // // return customers.findByApplication_User_Id(id);
+        // if (user == null) {
+        //     System.out.println("A");
+        //     return null;
+        // }
+        Optional<Customer> customer = customers.findById(id);
+        if (customer == null) {
+            return null;
+        }
+        return customer.get();
     }
    
+    
 }

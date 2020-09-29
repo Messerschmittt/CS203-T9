@@ -4,10 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -31,9 +28,10 @@ import lombok.*;
 public class ApplicationUser implements UserDetails{
     private static final long serialVersionUID = 1L;
 
-    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Integer id;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    @OneToOne(mappedBy = "applicationUser",  cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "application_User", orphanRemoval = true, cascade = CascadeType.ALL)
     @JsonIgnore
     private Customer customer;
 

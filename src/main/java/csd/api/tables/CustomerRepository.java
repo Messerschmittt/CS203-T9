@@ -1,7 +1,5 @@
 package csd.api.tables;
 
-import java.util.List;
-
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,8 +15,10 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface CustomerRepository extends JpaRepository <Customer, Integer> {
-    Customer findByApplicationUserId(Integer applicationUserId);
+    // @Query(value = "Select u from Customer where u.application_User_id =?1", nativeQuery = true)
+    // Customer findByApplication_User_Id(Integer application_User_id);
     Customer findByUsername(String username);
+    // Customer findById(Integer id);
     boolean existsByUsername(String username);
 
 

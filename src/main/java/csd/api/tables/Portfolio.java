@@ -3,13 +3,8 @@ package csd.api.tables;
 import java.util.List;
 import javax.persistence.*;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
+
 
 import lombok.*;
 
@@ -27,12 +22,15 @@ public class Portfolio {
     private Integer id;
 
     private double unrealised = 0;
-    private double total;
+    private double total = 0;
 
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL)
     private List<Assests> assests;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty("customer_id")
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
@@ -44,4 +42,9 @@ public class Portfolio {
     //     }
     //     return unrealised;
     // }
+
+    public Portfolio(Customer customer) {
+        this.customer = customer;
+
+    }
 }

@@ -36,8 +36,8 @@ public class Customer {
     private Integer id;
 
     private String full_name;
-    private String nric;
-    private String phone;
+    private String nric = null;
+    private String phone = null;
     private String address;
     private String username;
     private String password;
@@ -62,9 +62,9 @@ public class Customer {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    @JsonProperty("ApplicationUserId")
-    @JoinColumn(name = "ApplicationUserId")
-    private ApplicationUser applicationUser;
+    @JsonProperty("application_User_id")
+    @JoinColumn(name = "application_User_id")
+    private ApplicationUser application_User;
 
 
     //for some reason, active is set to false on default when using rest client
@@ -72,7 +72,7 @@ public class Customer {
     // not getting linked with application users either
 
     public Customer(String full_name, String nric, String phone, String address, 
-            String username, String password, String authorities, boolean active) {
+            String username, String password, String authorities, boolean active, Portfolio portfolio) {
                 this.full_name = full_name;
                 this.nric = nric;
                 this.phone = phone;
@@ -81,11 +81,12 @@ public class Customer {
                 this.password = password;
                 this.authorities = authorities;
                 this.active = active;
+                this.portfolio = portfolio;
     }
 
     public Customer(String full_name, String nric, String phone, String address, 
             String username, String password, String authorities) {
-                this(full_name, nric, phone,address, username, password, authorities, true);
+                this(full_name, nric, phone,address, username, password, authorities, true, null);
     }
     
     public Customer(String full_name, String nric, String phone, String address, 
@@ -98,16 +99,40 @@ public class Customer {
                 this(full_name, null, null ,null , username);
     }
 
+//     public Customer(String full_name, String username, Portfolio portfolio) { // for application.java
+
+//         this(full_name, null, null ,null , username, null, null, true, portfolio);
+// }
+
+
     
 
-    public Customer(ApplicationUser applicationUser, String full_name) {
-        this.applicationUser = applicationUser;
+    public Customer(ApplicationUser application_User, String full_name) {
+        this.application_User = application_User;
         this.full_name = full_name;
-        this.password = applicationUser.getPassword();
-        this.username = applicationUser.getUsername();
-        this.authorities = applicationUser.getSimpleAuthorities();
+        this.password = application_User.getPassword();
+        this.username = application_User.getUsername();
+        this.authorities = application_User.getSimpleAuthorities();
         this.active = true;
     }
 
-    
+    // Checks if NRIC input is valid, 
+    // if input is null, then it is considered valid, 
+    public boolean checkNRIC() {
+        if (nric == null) {
+            return true;
+        }
+
+        nric = nric.toUpperCase();
+        
+        return nric.matches("[STGF]\\d\\d\\d\\d\\d\\d\\d[A-Z]");
+    }
+
+    public boolean checkPhone() {
+        if (phone == null) {
+            return true;
+        }
+
+        return phone.matches("[89]\\d\\d\\d\\d\\d\\d\\d");
+    }
 }
