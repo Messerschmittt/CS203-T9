@@ -1,7 +1,9 @@
 package csd.api.tables;
 
+import java.security.Timestamp;
 import java.util.List;
 import javax.persistence.*;
+
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -21,7 +23,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Trade {
+public class Trade implements Comparable<Trade> {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -29,19 +31,41 @@ public class Trade {
     private String action;
     private String symbol;
     private int quantity;
-    private double bid;
-    private double ask;
+    private double bid = -1;
+    private double ask = -1;
     private double avg_price;
-    private int filled_quantity;
+    private int filled_quantity = 0;
     private String date;
-    private Integer account_id; // omit
-    private Integer customer_id; // if we know the account, we know the customer
     private String status;
-
-    // 
+  
     @ManyToOne
     @JoinTable(name = "account_id") 
     private Account account;
+
+    public Trade(String action, String symbol, int quanitity, 
+    double bid, double ask, double avg_price, int filled_quantity,
+    String date, String status, Account account){
+        this.action = action;
+        this.symbol = symbol;
+        this.quantity = quanitity;
+        this.bid = bid;
+        this.ask = ask;
+        this.avg_price = avg_price;
+        this.filled_quantity = filled_quantity;
+        this.date = date;
+        this.status = status;
+        this.account = account;
+    }
+
+    @Override
+    public int compareTo(Trade o) {
+        if(o.getAction().equals("buy")){
+            return (int)Double.compare(this.getBid(), o.getBid());
+        }else{
+            return (int)Double.compare(this.getAsk(), o.getAsk());
+        }
+        
+    }
 
 
 }

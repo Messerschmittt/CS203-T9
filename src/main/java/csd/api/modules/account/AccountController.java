@@ -1,6 +1,7 @@
 package csd.api.modules.account;
 
 import csd.api.tables.*;
+import csd.api.tables.templates.*;
 import csd.api.modules.user.*;
 
 
@@ -33,6 +34,7 @@ public class AccountController {
         this.customers = customers;
     }
 
+    
     @GetMapping("/accounts")
     public List<Account> getAccounts(){
         return accounts.findAll();
@@ -65,32 +67,43 @@ public class AccountController {
 
 
     /**
-     * Allows users to make a transfer between accounts
-     * @param newTrans
-     * @return the successful transaction object
+     * Should not allow the post mapping for this actually
      */
     @PostMapping("/transfer/makeTransfer")
     public Trans makeTransaction(@RequestBody Trans newTrans){
-        if(accounts.findById(newTrans.getFrom_acc()).isEmpty()){
-            throw new AccountNotFoundException(newTrans.getFrom_acc());
-        }
+        System.out.println("In make transaction");
+    
+        // if(accounts.findById(newTrans.getFrom_acc()).isEmpty()){
+        //     throw new AccountNotFoundException(newTrans.getFrom_acc());
+        // }else if(accounts.findById(newTrans.getTo_acc()).isEmpty()){
+        //     throw new AccountNotFoundException(newTrans.getTo_acc());
+        // }else{
+        //     System.out.println("both valid account");
+        // }
 
-        if(accounts.findById(newTrans.getTo_acc()).isEmpty()){
-            throw new AccountNotFoundException(newTrans.getTo_acc());
-        }
+        Account from_acc = newTrans.getFrom_account();
+        Account to_acc = newTrans.getTo_account();
 
-        Account from_acc = accounts.findById(newTrans.getFrom_acc()).get();
-        Account to_acc = accounts.findById(newTrans.getTo_acc()).get();
         double amt = newTrans.getAmount();
         if(amt > from_acc.getAvailable_balance()){
             throw new ExceedAvailableBalanceException(from_acc.getId());
         }
 
+        System.out.println("PRIOR from_acc - B: " + from_acc.getBalance() + " AB: " + from_acc.getAvailable_balance());
+        System.out.println("PRIOR to_acc - B: " + to_acc.getBalance() + " AB: " + to_acc.getAvailable_balance());
+
         from_acc.setBalance(from_acc.getBalance() - amt);
+        from_acc.setAvailable_balance(from_acc.getAvailable_balance() - amt);
         to_acc.setBalance(to_acc.getBalance() + amt);
+        to_acc.setAvailable_balance(to_acc.getAvailable_balance() + amt);
+
+        System.out.println("AFTER from_acc - B: " + from_acc.getBalance() + " AB: " + from_acc.getAvailable_balance());
+        System.out.println("AFTER to_acc - B: " + to_acc.getBalance() + " AB: " + to_acc.getAvailable_balance());
 
         accounts.save(from_acc);
         accounts.save(to_acc);
+
+        System.out.println("Transaction Completed");
 
         return transfers.save(newTrans);
     }

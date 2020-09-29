@@ -26,13 +26,22 @@ public class Portfolio {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private double unrealised;
+    private double unrealised = 0;
     private double total;
 
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL)
+    private List<Assests> assests;
 
-    
     @OneToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
-    
+
+    // //calculate unrealised gain and loss from current stock
+    // public double CalculateUnrealised(){
+    //     unrealised = 0;
+    //     for(Assests a: assests){
+    //         unrealised += a.getGain_loss();
+    //     }
+    //     return unrealised;
+    // }
 }

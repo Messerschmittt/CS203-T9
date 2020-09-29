@@ -1,5 +1,9 @@
 package csd.api.tables;
 
+
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,6 +15,8 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface AccountRepository extends JpaRepository <Account, Integer> {
-    Account findByCustomer_Id(Integer customer_id);
+public interface AssestsRepository extends JpaRepository <Assests, Integer> {
+    // Optional<Assests> findBySymbolAndId(String symbol, Long Id);
+    Assests findByCustomer_IdAndCode(Integer customer_id, String code);
+    
 }

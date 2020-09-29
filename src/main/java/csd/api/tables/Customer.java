@@ -46,6 +46,11 @@ public class Customer {
     @OneToOne(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
     @JsonIgnore
     private Portfolio portfolio;
+
+    //
+    @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Assests> assests;
     
     @OneToOne
     @JoinColumn(name = "ApplicationUserId")
@@ -82,6 +87,7 @@ public class Customer {
 
                 this(full_name, null, null ,null , username);
     }
+
     
 
     // public Customer(ApplicationUser applicationUser, String full_name) {

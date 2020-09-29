@@ -6,7 +6,7 @@
 
 
 ###
-GET http://localhost:8080/pricetest?stock=MSFT
+GET http://localhost:8080/pricetest?stock=S68.SI
 
 ###
 POST http://localhost:8080/generatefake
@@ -192,3 +192,59 @@ Content-Type: application/json
     "full_name": "Good User"
 
 }
+
+### -- Initialise Stock Repository (SGX Top 30 - Quantity: 20,000)
+POST http://localhost:8080/stock/initialiseStock
+
+
+### -- View Stock Repository
+GET http://localhost:8080/stocks
+
+### -- View Trade Repository
+GET http://localhost:8080/trades
+
+###
+GET http://localhost:8080/pricetest?stock=A17U.SI
+
+### - Create Account 1 for Customer 1
+POST http://localhost:8080/account/createAccount
+Authorization: Basic good_user_1:01_user_01
+Content-Type: application/json
+
+{
+    "username": "good_user_1",
+    "balance": 100000.0,
+    "available_balance": 100000.0
+}
+
+### - Create buy trade for Customer 1 - Account 1
+POST http://localhost:8080/trade/createTrade
+Content-Type: application/json
+
+{
+    "action":"buy", 
+    "symbol":"A17U.SI",
+    "quantity":500,  
+    "bid":10, 
+    "account_id":2, 
+    "customer_id":1, 
+    "status":"open"
+}
+
+### - Create sell trade for Customer 1 - Account 1
+POST http://localhost:8080/trade/createTrade
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17U.SI",
+    "quantity":500,  
+    "ask":3.23, 
+    "account_id":2, 
+    "customer_id":1, 
+    "status":"open"
+}
+
+
+### -- View assest 
+GET http://localhost:8080/assests

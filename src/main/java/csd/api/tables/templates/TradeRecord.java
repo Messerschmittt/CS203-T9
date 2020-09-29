@@ -1,7 +1,10 @@
-package csd.api.tables;
+package csd.api.tables.templates;
 
+import java.security.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import javax.persistence.*;
+
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -21,20 +24,21 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Trans {
+public class TradeRecord{
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
-    private double amount;
+    
+    private String action;
+    private String symbol;
+    private int quantity;
+    private double bid = -1;
+    private double ask = -1;
+    private double avg_price;
+    private int filled_quantity = 0;
+    private String date = LocalDateTime.now().toString();
+    private Integer account_id;
+    private Integer customer_id;
+    private String status = "open";
 
-    //
-    @ManyToOne
-    @JoinColumn(name = "account_to_id")
-    private Account to_account;
-    
-    //
-    @ManyToOne
-    @JoinColumn(name = "account_from_id")
-    private Account from_account;
-    
 }
