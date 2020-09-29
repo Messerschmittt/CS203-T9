@@ -226,7 +226,7 @@ Content-Type: application/json
     "symbol":"A17U.SI",
     "quantity":500,  
     "bid":10, 
-    "account_id":1, 
+    "account_id":2, 
     "customer_id":1, 
     "status":"open"
 }
@@ -240,7 +240,7 @@ Content-Type: application/json
     "symbol":"A17U.SI",
     "quantity":500,  
     "ask":3.23, 
-    "account_id":1, 
+    "account_id":2, 
     "customer_id":1, 
     "status":"open"
 }

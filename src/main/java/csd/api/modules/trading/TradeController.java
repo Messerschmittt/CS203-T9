@@ -145,12 +145,13 @@ public class TradeController {
         
         Boolean tradeNotFilled = true;
         int i = 0;
-        int tradequantity = newTrade.getQuantity() - newTrade.getFilled_quantity();
+        int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();
         double lastPrice = 0.0;
 
         if(newTrade.getAction().equals("buy")){
             double newTradeBid = newTrade.getBid();
             int tradeFilledQuantity = 0;
+            int currentTradeQty = initialTradeQty;
             while(tradeNotFilled && i < sTrades.size()){
                 Trade s = sTrades.get(i);
                 double sAskPrice = s.getAsk();
@@ -168,25 +169,26 @@ public class TradeController {
                 int sAvailQuantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
                 int sFilledQuantity = s.getFilled_quantity();
 
-                if(sAvailQuantity < tradequantity){  //partially filled in buy trade, but sell trade -> "filled"
+                if(sAvailQuantity < currentTradeQty){  //partially filled in buy trade, but sell trade -> "filled"
                     sStatus = "filled";
                     newTradeStatus = "partial-filled";
                     transaction_quantity = sAvailQuantity;
 
-                } else if(sAvailQuantity > tradequantity){  //partially filled in sell trade, but buy trade -> "filled"
+                } else if(sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but buy trade -> "filled"
                     sStatus = "partial-filled";
                     newTradeStatus = "filled";
-                    transaction_quantity = tradequantity;
+                    transaction_quantity = currentTradeQty;
     
-                } else if(sAvailQuantity == tradequantity){
+                } else if(sAvailQuantity == currentTradeQty){
                     sStatus = "filled";
                     newTradeStatus = "filled";
-                    transaction_quantity = tradequantity;
+                    transaction_quantity = currentTradeQty;
 
                 }
                 System.out.println("i:  " + i);
                 i++;
                 tradeFilledQuantity += transaction_quantity;
+                currentTradeQty -= transaction_quantity;
                 transaction_amt = transaction_quantity * sAskPrice;
                 lastPrice = sAskPrice;
                 
@@ -200,7 +202,7 @@ public class TradeController {
                 newTrade.setFilled_quantity(tradeFilledQuantity);
 
                 // Check if new trade is filled
-                if(tradeFilledQuantity == tradequantity){
+                if(tradeFilledQuantity == initialTradeQty){
                     tradeNotFilled = false;
                 }
 
@@ -247,6 +249,7 @@ public class TradeController {
         if(newTrade.getAction().equals("sell")){
             double newTradeAsk = newTrade.getAsk();
             int tradeFilledQuantity = 0;
+            int currentTradeQty = initialTradeQty;
             while(tradeNotFilled && i < bTrades.size()){
                 Trade b = bTrades.get(i);
                 double bBidPrice = b.getBid();
@@ -264,25 +267,26 @@ public class TradeController {
                 int bAvailQuantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
                 int bFilledQuantity = b.getFilled_quantity();
 
-                if(bAvailQuantity < tradequantity){  //partially filled in buy trade, but sell trade -> "filled"
+                if(bAvailQuantity < currentTradeQty){  //partially filled in buy trade, but sell trade -> "filled"
                     bStatus = "filled";
                     newTradeStatus = "partial-filled";
                     transaction_quantity = bAvailQuantity;
 
-                } else if(bAvailQuantity > tradequantity){  //partially filled in sell trade, but buy trade -> "filled"
+                } else if(bAvailQuantity > currentTradeQty){  //partially filled in sell trade, but buy trade -> "filled"
                     bStatus = "partial-filled";
                     newTradeStatus = "filled";
-                    transaction_quantity = tradequantity;
+                    transaction_quantity = currentTradeQty;
     
-                } else if(bAvailQuantity == tradequantity){
+                } else if(bAvailQuantity == currentTradeQty){
                     bStatus = "filled";
                     newTradeStatus = "filled";
-                    transaction_quantity = tradequantity;
+                    transaction_quantity = currentTradeQty;
 
                 }
                 System.out.println("i:  " + i);
                 i++;
                 tradeFilledQuantity += transaction_quantity;
+                currentTradeQty -= transaction_quantity;
                 transaction_amt = transaction_quantity * bBidPrice;
                 lastPrice = bBidPrice;
                 
@@ -296,7 +300,7 @@ public class TradeController {
                 newTrade.setFilled_quantity(tradeFilledQuantity);
 
                 // Check if new trade is filled
-                if(tradeFilledQuantity == tradequantity){
+                if(tradeFilledQuantity == initialTradeQty){
                     tradeNotFilled = false;
                 }
 

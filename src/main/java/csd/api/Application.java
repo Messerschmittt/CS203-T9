@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import csd.api.tables.*;
+import static csd.api.modules.account.RyverBankAccountConstants.*;
 
 @SpringBootApplication
 public class Application {
@@ -24,6 +25,7 @@ public class Application {
         CustomerRepository cusRepo = ctx.getBean(CustomerRepository.class);
         ContentRepository contRepo = ctx.getBean(ContentRepository.class);
         UserRepository userRepo = ctx.getBean(UserRepository.class);
+        AccountRepository acctRepo = ctx.getBean(AccountRepository.class);
         BCryptPasswordEncoder encoder = ctx.getBean(BCryptPasswordEncoder.class);
 
         List<ApplicationUser> initUsers = Arrays.asList(
@@ -31,7 +33,8 @@ public class Application {
             new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),
             new ApplicationUser("analyst_2", encoder.encode("02_analyst_02"), "ROLE_ANALYST"),
             new ApplicationUser("good_user_1", encoder.encode("01_user_01"), "ROLE_USER"),
-            new ApplicationUser("good_user_2", encoder.encode("02_user_02"), "ROLE_USER")
+            new ApplicationUser("good_user_2", encoder.encode("02_user_02"), "ROLE_USER"),
+            new ApplicationUser(BANK_USERNAME, encoder.encode(BANK_PASSWORD), "ROLE_USER")
             );
 
         initUsers.forEach(user -> {
@@ -54,18 +57,22 @@ public class Application {
 
 
         List<Customer> initCustomer = Arrays.asList(
-            new Customer("Customer 1", "good_user_1")  ,
-            new Customer("Customer 2", "good_user_2")
+            new Customer("Customer 1", "good_user_1"),
+            new Customer("Customer 2", "good_user_2"),
+            new Customer(BANK_FULL_NAME, BANK_USERNAME)
         );
 
         initCustomer.forEach(customer -> {
-            // cusRepo.save(customer);
             System.out.println("[User Initialised]" + cusRepo.save(customer).getUsername());
-
-            // System.out.println(cusRepo.findById(customer.getId()));
-
         });
 
+        List<Account> initAccount = Arrays.asList(
+            new Account(cusRepo.findByUsername(BANK_USERNAME), BANK_BALANCE, BANK_AVAIL_BALANCE)
+        );
+
+        initAccount.forEach(account -> {
+            System.out.println("[Account Initialised]" + acctRepo.save(account).getCustomer().getUsername());
+        });
 
         List<Content> initContent = Arrays.asList(
             // new Content("Content Title 1", "Content Summary 1", "Content Content 1", "Content Link 1"),

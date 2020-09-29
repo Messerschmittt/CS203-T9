@@ -1,6 +1,7 @@
 package csd.api.modules.trading;
 
 import csd.api.tables.*;
+import static csd.api.modules.account.RyverBankAccountConstants.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,14 +23,20 @@ public class StockController {
 
     public StockRepository stocks;
     public TradeRepository trades;
+    public AccountRepository accts;
 
-    public StockController(StockRepository stocks, TradeRepository trades){
+    public StockController(StockRepository stocks, TradeRepository trades, AccountRepository accts){
         this.stocks = stocks;
         this.trades = trades;
+        this.accts = accts;
     }
 
     @PostMapping("/stock/initialiseStock")
     public HashSet<Stock> initialiseStock(){
+        if(!accts.findById(1).get().getCustomer().getUsername().equals(BANK_USERNAME)){
+            throw new RyverBankAccountException();
+        }
+        
         int quantity = 20_000;
         String now = LocalDateTime.now().toString();
         
@@ -55,7 +62,7 @@ public class StockController {
             newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
             newBuyTrade.setAsk(0.0);
             newBuyTrade.setFilled_quantity(0);
-            newBuyTrade.setAccount(null);
+            newBuyTrade.setAccount(accts.findById(1).get()); // Since the RYVERBANK account is the first acct created
             trades.save(newBuyTrade);
 
             // Create new sell trade
@@ -68,7 +75,7 @@ public class StockController {
             newSellTrade.setBid(0.0);
             newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
             newSellTrade.setFilled_quantity(0);
-            newSellTrade.setAccount(null);
+            newSellTrade.setAccount(accts.findById(1).get());
             trades.save(newSellTrade);
 
             // Create new stock record

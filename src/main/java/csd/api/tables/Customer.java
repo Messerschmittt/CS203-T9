@@ -87,6 +87,7 @@ public class Customer {
 
                 this(full_name, null, null ,null , username);
     }
+
     
 
     // public Customer(ApplicationUser applicationUser, String full_name) {
