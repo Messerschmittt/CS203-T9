@@ -114,8 +114,6 @@ public class TradeController {
 
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell
-        
-        
         if(trade.getAction().equals("buy")){
             if(trade.getBid() * trade.getQuantity() > cusAcc.getAvailable_balance()){
                 throw new InsufficientBalanceForTradeException(trade.getId());
@@ -156,8 +154,9 @@ public class TradeController {
                 Trade s = sTrades.get(i);
                 double sAskPrice = s.getAsk();
 
-                // once there are no more ask orders below bid --> save & return
-                if(newTradeBid < sAskPrice){
+                if(newTradeBid == 0){ // check if market order
+                    // skip the price checking
+                }else if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
                     tradeRepo.save(newTrade);
                     return;
                 }
@@ -192,6 +191,21 @@ public class TradeController {
                 transaction_amt = transaction_quantity * sAskPrice;
                 lastPrice = sAskPrice;
                 
+
+                Account cusAcc = newTrade.getAccount();
+                System.out.println("customerAcc: " + cusAcc.getId());
+                // Create transaction between buyer and seller
+                Trans t = new Trans();
+                t.setAmount(transaction_amt);
+                t.setFrom_account(cusAcc);
+                t.setTo_account(s.getAccount());
+                if(s.getAccount() == null){
+                    System.out.println("Faulty account accessed");
+                    t.setTo_account(new Account());
+                }
+                accController.makeTransaction(t);
+                
+                // Only save when transaction is successful ie. theres sufficient funds
                 // Update s trade status
                 sFilledQuantity += transaction_quantity;
                 s.setStatus(sStatus);
@@ -206,19 +220,6 @@ public class TradeController {
                     tradeNotFilled = false;
                 }
 
-                Account cusAcc = newTrade.getAccount();
-                System.out.println("customerAcc: " + cusAcc.getId());
-                // Create transaction between buyer and seller
-                Trans t = new Trans();
-                t.setAmount(transaction_amt);
-                t.setFrom_account(cusAcc);
-                t.setTo_account(s.getAccount());
-                if(s.getAccount() == null){
-                    System.out.println("Bank account accessed");
-                    t.setTo_account(new Account());
-                }
-                accController.makeTransaction(t);
-                
                 // Save trades
                 tradeRepo.save(s);
                 tradeRepo.save(newTrade);
@@ -247,6 +248,7 @@ public class TradeController {
         }
         
         if(newTrade.getAction().equals("sell")){
+            System.out.println("In sell");
             double newTradeAsk = newTrade.getAsk();
             int tradeFilledQuantity = 0;
             int currentTradeQty = initialTradeQty;
@@ -254,8 +256,9 @@ public class TradeController {
                 Trade b = bTrades.get(i);
                 double bBidPrice = b.getBid();
 
-                // once there are no more ask orders below bid --> save & return
-                if(newTradeAsk > bBidPrice){
+                if(newTradeAsk == 0){
+                    // skip the price checking
+                }else if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
                     tradeRepo.save(newTrade);
                     return;
                 }
@@ -289,6 +292,19 @@ public class TradeController {
                 currentTradeQty -= transaction_quantity;
                 transaction_amt = transaction_quantity * bBidPrice;
                 lastPrice = bBidPrice;
+
+                Account cusAcc = newTrade.getAccount();
+                System.out.println("customerAcc: " + cusAcc.getId());
+                // Create transaction between buyer and seller
+                Trans t = new Trans();
+                t.setAmount(transaction_amt);
+                t.setFrom_account(b.getAccount());
+                t.setTo_account(cusAcc);
+                if(b.getAccount() == null){
+                    System.out.println("Bank account accessed");
+                    t.setFrom_account(new Account(null, 1_000_000, 1_000_000)); //using an arbitary value for bank
+                }
+                accController.makeTransaction(t);
                 
                 // Update s trade status
                 bFilledQuantity += transaction_quantity;
@@ -304,19 +320,6 @@ public class TradeController {
                     tradeNotFilled = false;
                 }
 
-                Account cusAcc = newTrade.getAccount();
-                System.out.println("customerAcc: " + cusAcc.getId());
-                // Create transaction between buyer and seller
-                Trans t = new Trans();
-                t.setAmount(transaction_amt);
-                t.setFrom_account(b.getAccount());
-                t.setTo_account(cusAcc);
-                if(b.getAccount() == null){
-                    System.out.println("Bank account accessed");
-                    t.setFrom_account(new Account(null, 1_000_000, 1_000_000)); //using an arbitary value for bank
-                }
-                accController.makeTransaction(t);
-                
                 // Save trades
                 tradeRepo.save(b);
                 tradeRepo.save(newTrade);
@@ -331,6 +334,7 @@ public class TradeController {
                     int priorQuantity = a.getQuantity();
                     double priorAvgPrice = a.getAvg_price();
                     int newQuantity = priorQuantity - transaction_quantity;
+                    System.out.println("after sell quantity" + newQuantity);
                     double newAvgPrice = 0;
                     if(newQuantity != 0){
                         newAvgPrice = ((priorQuantity * priorAvgPrice) - (transaction_quantity * transaction_amt))/(priorQuantity - transaction_quantity);
