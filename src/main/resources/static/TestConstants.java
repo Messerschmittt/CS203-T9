@@ -269,7 +269,7 @@ public class TestConstants {
         Portfolio info:
         {
                 "customer_id": 123456,
-                "assests": [
+                "assets": [
                 {
                     "code":"A17U",
                     "quantity":1000,

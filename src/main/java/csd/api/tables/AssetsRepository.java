@@ -15,8 +15,8 @@ import org.springframework.stereotype.Repository;
  * For the purpose of this exercise, CrudRepository would also be sufficient
  */
 @Repository
-public interface AssestsRepository extends JpaRepository <Assests, Integer> {
-    // Optional<Assests> findBySymbolAndId(String symbol, Long Id);
-    Assests findByCustomer_IdAndCode(Integer customer_id, String code);
+public interface AssetsRepository extends JpaRepository <Assets, Integer> {
+    // Optional<Assets> findBySymbolAndId(String symbol, Long Id);
+    Assets findByCustomer_IdAndCode(Integer customer_id, String code);
     
 }

@@ -21,11 +21,9 @@ public class Portfolio {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private double unrealised = 0;
-    private double total = 0;
 
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL)
-    private List<Assests> assests;
+    private List<Assets> assets;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -33,18 +31,25 @@ public class Portfolio {
     @JsonProperty("customer_id")
     @JoinColumn(name = "customer_id")
     private Customer customer;
-
-    // //calculate unrealised gain and loss from current stock
-    // public double CalculateUnrealised(){
-    //     unrealised = 0;
-    //     for(Assests a: assests){
-    //         unrealised += a.getGain_loss();
-    //     }
-    //     return unrealised;
-    // }
+    
+    private double unrealised = 0.0;
+    private double total = 0.0;
 
     public Portfolio(Customer customer) {
         this.customer = customer;
 
+    }
+
+    //calculate unrealised gain and loss from current stock holding
+    public double updateUnrealised(){
+        if(assets == null || assets.isEmpty()){
+            return unrealised;
+        }
+
+        unrealised = 0.0;   //reset to 0 and recalculate
+        for(Assets a: assets){
+            unrealised += a.getGain_loss();
+        }
+        return unrealised;
     }
 }

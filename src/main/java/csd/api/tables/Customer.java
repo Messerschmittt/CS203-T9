@@ -57,7 +57,7 @@ public class Customer {
     //
     @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Assests> assests;
+    private List<Assets> assets;
     
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")

@@ -29,18 +29,20 @@ public class TradeController {
     private TradeRepository tradeRepo;
     private AccountRepository accRepo;
     private PortfolioRepository portfolioRepo;
-    private AssestsRepository assestsRepo;
+    private AssetsRepository assetsRepo;
     private CustomerRepository custRepo;
 
     private AccountController accController;
     private StockController stockController;
+    private StockRepository stockRepo;
 
     public TradeController(TradeRepository tradeRepo, AccountRepository accRepo, StockController stockController,
-    PortfolioRepository portfolioRepo, AssestsRepository assetsRepo, CustomerRepository custRepo, AccountController accController){
+    PortfolioRepository portfolioRepo, AssetsRepository assetsRepo, CustomerRepository custRepo, 
+    AccountController accController, StockRepository stockRepo){
         this.tradeRepo = tradeRepo;
         this.accRepo = accRepo;
         this.portfolioRepo = portfolioRepo;
-        this.assestsRepo = assetsRepo;
+        this.assetsRepo = assetsRepo;
         this.custRepo = custRepo;
         this.accController = accController;
         this.stockController = stockController;
@@ -226,9 +228,9 @@ public class TradeController {
                 
                 // Create/Update asset record
                 Customer c = newTrade.getAccount().getCustomer();
-                Assests a = assestsRepo.findByCustomer_IdAndCode(c.getId(), newTrade.getSymbol());
+                Assets a = assetsRepo.findByCustomer_IdAndCode(c.getId(), newTrade.getSymbol());
                 if(a == null){
-                    a = new Assests();
+                    a = new Assets();
                     a.setCode(newTrade.getSymbol());
                     a.setCustomer(c);
                     a.setAvg_price(sAskPrice);
@@ -241,8 +243,12 @@ public class TradeController {
                     a.setAvg_price(newAvgPrice);
                     a.setQuantity(priorQuantity + transaction_quantity);
                 }
-
-                assestsRepo.save(a);
+                
+                Stock stock = stockRepo.findBySymbol(newTrade.getSymbol()); //to get last price
+                a.setCurrent_price(stock.getLast_price());
+                a.CalculateValue();
+                a.CalculateGain_loss();
+                assetsRepo.save(a);
             }
 
         }
@@ -326,7 +332,7 @@ public class TradeController {
                 
                 // Create/Update asset record
                 Customer c = newTrade.getAccount().getCustomer();
-                Assests a = assestsRepo.findByCustomer_IdAndCode(c.getId(), newTrade.getSymbol());
+                Assets a = assetsRepo.findByCustomer_IdAndCode(c.getId(), newTrade.getSymbol());
                 if(a == null){
                    System.out.println("asset not found");
                    // Shld throw a real exception
@@ -344,7 +350,11 @@ public class TradeController {
                     a.setQuantity(priorQuantity - transaction_quantity);
                 }
 
-                assestsRepo.save(a);
+                Stock stock = stockRepo.findBySymbol(newTrade.getSymbol()); //to get last price
+                a.setCurrent_price(stock.getLast_price());
+                a.CalculateValue();
+                a.CalculateGain_loss();
+                assetsRepo.save(a);
             }
         }
 

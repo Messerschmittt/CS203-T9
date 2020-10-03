@@ -167,22 +167,22 @@
             
 //     }
 //     tradeRepo.save(trade);
-//     //update customer's assest 
+//     //update customer's asset 
 //     if(fill){
 
 //         int customerid = trade.getCustomer_id();
 //         Optional<Customer> customer = custRepo.findById(customerid);
 //         Customer c = customer.get();
 //         Portfolio p = portfolioRepo.findByCustomer_Id(customerid);
-//         List<Assests> aList = p.getAssests();
-//         //get assest based on customer id and stock symbol
-//         Assests a = assestsRepo.findByCustomer_IdAndCode(customerid, trade.getSymbol());
-//         //if assest not exisit, add new assest to assest list 
+//         List<Assets> aList = p.getAssets();
+//         //get asset based on customer id and stock symbol
+//         Assets a = assetsRepo.findByCustomer_IdAndCode(customerid, trade.getSymbol());
+//         //if asset not exisit, add new asset to asset list 
 //         if(a == null){
-//             Assests newAssests = new Assests(trade.getSymbol(),trade.getFilled_quantity(),trade.getAvg_price(),matchedPrice);
-//             newAssests.setCustomer(c);
-//             assestsRepo.save(newAssests);
-//         //assest exisits, update assest value 
+//             Assets newAssets = new Assets(trade.getSymbol(),trade.getFilled_quantity(),trade.getAvg_price(),matchedPrice);
+//             newAssets.setCustomer(c);
+//             assetsRepo.save(newAssets);
+//         //asset exisits, update asset value 
 //         }else{
 //             a.setAvg_price(trade.getAvg_price());
 //             if(trade.getSymbol().equals("buy")){
@@ -194,11 +194,11 @@
 //             }  
 //             //update the current stock price            
 //             a.setCurrent_price(matchedPrice);  
-//             assestsRepo.save(a);
+//             assetsRepo.save(a);
 //         }
 //         //update the unrealized stock price of portfolio
 //         double unrealised = 0;
-//         for(Assests ast: aList){
+//         for(Assets ast: aList){
 //             unrealised += ast.getGain_loss();
 //         }
 

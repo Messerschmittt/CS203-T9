@@ -21,7 +21,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Assests {
+public class Assets {
     
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -44,7 +44,7 @@ public class Assests {
     @JsonIgnore
     private Customer customer;
 
-    public Assests(String code, int quantity, double avg_price, double current_price){
+    public Assets(String code, int quantity, double avg_price, double current_price){
         this.code = code;
         this.quantity = quantity;
         this.avg_price = avg_price;
