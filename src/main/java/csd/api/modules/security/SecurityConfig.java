@@ -60,6 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .addFilter(new JWTAuthorizationFilter(authenticationManager(), userDetailsService))
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
         .authorizeRequests()
+            // .anyRequest().authenticated() // All requests to API has to be authenticated
             // User Controller
             .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyManager   )
             .antMatchers(HttpMethod.POST, "/user/createUser").hasAnyRole(onlyManager)
@@ -73,9 +74,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // Trade Controller
             
             // Content Controller
-            .antMatchers(HttpMethod.GET, "/contents").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.GET, "/content/approvedContents").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.PUT, "/content/approveContent/{id}").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.GET, "/contents").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.GET, "/content/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.POST, "/content").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.PUT, "/content").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.DELETE, "/content/*").hasAnyRole(onlyEmp)
+
+            
             .and()
 
         // Control Logging in and out

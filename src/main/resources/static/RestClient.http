@@ -297,3 +297,5 @@ Authorization: Basic manager_1:01_manager_01
 ### - View approved contents
 GET http://localhost:8080/content/approvedContents
 Authorization: Basic manager_1:01_manager_01
+
+
