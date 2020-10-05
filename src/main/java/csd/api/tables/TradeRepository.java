@@ -16,5 +16,5 @@ import org.springframework.stereotype.Repository;
 public interface TradeRepository extends JpaRepository <Trade, Integer> {
     List<Trade> findByActionAndDateAndSymbol(String action, String date, String symbol);
     List<Trade> findBySymbolAndBid(String Symbol, double bid);
-	List<Trade> findByActionAndStatusAndSymbol(String action, String status, String symbol);
+    List<Trade> findByActionAndStatusAndSymbol(String action, String status, String symbol);
 }

@@ -1,4 +1,4 @@
-package csd.api.tables;
+package csd.api.tables.templates;
 
 import lombok.*;
 

@@ -66,19 +66,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers(HttpMethod.POST, "/user/createUser").hasAnyRole(onlyManager)
             
             // Account Controller
-            .antMatchers(HttpMethod.GET, "/accounts").hasAnyRole(onlyManager)
-            .antMatchers(HttpMethod.POST, "/account/createAccount").hasAnyRole(onlyUser)
-            .antMatchers(HttpMethod.GET, "/transfers").hasAnyRole(onlyManager)
-            .antMatchers(HttpMethod.POST, "/transfer/makeTransfer").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/accounts").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.POST, "/accounts").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.GET, "/accounts/**").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.GET, "/transactions").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.POST, "/transactions").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.POST, "/transactions/makeTransfer").hasAnyRole(onlyUser)
 
             // Trade Controller
             
             // Content Controller
             .antMatchers(HttpMethod.GET, "/contents").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.GET, "/content/*").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.POST, "/content").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.PUT, "/content").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.DELETE, "/content/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.GET, "/contents/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.POST, "/contents").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.PUT, "/contents").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.DELETE, "/contents/*").hasAnyRole(onlyEmp)
 
             
             .and()
