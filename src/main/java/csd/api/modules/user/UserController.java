@@ -113,10 +113,11 @@ public class UserController {
         //     return null;
         // }
         Optional<Customer> customer = customers.findById(id);
-        if (customer == null) {
-            return null;
+        try {
+            return customer.get();
+        } catch (NoSuchElementException e) {
+            throw new CustomerNotFoundException(id);
         }
-        return customer.get();
     }
    
     

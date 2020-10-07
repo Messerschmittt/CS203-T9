@@ -62,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
             // .anyRequest().authenticated() // All requests to API has to be authenticated
             // User Controller
-            .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyManager   )
+            // .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyManager   )
             .antMatchers(HttpMethod.POST, "/user/createUser").hasAnyRole(onlyManager)
             
             // Account Controller

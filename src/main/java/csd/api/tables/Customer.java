@@ -30,6 +30,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
+
 public class Customer {
 
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
@@ -59,11 +60,16 @@ public class Customer {
     @JsonIgnore
     private List<Assets> assets;
     
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    @JsonProperty("application_User_id")
-    @JoinColumn(name = "application_User_id")
+    // @OneToOne(fetch = FetchType.LAZY, optional = false)
+    // @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    // @JsonIdentityReference(alwaysAsId = true)
+    // @JsonProperty("application_User_id")
+    // @JoinColumn(name = "application_User_id")
+    @OneToOne
+    // to deal with huge errors
+    
+    @JsonIgnore
+
     private ApplicationUser application_User;
 
 

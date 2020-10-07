@@ -39,7 +39,7 @@ public class Trade implements Comparable<Trade> {
     private String status;
   
     @ManyToOne
-    @JoinTable(name = "account_id") 
+    @JoinColumn(name = "account_id") 
     private Account account;
 
     public Trade(String action, String symbol, int quanitity, 
