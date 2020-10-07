@@ -41,12 +41,12 @@ public class UserController {
     @PostMapping("/user/createUser")    
     public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
         String username = user.getUsername();
-
         if (users.existsByUsername(username)) {
             throw new UsernameAlreadyTakenException(username);
         }
 
         user.setPassword(encoder.encode(user.getPassword()));
+
         return users.save(user);
     }
 
