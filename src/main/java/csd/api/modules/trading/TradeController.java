@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Sort;
 
 
 import csd.api.modules.account.*;
@@ -89,20 +90,20 @@ public class TradeController {
         tradeRepo.deleteById(id);
     }
 
+    //--can change to normal function (no need mapping)
     @GetMapping("/trades/{action}/{date}/{symbol}")
     public List<Trade> getAllmatchingorder(@PathVariable String action,@PathVariable String date,@PathVariable String symbol) {
         return tradeRepo.findByActionAndDateAndSymbol(action,date,symbol);
     }
 
+    //--can change to normal function (no need mapping)
     @GetMapping("/trades/{action}/{status}/{symbol}")
     public List<Trade> getAllvalidorder(@PathVariable String action,@PathVariable String status,@PathVariable String symbol) {
         return tradeRepo.findByActionAndStatusAndSymbol(action,status, symbol);
     }
 
     
-
-    
-    @PostMapping("/trade/createTrade")
+    @PostMapping("/trades")
     public void TradeGenerate(@RequestBody TradeRecord tradeRecord){
         Account cusAcc = accRepo.findById(tradeRecord.getAccount_id()).get();
         Trade trade = new Trade(tradeRecord.getAction(), tradeRecord.getSymbol(), tradeRecord.getQuantity(), tradeRecord.getBid(), tradeRecord.getAsk(), 
@@ -128,24 +129,48 @@ public class TradeController {
           
     }
 
+    //delete after all done
+    //Test Sorting -- //--can change to normal function (no need mapping)
+    // @GetMapping("/trade/SortSellTrade/{action}/{symbol}")
+    // public List<Trade> Sort(@PathVariable String action,@PathVariable String symbol){
+
+    //sorting all the open or partial-filled sellTrades with specific stock symbol
+    public List<Trade> sellTradesSorting(String symbol){
+        Sort sSort = Sort.by("ask").ascending().and(Sort.by("date").ascending());
+        List<Trade> sTrades = tradeRepo.findByActionAndSymbolAndStatusContainingOrStatusContaining("sell", symbol, "open", "partial", sSort);
+        return sTrades;
+    }
+
+    //sorting all the open or partial-filled buyTrades with specific stock symbol
+    public List<Trade> buyTradesSorting(String symbol){
+        Sort bSort = Sort.by("bid").descending().and(Sort.by("date").ascending());
+        List<Trade> bTrades = tradeRepo.findByActionAndSymbolAndStatusContainingOrStatusContaining("buy", symbol, "open", "partial", bSort);
+        return bTrades;
+    }
+
     //find the matching trade    
     public void matching(Trade newTrade){
+        List<Trade> sTrades = sellTradesSorting(newTrade.getSymbol());  //sorted list of sellTrades
+        List<Trade> bTrades = buyTradesSorting(newTrade.getSymbol());   //sorted list of buyTrades
+        
+        //delete after all done
+        // List<Trade> bTrades = tradeRepo.findByActionAndStatusAndSymbol("buy","open",newTrade.getSymbol());
+        // List<Trade> bTrades2 = tradeRepo.findByActionAndStatusAndSymbol("buy","partial-filled",newTrade.getSymbol());
+        // bTrades.addAll(bTrades2);
+        // Collections.sort(bTrades);
+        // Collections.reverse(bTrades);   //descending order
 
-        List<Trade> bTrades = tradeRepo.findByActionAndStatusAndSymbol("buy","open",newTrade.getSymbol());
-        List<Trade> bTrades2 = tradeRepo.findByActionAndStatusAndSymbol("buy","partial-filled",newTrade.getSymbol());
-        bTrades.addAll(bTrades2);
-        Collections.sort(bTrades);
-        Collections.reverse(bTrades);   //descending order
-
-
-        List<Trade> sTrades = tradeRepo.findByActionAndStatusAndSymbol("sell","open", newTrade.getSymbol());
-        List<Trade> sTrades2 = tradeRepo.findByActionAndStatusAndSymbol("sell","partial-filled", newTrade.getSymbol());
-        sTrades.addAll(sTrades2);
-        Collections.sort(sTrades);  //ascending order
+        // List<Trade> sTrades = tradeRepo.findByActionAndStatusAndSymbol("sell","open", newTrade.getSymbol());
+        // List<Trade> sTrades2 = tradeRepo.findByActionAndStatusAndSymbol("sell","partial-filled", newTrade.getSymbol());
+        // sTrades.addAll(sTrades2);
+        // Collections.sort(sTrades);  //ascending order
         
         Boolean tradeNotFilled = true;
         int i = 0;
         int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();
+        Account cusAcc = newTrade.getAccount();
+        Customer customer = cusAcc.getCustomer();
+        Portfolio cusPortfolio = customer.getPortfolio();
         double lastPrice = 0.0;
 
         if(newTrade.getAction().equals("buy")){
@@ -163,24 +188,25 @@ public class TradeController {
                     return;
                 }
 
-                String newTradeStatus = null;
-                String sStatus = null;
+                String newTradeStatus = null;       //for update the status of newTrade
+                String sStatus = null;              //for update the status of sTrade
                 double transaction_amt = 0.0;
                 int transaction_quantity = 0;
                 int sAvailQuantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
                 int sFilledQuantity = s.getFilled_quantity();
-
-                if(sAvailQuantity < currentTradeQty){  //partially filled in buy trade, but sell trade -> "filled"
+                double gain_loss = 0.0;     //to update in Portfolio
+                
+                if(sAvailQuantity < currentTradeQty){  //partially filled in newTrade(buy), but sell trade -> "filled"
                     sStatus = "filled";
                     newTradeStatus = "partial-filled";
                     transaction_quantity = sAvailQuantity;
 
-                } else if(sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but buy trade -> "filled"
+                } else if(sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but newTrade(buy) -> "filled"
                     sStatus = "partial-filled";
                     newTradeStatus = "filled";
                     transaction_quantity = currentTradeQty;
     
-                } else if(sAvailQuantity == currentTradeQty){
+                } else if(sAvailQuantity == currentTradeQty){   //both trades status "filled"
                     sStatus = "filled";
                     newTradeStatus = "filled";
                     transaction_quantity = currentTradeQty;
@@ -192,19 +218,20 @@ public class TradeController {
                 currentTradeQty -= transaction_quantity;
                 transaction_amt = transaction_quantity * sAskPrice;
                 lastPrice = sAskPrice;
-                
 
-                Account cusAcc = newTrade.getAccount();
                 System.out.println("customerAcc: " + cusAcc.getId());
+                
                 // Create transaction between buyer and seller
                 Trans t = new Trans();
                 t.setAmount(transaction_amt);
                 t.setFrom_account(cusAcc);
                 t.setTo_account(s.getAccount());
+                //---?
                 if(s.getAccount() == null){
                     System.out.println("Faulty account accessed");
                     t.setTo_account(new Account());
                 }
+                tradeRepo.save(newTrade);
                 accController.makeTransaction(t);
                 
                 // Only save when transaction is successful ie. theres sufficient funds
@@ -221,38 +248,41 @@ public class TradeController {
                 if(tradeFilledQuantity == initialTradeQty){
                     tradeNotFilled = false;
                 }
-
+                
                 // Save trades
                 tradeRepo.save(s);
                 tradeRepo.save(newTrade);
                 
                 // Create/Update asset record
-                Customer c = newTrade.getAccount().getCustomer();
-                Assets a = assetsRepo.findByCustomer_IdAndCode(c.getId(), newTrade.getSymbol());
+                Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
+                
                 if(a == null){
                     a = new Assets();
                     a.setCode(newTrade.getSymbol());
-                    a.setCustomer(c);
+                    a.setCustomer(customer);
                     a.setAvg_price(sAskPrice);
                     a.setQuantity(a.getQuantity() + transaction_quantity);
                 }else{
                     int priorQuantity = a.getQuantity();
                     double priorAvgPrice = a.getAvg_price();
-                    double newAvgPrice = ((priorQuantity * priorAvgPrice) + (transaction_quantity * transaction_amt))/(transaction_quantity + priorQuantity);
-
+                    double newAvgPrice = ((priorQuantity * priorAvgPrice) + transaction_amt)/(transaction_quantity + priorQuantity);
                     a.setAvg_price(newAvgPrice);
                     a.setQuantity(priorQuantity + transaction_quantity);
                 }
-                
-                Stock stock = stockRepo.findBySymbol(newTrade.getSymbol()); //to get last price
-                a.setCurrent_price(stock.getLast_price());
+                a.setCurrent_price(lastPrice);          //should keep updating for every trade???
                 a.CalculateValue();
                 a.CalculateGain_loss();
                 assetsRepo.save(a);
-            }
 
+                //need to check again ---
+                gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
+                cusPortfolio.updateTotal_gain_loss(gain_loss); 
+                cusPortfolio.updateUnrealised();
+                portfolioRepo.save(cusPortfolio);
+            }
         }
         
+        //for sell action
         if(newTrade.getAction().equals("sell")){
             System.out.println("In sell");
             double newTradeAsk = newTrade.getAsk();
@@ -275,6 +305,7 @@ public class TradeController {
                 int transaction_quantity = 0;
                 int bAvailQuantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
                 int bFilledQuantity = b.getFilled_quantity();
+                double gain_loss = 0.0;     //to update in Portfolio
 
                 if(bAvailQuantity < currentTradeQty){  //partially filled in buy trade, but sell trade -> "filled"
                     bStatus = "filled";
@@ -299,7 +330,6 @@ public class TradeController {
                 transaction_amt = transaction_quantity * bBidPrice;
                 lastPrice = bBidPrice;
 
-                Account cusAcc = newTrade.getAccount();
                 System.out.println("customerAcc: " + cusAcc.getId());
                 // Create transaction between buyer and seller
                 Trans t = new Trans();
@@ -310,6 +340,7 @@ public class TradeController {
                     System.out.println("Bank account accessed");
                     t.setFrom_account(new Account(null, 1_000_000, 1_000_000)); //using an arbitary value for bank
                 }
+                tradeRepo.save(newTrade);
                 accController.makeTransaction(t);
                 
                 // Update s trade status
@@ -331,8 +362,7 @@ public class TradeController {
                 tradeRepo.save(newTrade);
                 
                 // Create/Update asset record
-                Customer c = newTrade.getAccount().getCustomer();
-                Assets a = assetsRepo.findByCustomer_IdAndCode(c.getId(), newTrade.getSymbol());
+                Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
                 if(a == null){
                    System.out.println("asset not found");
                    // Shld throw a real exception
@@ -343,18 +373,23 @@ public class TradeController {
                     System.out.println("after sell quantity" + newQuantity);
                     double newAvgPrice = 0;
                     if(newQuantity != 0){
-                        newAvgPrice = ((priorQuantity * priorAvgPrice) - (transaction_quantity * transaction_amt))/(priorQuantity - transaction_quantity);
+                        newAvgPrice = ((priorQuantity * priorAvgPrice) - (transaction_amt))/(priorQuantity - transaction_quantity);
                     }
 
                     a.setAvg_price(newAvgPrice);
                     a.setQuantity(priorQuantity - transaction_quantity);
                 }
 
-                Stock stock = stockRepo.findBySymbol(newTrade.getSymbol()); //to get last price
-                a.setCurrent_price(stock.getLast_price());
+                a.setCurrent_price(lastPrice);
                 a.CalculateValue();
                 a.CalculateGain_loss();
                 assetsRepo.save(a);
+
+                //need to check again ---
+                gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
+                cusPortfolio.updateTotal_gain_loss(gain_loss); 
+                cusPortfolio.updateUnrealised();
+                portfolioRepo.save(cusPortfolio);
             }
         }
 

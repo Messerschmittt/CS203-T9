@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Sort;
 
 /**
  * We only need this interface declaration
@@ -17,4 +18,5 @@ public interface TradeRepository extends JpaRepository <Trade, Integer> {
     List<Trade> findByActionAndDateAndSymbol(String action, String date, String symbol);
     List<Trade> findBySymbolAndBid(String Symbol, double bid);
     List<Trade> findByActionAndStatusAndSymbol(String action, String status, String symbol);
+    List<Trade> findByActionAndSymbolAndStatusContainingOrStatusContaining(String action, String symbol, String status1, String status2, Sort sort);
 }

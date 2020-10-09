@@ -82,7 +82,7 @@ public class PriceController{
             newTrade.setBid(Double.parseDouble(info.get("bid")));
             newTrade.setQuantity(Integer.parseInt(info.get("bidVol")));
         }else if(action.equals("sell")){
-            newTrade.setBid(Double.parseDouble(info.get("ask")));
+            newTrade.setAsk(Double.parseDouble(info.get("ask")));
             newTrade.setQuantity(Integer.parseInt(info.get("askVol")));
         }
         newTrade.setAccount(null);

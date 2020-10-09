@@ -36,7 +36,7 @@ public class Trade implements Comparable<Trade> {
     private double avg_price;
     private int filled_quantity = 0;
     private String date;
-    private String status;
+    private String status = "open";
   
     @ManyToOne
     @JoinColumn(name = "account_id") 
@@ -66,6 +66,4 @@ public class Trade implements Comparable<Trade> {
         }
         
     }
-
-
 }

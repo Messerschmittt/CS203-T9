@@ -32,8 +32,8 @@ public class Portfolio {
     @JoinColumn(name = "customer_id")
     private Customer customer;
     
-    private double unrealised = 0.0;
-    private double total = 0.0;
+    private double unrealized_gain_loss = 0.0;
+    private double total_gain_loss = 0.0;
 
     public Portfolio(Customer customer) {
         this.customer = customer;
@@ -43,13 +43,18 @@ public class Portfolio {
     //calculate unrealised gain and loss from current stock holding
     public double updateUnrealised(){
         if(assets == null || assets.isEmpty()){
-            return unrealised;
+            return unrealized_gain_loss;
         }
 
-        unrealised = 0.0;   //reset to 0 and recalculate
+        unrealized_gain_loss = 0.0;   //reset to 0 and recalculate
         for(Assets a: assets){
-            unrealised += a.getGain_loss();
+            unrealized_gain_loss += a.getGain_loss();
         }
-        return unrealised;
+        return unrealized_gain_loss;
+    }
+
+    public double updateTotal_gain_loss(double gain_loss){
+        total_gain_loss += gain_loss;
+        return total_gain_loss;
     }
 }
