@@ -59,6 +59,4 @@ public class UserControllerTest {
         verify(users).save(user);
     }
 
-
-
 }
