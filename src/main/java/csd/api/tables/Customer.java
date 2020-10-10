@@ -73,9 +73,7 @@ public class Customer {
     private ApplicationUser application_User;
 
 
-    //for some reason, active is set to false on default when using rest client
-    // need to enforce one to one
-    // not getting linked with application users either
+
 
     public Customer(String full_name, String nric, String phone, String address, 
             String username, String password, String authorities, boolean active, Portfolio portfolio) {
