@@ -107,8 +107,8 @@ Authorization: Basic manager_1:01_manager_01
 ### Customer
 
 ### -- Create Account From Customer1
-POST http://localhost:8080/account/createAccount
-Authorization: Basic good_user_1:01_user_01
+POST http://localhost:8080/accounts
+Authorization: Basic manager_1:01_manager_01
 Content-Type: application/json
 
 {
@@ -118,7 +118,7 @@ Content-Type: application/json
 }
 
 ### -- Create Account From Customer2
-POST http://localhost:8080/account/createAccount
+POST http://localhost:8080/accounts
 Authorization: Basic good_user_2:02_user_02
 Content-Type: application/json
 
@@ -130,7 +130,7 @@ Content-Type: application/json
 
 ###
 ### -- Create Invalid Account (invalid username)
-POST http://localhost:8080/account/createAccount
+POST http://localhost:8080/accounts
 Authorization: Basic good_user_2:02_user_02
 Content-Type: application/json
 
@@ -244,7 +244,7 @@ GET http://localhost:8080/trades
 GET http://localhost:8080/pricetest?stock=A17U.SI
 
 ### - Create Account 1 for Customer 1 if not done above
-POST http://localhost:8080/account/createAccount
+POST http://localhost:8080/accounts
 Authorization: Basic good_user_1:01_user_01
 Content-Type: application/json
 
@@ -255,7 +255,7 @@ Content-Type: application/json
 }
 
 ### - Create buy trade for Customer 1 - Account 1
-POST http://localhost:8080/trade/createTrade
+POST http://localhost:8080/trades
 Content-Type: application/json
 
 {
@@ -272,7 +272,7 @@ Content-Type: application/json
 GET http://localhost:8080/assets
 
 ### - Create sell trade for Customer 1 - Account 1
-POST http://localhost:8080/trade/createTrade
+POST http://localhost:8080/trades
 Content-Type: application/json
 
 {

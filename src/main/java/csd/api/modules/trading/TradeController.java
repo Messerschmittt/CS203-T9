@@ -4,6 +4,8 @@ import csd.api.tables.*;
 import csd.api.tables.templates.*;
 
 import java.util.List;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.domain.Sort;
 
 
+import csd.api.modules.user.*;
 import csd.api.modules.account.*;
 import csd.api.modules.trading.*;
 
@@ -105,6 +108,31 @@ public class TradeController {
     
     @PostMapping("/trades")
     public void TradeGenerate(@RequestBody TradeRecord tradeRecord){
+        //check symbol 
+        String inputsymbol = tradeRecord.getSymbol();
+        if(stockRepo.findBySymbol(inputsymbol) == null){
+            throw new InvalidInputException(inputsymbol, "Stock Symbol");
+        }
+        //check timing       
+        LocalDateTime now = LocalDateTime.now();
+        int nowtime = now.getHour();
+        DayOfWeek day = now.getDayOfWeek();
+        switch (day) {
+            case SATURDAY:
+                throw new InvalidTradeTiming();
+            case SUNDAY:
+                throw new InvalidTradeTiming();
+            default:
+                if(nowtime < 9 || nowtime >= 17){
+                    List<Trade> invalidtrades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
+                    for(Trade t: invalidtrades){
+                        t.setStatus("expired"); //update volumn in stock??
+                        tradeRepo.save(t);
+                    }
+                }
+        }
+        
+
         Account cusAcc = accRepo.findById(tradeRecord.getAccount_id()).get();
         Trade trade = new Trade(tradeRecord.getAction(), tradeRecord.getSymbol(), tradeRecord.getQuantity(), tradeRecord.getBid(), tradeRecord.getAsk(), 
         tradeRecord.getAvg_price(), tradeRecord.getFilled_quantity(), tradeRecord.getDate(), tradeRecord.getStatus(),  cusAcc);
@@ -252,6 +280,16 @@ public class TradeController {
                 // Save trades
                 tradeRepo.save(s);
                 tradeRepo.save(newTrade);
+
+                //update the stock buy volume and price
+                Stock targetstock = stockRepo.findBySymbol(newTrade.getSymbol());
+                if(newTrade.getBid() > targetstock.getBid()){
+                    targetstock.setBid(newTrade.getBid());
+                    targetstock.setBid_volume(tradeFilledQuantity); 
+                }else if(newTrade.getBid() == targetstock.getBid()){
+                    targetstock.setBid_volume(targetstock.getBid_volume() + tradeFilledQuantity);
+                }
+                stockRepo.save(targetstock);
                 
                 // Create/Update asset record
                 Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
@@ -360,6 +398,16 @@ public class TradeController {
                 // Save trades
                 tradeRepo.save(b);
                 tradeRepo.save(newTrade);
+
+                //update stock sell volumn and price
+                 Stock targetstock = stockRepo.findBySymbol(newTrade.getSymbol());
+                 if(newTrade.getAsk() > targetstock.getAsk()){
+                     targetstock.setAsk(newTrade.getAsk());
+                     targetstock.setAsk_volume(tradeFilledQuantity); 
+                 }else if(newTrade.getAsk() == targetstock.getAsk()){
+                     targetstock.setAsk_volume(targetstock.getAsk_volume() + tradeFilledQuantity);
+                 }
+                 stockRepo.save(targetstock);
                 
                 // Create/Update asset record
                 Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
