@@ -6,6 +6,8 @@ import java.net.URI;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,20 @@ class UserIntegrationTest {
 	private BCryptPasswordEncoder encoder;
 
 
+	@BeforeEach
+	void init() {
+		ApplicationUser user = users.save(new ApplicationUser("NewUser", "newuser123", "ROLE_USER"));
+		Customer customer = customers.save(new Customer(user, "New User"));
+		// System.out.println(customer.getId());
+
+		users.save(new ApplicationUser("NewManager", "newmanager123", "ROLE_MANAGER"));
+
+		users.save(new ApplicationUser("NewAnalyst", "newanalyst123", "ROLE_ANALYST"));
+		
+	}
+
+
+
 	@AfterEach
 	void tearDown(){
 		customers.deleteAll();
@@ -53,9 +69,7 @@ class UserIntegrationTest {
 	@Test
 	public void getUsers_Success() throws Exception {
         URI uri = new URI(baseUrl + port + "/users");
-        
-        users.save(new ApplicationUser("NewUser", "newuser123", "ROLE_USER"));
-		
+        		
         // Need to use array with a ReponseEntity here
         ResponseEntity<ApplicationUser[]> result = restTemplate
 										.exchange(uri, HttpMethod.GET, null, ApplicationUser[].class);
@@ -63,15 +77,16 @@ class UserIntegrationTest {
 		ApplicationUser[] userList = result.getBody();
 		
 		assertEquals(200, result.getStatusCode().value());
-        assertEquals(1, userList.length);
-    }
+        assertEquals(3, userList.length);
+	}
+
+
+
 
     @Test
 	public void getCustomers_Success() throws Exception {
         URI uri = new URI(baseUrl + port + "/customers");
         
-        ApplicationUser user = users.save(new ApplicationUser("NewUser", "newuser123", "ROLE_USER"));
-        customers.save(new Customer(user, "New User"));
 		
 		// Need to use array with a ReponseEntity here
         ResponseEntity<Customer[]> result = restTemplate.exchange(uri, HttpMethod.GET, null, Customer[].class);
@@ -84,20 +99,19 @@ class UserIntegrationTest {
 
     @Test
 	public void getCustomerDetails_ValidCustomerId_Success() throws Exception {
-        ApplicationUser user = users.save(new ApplicationUser("NewUser", "newuser123", "ROLE_USER"));
-        Customer customer = customers.save(new Customer(user, "New User"));
-		Integer id = customer.getId();
+
+		Integer id = customers.findAll().get(0).getId();
 		URI uri = new URI(baseUrl + port + "/customers/" + id);
 	
 		ResponseEntity<Customer> result = restTemplate.getForEntity(uri, Customer.class);
 			
 		assertEquals(200, result.getStatusCode().value());
-		assertEquals(customer.getUsername(), result.getBody().getUsername());
+		assertEquals("NewUser", result.getBody().getUsername());
     }
     
     @Test
 	public void getCustomerDetails_InvalidCustomerId_Failure() throws Exception {
-		URI uri = new URI(baseUrl + port + "/customers/1");
+		URI uri = new URI(baseUrl + port + "/customers/100");
 		
 		ResponseEntity<Customer> result = restTemplate.getForEntity(uri, Customer.class);
 			
