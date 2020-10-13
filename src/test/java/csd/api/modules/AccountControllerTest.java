@@ -41,7 +41,7 @@ public class AccountControllerTest {
     private AccountController accountController;
 
     @Test
-    void createAccount_NewUser() {
+    void createAccount_NewAccount_ReturnAccount() {
         // Arrange
         AccountRecord newAccountRecord = new AccountRecord("NewRecord", 0, 0);
         Account newAccount = new Account();
@@ -58,5 +58,27 @@ public class AccountControllerTest {
         assertNotNull(savedAccount);
         verify(customers).existsByUsername(newAccountRecord.getUsername());
         verify(accounts).save(newAccount);
+    }
+
+    @Test
+    void createAccount_SameAccount_ReturnNull() {
+        // Arrange
+        AccountRecord newAccountRecord = new AccountRecord("NewRecord", 0, 0);
+        Account newAccount = new Account();
+        ArrayList<Account> list = new ArrayList<>();
+        list.add(newAccount);
+
+        // Mock
+        when(customers.existsByUsername(any(String.class))).thenReturn(false);
+
+        // Act
+        Account savedAccount = null;
+        try {
+            savedAccount = accountController.createAccount(newAccountRecord);
+        } catch (CustomerNotFoundException e) {
+            // Assert
+            assertNull(savedAccount);
+            verify(customers).existsByUsername(newAccountRecord.getUsername());
+        }
     }
 }
