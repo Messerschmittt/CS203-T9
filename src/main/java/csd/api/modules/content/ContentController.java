@@ -1,6 +1,7 @@
 package csd.api.modules.content;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,7 +55,7 @@ public class ContentController {
      * @param id
      * @return content or null if no content with id specified
      */
-    @GetMapping("/content/{id}")
+    @GetMapping("/contents/{id}")
     public Optional<Content> getSpecificContent(@PathVariable Integer id){
         return contents.findById(id);
 
@@ -69,7 +70,7 @@ public class ContentController {
      * @return content created
      */
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/content")
+    @PostMapping("/contents")
     public Content createContent(@RequestBody Content content){
         // Approval set to false by default regardless of input
         content.setApproved(false);
@@ -84,7 +85,7 @@ public class ContentController {
      * @param auth
      * @return content updated
      */
-    @PutMapping("/content")
+    @PutMapping("/contents")
     public Content updateContent(@RequestBody Content content, Authentication auth){
         Optional<Content> c = contents.findById(content.getId());
         if(!c.isPresent()){
@@ -111,7 +112,7 @@ public class ContentController {
      * API is restricted to only employees
      * @param id
      */
-    @DeleteMapping("/content/{id}")
+    @DeleteMapping("/contents/{id}")
     public void deleteContent(@PathVariable Integer id){
         try{
             contents.deleteById(id);
@@ -120,6 +121,17 @@ public class ContentController {
         }
 
         return;
+    }
+
+    @GetMapping("contents/test/topheadlines")
+    public ArrayList<Content> getTopHeadlines(){
+        return NewsAPI.apiTopHeadlines();
+    }
+
+    @GetMapping("contents/test/specificQuery/{query}")
+    public ArrayList<Content> getSpecificQuery(@PathVariable String query){
+        System.out.println("Query: " + query);
+        return NewsAPI.apiSpecificQuery(query);
     }
 
     

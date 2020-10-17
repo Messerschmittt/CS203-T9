@@ -95,12 +95,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         // Control Logging in and out
         // .formLogin().loginPage("/login_page").permitAll().and()
-        // .logout()
-        //     .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-        //     .invalidateHttpSession(true)
-        //     .deleteCookies("JSESSIONID")
-        //     .logoutSuccessUrl("/logoutSuccess")
-        //     .and()
+        .logout()
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
+            .and()
 
         .csrf().disable() // CSRF protection is needed only for browser based attacks
         .formLogin().disable()
