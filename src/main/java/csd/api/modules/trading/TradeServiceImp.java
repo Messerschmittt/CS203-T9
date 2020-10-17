@@ -17,6 +17,7 @@ import csd.api.tables.templates.*;
 import csd.api.modules.user.*;
 import csd.api.modules.account.*;
 import csd.api.modules.trading.*;
+import csd.api.modules.portfolio.*;
 
 @Service
 public class TradeServiceImp implements TradeService {
@@ -93,7 +94,7 @@ public class TradeServiceImp implements TradeService {
     public boolean checkSymbol(String symbol){
         //check symbol 
         boolean isValid = true;
-        if(!stockRepo.existsBySymbol(symbol)){
+        if(stockRepo.findBySymbol(symbol) == null){
             isValid = false;
         }
         return isValid;
@@ -502,7 +503,7 @@ public class TradeServiceImp implements TradeService {
             //if there is stock in the assets, assign it to "assets" variable
             Assets assets = null;
             for(Assets a: cusAssets){
-                if(a.getSymbol().equals(trade.getSymbol())){    
+                if(a.getCode().equals(trade.getSymbol())){    
                     assets = a;
                 }
             }
