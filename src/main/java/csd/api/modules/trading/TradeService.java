@@ -24,21 +24,55 @@ public interface TradeService {
     void deleteTrade(Integer id);
 
     /**
-     * 
+     * Check validation of input stock symbol
      * @param symbol
-     * @return
+     * @return boolean value
      */
     boolean checkSymbol(String symbol);
 
     /**
-     * 
-     * @return the boolean value that indicate the time is valid or not
+     * Check does stock market open or not.
+     * @return boolean value
      */
     boolean checkTime();
-    // bookean checkDate();
+
+    /**
+     * Update the trades status as expired
+     */
+    void updateStatusToExpired();
+
+    /**
+     * Check the validation of input quantity
+     * @param quantity
+     * @return boolean value
+     */
     boolean checkQuantity(int quantity);
+
+    /**
+     * Sort the specific stock sell trades with price and time
+     * @param symbol
+     * @return list of sorted sell Trades
+     */
     List<Trade> sellTradesSorting(String symbol);
+
+    /**
+     * Sort the specific stock buy trades with price and time
+     * @param symbol
+     * @return list of sorted buy Trades
+     */
     List<Trade> buyTradesSorting(String symbol);
+
+    /**
+     * Fullfil the customer trade order
+     * @param newTrade
+     * @return the updated Trade object
+     */
     Trade matching(Trade newTrade);
+
+    /**
+     * To fullfil the customer's trade order and save the trade info to the repo
+     * @param tradeRecord
+     * @return the updated Trade object
+     */
     Trade TradeGenerate(TradeRecord tradeRecord);
 }

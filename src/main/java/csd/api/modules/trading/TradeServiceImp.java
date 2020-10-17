@@ -24,9 +24,7 @@ public class TradeServiceImp implements TradeService {
     private AccountRepository accRepo;
     private PortfolioRepository portfolioRepo;
     private AssetsRepository assetsRepo;
-    private CustomerRepository custRepo;
     private StockRepository stockRepo;
-
     private AccountController accController;
     private StockController stockController;
 
@@ -36,19 +34,17 @@ public class TradeServiceImp implements TradeService {
      * @param accRepo
      * @param portfolioRepo
      * @param assetsRepo
-     * @param custRepo
      * @param stockRepo
      * @param accController
      * @param stockController
      */
     public TradeServiceImp(TradeRepository tradeRepo, AccountRepository accRepo, 
-            PortfolioRepository portfolioRepo, AssetsRepository assetsRepo, CustomerRepository custRepo, 
+            PortfolioRepository portfolioRepo, AssetsRepository assetsRepo,
             StockRepository stockRepo, AccountController accController, StockController stockController) {
         this.tradeRepo = tradeRepo;
         this.accRepo = accRepo;
         this.portfolioRepo = portfolioRepo;
         this.assetsRepo = assetsRepo;
-        this.custRepo = custRepo;
         this.stockRepo = stockRepo;
         this.accController = accController;
         this.stockController = stockController;
@@ -88,23 +84,32 @@ public class TradeServiceImp implements TradeService {
         tradeRepo.deleteById(id);
     }
     
-    //check is the stock symbol valid
+    /**
+     * Check the validation of input stock symbol
+     * @param symbol
+     * @return boolean value
+     */
     @Override
     public boolean checkSymbol(String symbol){
         //check symbol 
         boolean isValid = true;
-        if(stockRepo.findBySymbol(symbol) == null){
-            // throw new InvalidInputException(inputsymbol, "Stock Symbol");
+        if(!stockRepo.existsBySymbol(symbol)){
             isValid = false;
         }
         return isValid;
     }
 
-    //check is stock market open. Market open on Weekdays 9am tp 5pm.
+    /**
+     * Check does stock market open or not. Market open on Weekdays 9am tp 5pm.
+     * @return boolean value
+     */
     @Override
     public boolean checkTime(){
         boolean isValid = false;
         LocalDateTime now = LocalDateTime.now();
+        String date = now.toString().substring(0, 11);      //for checking the date of trades are same or not
+        
+        //for checking the market open time
         int nowtime = now.getHour();
         DayOfWeek day = now.getDayOfWeek();
         switch (day) {
@@ -114,19 +119,42 @@ public class TradeServiceImp implements TradeService {
                 throw new InvalidTradeTiming();
             default:
                 if(nowtime < 9 || nowtime >= 17){
-                    List<Trade> invalidtrades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
-                    for(Trade t: invalidtrades){
-                        t.setStatus("expired"); //update volumn in stock??
-                        tradeRepo.save(t);
+                    updateStatusToExpired();
+                } else{     //if stock market open
+                    //check if the date of open or partial-filled trades is same with the date of current trade
+                    List<Trade> trades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
+                    if(trades != null || !trades.isEmpty()){
+                        String previousDate = trades.get(0).toString().substring(0, 11);
+                        //if date is not same, then update the staus of all open or partial-filled trades as expired
+                        if(!date.equals(previousDate)){
+                            updateStatusToExpired();
+                        }
                     }
-                } else{
                     isValid = true;
                 }
         }
         return isValid;
     }
 
-    //check the input quantity is multiple of 100
+    /**
+     * Update the trades status of "open" and "partial-filled" as expired
+     */
+    public void updateStatusToExpired(){
+        List<Trade> invalidTrades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
+        if (invalidTrades == null || invalidTrades.isEmpty()){
+            return;
+        }
+        for(Trade t: invalidTrades){
+            t.setStatus("expired");
+            tradeRepo.save(t);
+        }
+    }
+
+    /**
+     * Check the validation of input quantity. Quantity should be multiple of 100
+     * @param quantity
+     * @return boolean value
+     */
     @Override
     public boolean checkQuantity(int quantity){
         if(quantity % 100 == 0){
@@ -135,12 +163,12 @@ public class TradeServiceImp implements TradeService {
         return false;
     }
 
-    //delete after all done
-    //Test Sorting -- //--can change to normal function (no need mapping)
-    // @GetMapping("/trade/SortSellTrade/{action}/{symbol}")
-    // public List<Trade> Sort(@PathVariable String action,@PathVariable String symbol){
-
-    //sorting all the open or partial-filled sellTrades with specific stock symbol
+    /**
+     * Sort all the open or partial-filled of specific stock sell trades in ascending order
+     * of ask price and date.
+     * @param symbol
+     * @return list of sorted sell Trades
+     */
     @Override
     public List<Trade> sellTradesSorting(String symbol){
         Sort sSort = Sort.by("ask").ascending().and(Sort.by("date").ascending());
@@ -148,7 +176,12 @@ public class TradeServiceImp implements TradeService {
         return sTrades;
     }
 
-    //sorting all the open or partial-filled buyTrades with specific stock symbol
+    /**
+     * Sort all the open or partial-filled of specific stock buy trades in descending order
+     * of bid price and ascending order of date.
+     * @param symbol
+     * @return list of sorted buy Trades
+     */
     @Override
     public List<Trade> buyTradesSorting(String symbol){
         Sort bSort = Sort.by("bid").descending().and(Sort.by("date").ascending());
@@ -416,8 +449,9 @@ public class TradeServiceImp implements TradeService {
         return newTrade;
     } 
     
-    /** --------------need modify
-     * Check if the user input valid stock symbol, and is the stock market 
+    /** 
+     * To fullfil the customer's trade order and save the trade info to the repo.
+     * Check the validation of the info of stock symbol, time
      * then create trade and perform trade matching
      * @param tradeRecord
      * @return the latest trade info
@@ -446,16 +480,41 @@ public class TradeServiceImp implements TradeService {
         }
 
         Account cusAcc = accRepo.findById(tradeRecord.getAccount_id()).get();
+        List<Assets> cusAssets = cusAcc.getCustomer().getAssets();
         Trade trade = new Trade(tradeRecord.getAction(), tradeRecord.getSymbol(), tradeRecord.getQuantity(), tradeRecord.getBid(), tradeRecord.getAsk(), 
         tradeRecord.getAvg_price(), tradeRecord.getFilled_quantity(), tradeRecord.getDate(), tradeRecord.getStatus(),  cusAcc);
 
-
-        // do we need to update in available balance??
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell
         if(trade.getAction().equals("buy")){
             if(trade.getBid() * trade.getQuantity() > cusAcc.getAvailable_balance()){
                 throw new InsufficientBalanceForTradeException(trade.getId());
+            }
+        }
+
+        //To check the customer has sufficient stock in assets to sell
+        if(trade.getAction().equals("sell")){
+            if(cusAssets == null || cusAssets.isEmpty()){       //assets is empty
+                throw new AssetsNotFoundException();
+            }
+
+            //check if the user have the stock
+            //if there is stock in the assets, assign it to "assets" variable
+            Assets assets = null;
+            for(Assets a: cusAssets){
+                if(a.getSymbol().equals(trade.getSymbol())){    
+                    assets = a;
+                }
+            }
+
+            //if not found the stock in assets list, throw AssetsNotFoundException with stock symbol
+            if(assets == null){
+                throw new AssetsNotFoundException(trade.getSymbol());
+            }
+
+            //if there is stock in assets, check if the quantity is enough, if not throw InsufficientStockException
+            if(trade.getQuantity() > assets.getQuantity()){
+                throw new InsufficientStockException();
             }
         }
         
