@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.domain.Sort;
-
+import org.springframework.security.core.Authentication;
 
 import csd.api.modules.user.*;
 import csd.api.modules.account.*;
@@ -31,6 +31,7 @@ import csd.api.modules.trading.*;
 @RestController
 public class TradeController {
     private TradeService tradeService;
+    private AccountRepository accRepo;
 
     public TradeController(TradeService tradeService){
         this.tradeService = tradeService;
@@ -53,26 +54,41 @@ public class TradeController {
      * @return trade with the given id
      */
     @GetMapping("/trades/{id}")
-    public Trade getTrade(@PathVariable Integer id){
+    public Trade getTrade(@PathVariable Integer id,Authentication auth){
         Trade trade = tradeService.getTrade(id);
-
-        //-> need to check is this specific trade belong to the login user?-------------
-
-
+        
         // To handle "trade not found" error using proper HTTP status code: 404
         if(trade == null) throw new TradeNotFoundException(id);
+        //-> need to check is this specific trade belong to the login user?-------------
+        Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
+                throw new UnauthorisedAccountAccessException(id);
+            }
+        }
+
         return tradeService.getTrade(id);
     }
 
     /**
      * Remove a trade with the DELETE request to "/trades/{id}"
+     * For ROLE_USER only
      * If there is no trade with the given "id", will throw a TradeNotFoundException
      * @param id
      */
     @DeleteMapping("/trades/{id}")
-    public void deleteTrade(@PathVariable Integer id){
-
-        //->need to check is this specific trade belong to the login user?-------------
+    public void deleteTrade(@PathVariable Integer id, Authentication auth){
+        Trade trade = tradeService.getTrade(id);
+        
+        // To handle "trade not found" error using proper HTTP status code: 404
+        if(trade == null) throw new TradeNotFoundException(id);
+        //-> need to check is this specific trade belong to the login user?-------------
+        Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
+                throw new UnauthorisedAccountAccessException(id);
+            }
+        }
 
         tradeService.deleteTrade(id);
     }
@@ -83,7 +99,12 @@ public class TradeController {
      * @return the latest info of trade
      */
     @PostMapping("/trades")
-    public Trade TradeGenerate(@RequestBody TradeRecord tradeRecord){
+    public Trade TradeGenerate(@RequestBody TradeRecord tradeRecord, Authentication auth){
+         // Only allow role_user of create trade
+         if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            throw new UnauthorisedUserException("trade");
+        }
+
         return tradeService.TradeGenerate(tradeRecord);
     }
     

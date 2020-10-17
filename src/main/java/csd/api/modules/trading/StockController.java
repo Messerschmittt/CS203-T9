@@ -1,5 +1,6 @@
 package csd.api.modules.trading;
 
+import csd.api.modules.user.UnauthorisedUserException;
 import csd.api.tables.*;
 import static csd.api.modules.account.RyverBankAccountConstants.*;
 
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 @RestController
 public class StockController {
@@ -89,11 +91,22 @@ public class StockController {
         System.out.println("Counter: " + counter);
         return initialisedStock;
     }
-
+    // this for only role_user also?
     @GetMapping("/stocks")
     public List<Stock> getAllStocks(){
         return stocks.findAll();
     }
+
+    @GetMapping("/stocks/{symbol}")
+    public Stock getoneStock(@PathVariable String symbol, Authentication auth){
+        // Only allow role_user of create stock
+        if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            throw new UnauthorisedUserException("trade");
+        }
+        Stock stock = stocks.findBySymbol(symbol);
+        return stock;
+    }
+    
 
     public void refreshStockPrice(String symbol, double last_price){
         Stock s = stocks.findBySymbol(symbol);
