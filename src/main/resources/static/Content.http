@@ -5,8 +5,9 @@ Analyst2: Basic analyst_2:02_analyst_02
 User1: Basic good_user_1:01_user_01
 User2: Basic good_user_2:02_user_02
 
+
 ### Retrieve all content as employee
-GET http://localhost:8080/contents
+GET http://34.239.105.123:8080/contents
 Authorization: Basic manager_1:01_manager_01
 
 ### Retrieve all content as customer (normal user)
@@ -14,12 +15,12 @@ GET http://localhost:8080/contents
 Authorization: Basic good_user_1:01_user_01
 
 ### Retrieve a specific content (only emp)
-GET http://localhost:8080/content/1
+GET http://localhost:8080/contents/1
 Authorization: Basic manager_1:01_manager_01
 
 ### Create a new content
-POST http://localhost:8080/content
-Authorization: Basic manager_1:01_manager_01
+POST http://localhost:8080/contents
+Authorization: Basic good_user_1:01_user_01
 Content-Type: application/json
 
 {
@@ -30,7 +31,7 @@ Content-Type: application/json
 }
 
 ### Update a created content - Employee
-PUT http://localhost:8080/content 
+PUT http://localhost:8080/contents
 Authorization: Basic analyst_1:01_analyst_01
 Content-Type: application/json
 
@@ -44,7 +45,7 @@ Content-Type: application/json
 }
 
 ### Update a created content - Manager
-PUT http://localhost:8080/content 
+PUT http://localhost:8080/contents
 Authorization: Basic manager_1:01_manager_01
 Content-Type: application/json
 
@@ -57,3 +58,8 @@ Content-Type: application/json
     "approved": true
 }
 
+### Get top headlines
+GET http://localhost:8080/content/test/topheadlines
+
+### Get specific query
+GET http://localhost:8080/content/test/specificQuery/CDL

@@ -6,6 +6,7 @@ package csd.api.tables;
 import com.fasterxml.jackson.annotation.*;
  
 
+import java.lang.Integer;
 
 import java.util.List;
 import javax.persistence.*;
@@ -93,9 +94,10 @@ public class Customer {
                 this(full_name, nric, phone,address, username, password, authorities, true, null);
     }
     
+    
     public Customer(String full_name, String nric, String phone, String address, 
             String username) {
-                this(full_name, nric, phone,address, username, null, null);
+                this(full_name, nric, phone,address, username, null, null); // do we need this?
     }
 
     public Customer(String full_name, String username) { // can remove
@@ -129,7 +131,107 @@ public class Customer {
 
         nric = nric.toUpperCase();
         
-        return nric.matches("[STGF]\\d\\d\\d\\d\\d\\d\\d[A-Z]");
+        if (!nric.matches("[STGF]\\d\\d\\d\\d\\d\\d\\d[A-Z]")) {
+            return false;
+        }
+
+        int num = Integer.parseInt(nric.substring(1, 8));
+        int checksum = 0;
+        int temp = 0;
+
+        for (int i = 2 ; i < 8 ; i++) {
+            temp = num % 10;
+            checksum += temp * i;
+            num /= 10;
+        }
+
+        temp = num % 10;
+        checksum += temp * 2;
+        num /= 10;
+
+        if (nric.charAt(0) == 'T' || nric.charAt(0) == 'G' ) {
+            checksum += 4;
+        }
+
+        checksum %= 11;
+
+        char last  = 'S';
+
+        if (nric.charAt(0) == 'T' || nric.charAt(0) == 'S') {
+            switch (checksum) {
+                case 0:
+                    last = 'J';
+                    break;
+                case 1:
+                    last = 'Z';
+                    break;
+                case 2:
+                    last = 'I';
+                    break;
+                case 3:
+                    last = 'H';
+                    break;
+                case 4:
+                    last = 'G';
+                    break;
+                case 5:
+                    last = 'F';
+                    break;
+                case 6:
+                    last = 'E';
+                    break;
+                case 7:
+                    last = 'D';
+                    break;
+                case 8:
+                    last = 'C';
+                    break;
+                case 9:
+                    last = 'B';
+                    break;
+                case 10:
+                    last = 'A';
+                    break;
+            }
+        } else {
+            switch (checksum) {
+                case 0:
+                    last = 'X';
+                    break;
+                case 1:
+                    last = 'W';
+                    break;
+                case 2:
+                    last = 'U';
+                    break;
+                case 3:
+                    last = 'T';
+                    break;
+                case 4:
+                    last = 'R';
+                    break;
+                case 5:
+                    last = 'Q';
+                    break;
+                case 6:
+                    last = 'P';
+                    break;
+                case 7:
+                    last = 'N';
+                    break;
+                case 8:
+                    last = 'M';
+                    break;
+                case 9:
+                    last = 'L';
+                    break;
+                case 10:
+                    last = 'K';
+                    break;
+            }
+        }
+        
+        return nric.charAt(8) == last;
     }
 
     public boolean checkPhone() {

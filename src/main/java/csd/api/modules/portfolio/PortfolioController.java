@@ -9,16 +9,19 @@ import csd.api.tables.*;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 @RestController
 public class PortfolioController {
     private PortfolioRepository portfolioRepo;
+    private CustomerRepository customerRepo;
 
-    public PortfolioController(PortfolioRepository portfolioRepo){
+    public PortfolioController(PortfolioRepository portfolioRepo, CustomerRepository customerRepo){
         this.portfolioRepo = portfolioRepo;
+        this.customerRepo = customerRepo;
     }
 
-    /**
+    /**   this one for testing 
      * List all portfolio in the system
      * @return list of all portfolio
      */
@@ -26,7 +29,20 @@ public class PortfolioController {
     public List<Portfolio> listPortfolios(){
         return portfolioRepo.findAll();
     }
-
+    /**
+     * List portfolio owned by customer
+     * @return portfoli of customer
+     */
+    @GetMapping("/portfolio")
+    public Portfolio listPortfolioforuser(Authentication auth){
+        Portfolio p = null;
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            Customer c = customerRepo.findByUsername(auth.getName());
+            p =  portfolioRepo.findByCustomer_Id(c.getId());
+        }
+        return p;
+    }
+    
     @GetMapping("/portfolio/{id}")
     public Portfolio getPortfolio(@PathVariable Integer id){
         Optional<Portfolio> p = portfolioRepo.findById(id);

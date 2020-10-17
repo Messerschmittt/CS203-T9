@@ -74,7 +74,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers(HttpMethod.POST, "/transactions/makeTransfer").hasAnyRole(onlyUser)
 
             // Trade Controller
-            
+            .antMatchers(HttpMethod.GET, "/trades").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.POST, "/trades").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/trades/*").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.DELETE, "/trades/*").hasAnyRole(onlyUser)
+            // Porfolio Controller
+            .antMatchers(HttpMethod.GET, "/portfolio").hasAnyRole(onlyUser)
+            // Stock Controller
+            .antMatchers(HttpMethod.GET, "/stocks").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/stocks/*").hasAnyRole(onlyUser)
             // Content Controller
             .antMatchers(HttpMethod.GET, "/contents").hasAnyRole(allUsers)
             .antMatchers(HttpMethod.GET, "/contents/*").hasAnyRole(onlyEmp)
@@ -87,12 +95,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         // Control Logging in and out
         // .formLogin().loginPage("/login_page").permitAll().and()
-        // .logout()
-        //     .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-        //     .invalidateHttpSession(true)
-        //     .deleteCookies("JSESSIONID")
-        //     .logoutSuccessUrl("/logoutSuccess")
-        //     .and()
+        .logout()
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
+            .and()
 
         .csrf().disable() // CSRF protection is needed only for browser based attacks
         .formLogin().disable()

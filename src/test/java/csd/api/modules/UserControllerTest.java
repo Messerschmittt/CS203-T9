@@ -115,6 +115,94 @@ public class UserControllerTest {
         }
      }
 
+     @Test
+     void addCustomer_ValidNric_ReturnCustomer() {
+        ApplicationUser user  =  new ApplicationUser("NewUser", "newuser1", "ROLE_USER");
+        Customer customer = new Customer( "New User", "S9565026J", "90001234", "123 Still Rd", "NewUser", "newuser1", "ROLE_USER");
+
+        when(users.existsByUsername(any(String.class))).thenReturn(true);
+        when(customers.existsByUsername(any(String.class))).thenReturn(false);
+        when(users.findByUsername(any(String.class))).thenReturn(user);
+        when(customers.save(any(Customer.class))).thenReturn(customer);
+
+        Customer savedCustomer = userController.addCustomer(customer); 
+        assertNotNull(savedCustomer);
+
+        verify(users).existsByUsername(user.getUsername());
+        verify(customers).existsByUsername(customer.getUsername());
+        verify(users).findByUsername(user.getUsername());
+        verify(customers).save(customer);
+     }
+
+     
+     @Test
+     void addCustomer_InvalidNric_ReturnNull() { // wrong checksum
+        ApplicationUser user  =  new ApplicationUser("NewUser", "newuser1", "ROLE_USER");
+        Customer customer = new Customer( "New User", "S9565026X", "90001234", "123 Still Rd", "NewUser", "newuser1", "ROLE_USER");
+
+        when(users.existsByUsername(any(String.class))).thenReturn(true);
+        when(customers.existsByUsername(any(String.class))).thenReturn(false);
+
+        Customer savedCustomer = null; 
+        
+        try {
+            savedCustomer =  userController.addCustomer(customer);
+        } catch ( InvalidInputException e) {
+            assertNull(savedCustomer);
+            assertEquals(e.getMessage(), customer.getNric() + " is not a valid nric");
+            verify(users).existsByUsername(user.getUsername());
+            verify(customers).existsByUsername(customer.getUsername());
+        }
+     }
+
+     
+
+     @Test
+     void addCustomer_InvalidPhone_ReturnNull() {
+        ApplicationUser user  =  new ApplicationUser("NewUser", "newuser1", "ROLE_USER");
+        Customer customer = new Customer( "New User", "S9565026J", "70001234", "123 Still Rd", "NewUser", "newuser1", "ROLE_USER");
+
+        when(users.existsByUsername(any(String.class))).thenReturn(true);
+        when(customers.existsByUsername(any(String.class))).thenReturn(false);
+
+        Customer savedCustomer = null; 
+        
+        try {
+            savedCustomer =  userController.addCustomer(customer);
+        } catch ( InvalidInputException e) {
+            assertNull(savedCustomer);
+            assertEquals(e.getMessage(), customer.getPhone() + " is not a valid phone number");
+            verify(users).existsByUsername(user.getUsername());
+            verify(customers).existsByUsername(customer.getUsername());
+        }
+     }
+
+     @Test
+     void addCustomer_InvalidNricInvalidPhone_ReturnNull() {
+        ApplicationUser user  =  new ApplicationUser("NewUser", "newuser1", "ROLE_USER");
+        Customer customer = new Customer( "New User", "S9565026X", "70001234", "123 Still Rd", "NewUser", "newuser1", "ROLE_USER");
+
+        when(users.existsByUsername(any(String.class))).thenReturn(true);
+        when(customers.existsByUsername(any(String.class))).thenReturn(false);
+
+        Customer savedCustomer = null; 
+        
+        try {
+            savedCustomer =  userController.addCustomer(customer);
+        } catch ( InvalidInputException e) {
+            assertNull(savedCustomer);
+            assertEquals(e.getMessage(), customer.getNric() + " is not a valid nric and " + customer.getPhone() + " is not a valid phone number");
+            verify(users).existsByUsername(user.getUsername());
+            verify(customers).existsByUsername(customer.getUsername());
+        }
+     }
+
+     
+     
+
+
+
+
      
      
 

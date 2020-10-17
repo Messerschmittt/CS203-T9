@@ -66,11 +66,11 @@ public class UserController {
             throw new CustomerAlreadyExistsException(username);
         }
 
-        if (!customer.checkNRIC()) {
+        if (!customer.checkNRIC() && !customer.checkPhone()) {
+            throw new InvalidInputException(customer.getNric(), customer.getPhone(), "nric", "phone number");
+        } else if (!customer.checkNRIC()) {
             throw new InvalidInputException(customer.getNric(), "nric");
-        }
-
-        if (!customer.checkPhone()) {
+        } else if (!customer.checkPhone()) {
             throw new InvalidInputException(customer.getPhone(), "phone number");
         }
 
