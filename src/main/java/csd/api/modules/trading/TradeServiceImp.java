@@ -203,6 +203,164 @@ public class TradeServiceImp implements TradeService {
         return bTrades;
     }
 
+    @Override
+    public Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
+                double transaction_amt, double currentPrice){
+        
+                    // Create/Update asset record
+        Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
+        if(a == null){          //create new assets
+            a = new Assets();
+            a.setCode(newTrade.getSymbol());
+            a.setCustomer(customer);
+            a.setAvg_price(currentPrice);
+            a.setQuantity(transaction_quantity);
+        } else{                 //update assets
+            int priorQuantity = a.getQuantity();
+            double priorAvgPrice = a.getAvg_price();
+            double newAvgPrice = ((priorQuantity * priorAvgPrice) + transaction_amt)/(transaction_quantity + priorQuantity);
+            a.setAvg_price(newAvgPrice);
+            a.setQuantity(priorQuantity + transaction_quantity);
+        }
+        a.setCurrent_price(currentPrice);
+        a.CalculateValue();
+        a.CalculateGain_loss();
+        assetsRepo.save(a);
+
+        //update Portfolio also
+        Portfolio cusPortfolio = customer.getPortfolio();
+        double gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
+        a.setCustomer(customer);
+        a.setPortfolio(cusPortfolio);
+        cusPortfolio.updateTotal_gain_loss(gain_loss); 
+        cusPortfolio.updateUnrealised();
+        portfolioRepo.save(cusPortfolio);
+
+        return a;
+    }
+
+    @Override
+    public Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
+    double transaction_amt, double currentPrice){
+
+        // Create/Update asset record
+        Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
+        int priorQuantity = a.getQuantity();
+        double priorAvgPrice = a.getAvg_price();
+        int newQuantity = priorQuantity - transaction_quantity;
+        // System.out.println("after sell quantity" + newQuantity);
+        double newAvgPrice = 0;
+
+        newAvgPrice = ((priorQuantity * priorAvgPrice) - (transaction_amt))/(priorQuantity - transaction_quantity);
+        a.setAvg_price(newAvgPrice);
+        a.setQuantity(newQuantity);
+        a.setCurrent_price(currentPrice);
+        a.CalculateValue();
+        a.CalculateGain_loss();
+        assetsRepo.save(a);
+
+        //update Portfolio also
+        Portfolio cusPortfolio = customer.getPortfolio();
+        double gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
+        a.setCustomer(customer);
+        a.setPortfolio(cusPortfolio);
+        cusPortfolio.updateTotal_gain_loss(gain_loss); 
+        cusPortfolio.updateUnrealised();
+        portfolioRepo.save(cusPortfolio);
+
+        if(newQuantity == 0){       //remove assests from repo
+            assetsRepo.deleteById(a.getId());
+        }
+
+        return a;
+    }
+
+    @Override
+    public Trade buyMarketOrder(Trade newTrade, Account cusAcc, Customer customer){
+        Stock stock = stockRepo.findBySymbol(newTrade.getSymbol());
+        String status = null;
+        int askVolume = stock.getAsk_volume();      //20,000
+        int tradeQty = newTrade.getQuantity();      //2,000
+        int filledQty = 0;          //buyer side
+        double total_amt;
+        int volume = 0;
+        if( askVolume < tradeQty){  //partially filled in newTrade(buy)
+            status = "partial-filled";          //at buyer
+            filledQty = askVolume;
+        } else {
+            status = "filled";
+            filledQty = tradeQty;       //2,000
+            volume = askVolume - tradeQty;          //ask volume of stock would not be 0 //18,000
+        }
+        total_amt = stock.getAsk() * filledQty;
+
+        // Create transaction between buyer and seller
+        Account acc = accRepo.findById(3).get();      //Ryver Bank account
+        Trans t = new Trans();
+        t.setAmount(total_amt);
+        t.setFrom_account(cusAcc);
+        t.setTo_account(acc);
+
+        // if(acc == null){
+        //     System.out.println("Faulty account accessed");
+        //     t.setTo_account(new Account());
+        // }
+        tradeRepo.save(newTrade);
+        accController.makeTransaction(t);
+
+        newTrade.setAvg_price(stock.getAsk());
+        newTrade.setStatus(status);
+        newTrade.setFilled_quantity(filledQty);
+        tradeRepo.save(newTrade);
+
+        stock.setAsk_volume(volume);
+        stockRepo.save(stock);
+
+        updateBuyerAssets(customer, newTrade, filledQty, total_amt, stock.getAsk());
+        return newTrade;
+    }
+
+    @Override
+    public Trade sellMarketOrder(Trade newTrade, Account cusAcc, Customer customer){
+        Stock stock = stockRepo.findBySymbol(newTrade.getSymbol());
+        String status = null;
+        int bidVolume = stock.getBid_volume();
+        int tradeQty = newTrade.getQuantity();
+        int filledQty = 0;
+        double total_amt;
+        int volume = 0;
+        if( bidVolume < tradeQty){  //partially filled in newTrade(buy)
+            status = "partial-filled";
+            filledQty = bidVolume;
+        } else {
+            status = "filled";
+            filledQty = tradeQty;
+            volume = bidVolume - tradeQty;          //ask volume of stock would not be 0
+        }
+        total_amt = stock.getBid() * filledQty;
+
+        // Create transaction between buyer and seller
+        Account acc = accRepo.findById(3).get();      //Ryver Bank account
+        Trans t = new Trans();
+        t.setAmount(total_amt);
+        t.setFrom_account(cusAcc);
+        t.setTo_account(acc);
+
+        tradeRepo.save(newTrade);
+        accController.makeTransaction(t);
+
+        newTrade.setAvg_price(stock.getBid());
+        newTrade.setStatus(status);
+        newTrade.setFilled_quantity(filledQty);
+        tradeRepo.save(newTrade);
+
+        stock.setAsk_volume(volume);
+        stockRepo.save(stock);
+
+        updateSellerAssets(customer, newTrade, filledQty, total_amt, stock.getBid());
+        return newTrade;
+    }
+
     //find the matching trade   
     @Override    
     public Trade matching(Trade newTrade){
@@ -217,7 +375,6 @@ public class TradeServiceImp implements TradeService {
         int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();
         Account cusAcc = newTrade.getAccount();
         Customer customer = cusAcc.getCustomer();
-        Portfolio cusPortfolio = customer.getPortfolio();
         double lastPrice = 0.0;
 
         if(newTrade.getAction().equals("buy")){
@@ -226,10 +383,11 @@ public class TradeServiceImp implements TradeService {
             int currentTradeQty = initialTradeQty;
             while(tradeNotFilled && i < sTrades.size()){
                 Trade s = sTrades.get(i);
+                Customer seller = s.getAccount().getCustomer();
                 double sAskPrice = s.getAsk();
 
                 if(newTradeBid == 0){ // check if market order
-                    // skip the price checking
+                    return buyMarketOrder(newTrade, cusAcc, customer);
                 }else if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;
@@ -241,7 +399,6 @@ public class TradeServiceImp implements TradeService {
                 int transaction_quantity = 0;
                 int sAvailQuantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
                 int sFilledQuantity = s.getFilled_quantity();
-                double gain_loss = 0.0;     //to update in Portfolio
                 
                 if(sAvailQuantity < currentTradeQty){  //partially filled in newTrade(buy), but sell trade -> "filled"
                     sStatus = "filled";
@@ -273,7 +430,7 @@ public class TradeServiceImp implements TradeService {
                 t.setAmount(transaction_amt);
                 t.setFrom_account(cusAcc);
                 t.setTo_account(s.getAccount());
-                //---?
+                
                 if(s.getAccount() == null){
                     System.out.println("Faulty account accessed");
                     t.setTo_account(new Account());
@@ -300,43 +457,10 @@ public class TradeServiceImp implements TradeService {
                 tradeRepo.save(s);
                 tradeRepo.save(newTrade);
 
-                //update the stock buy volume and price
-                Stock targetstock = stockRepo.findBySymbol(newTrade.getSymbol());
-                if(newTrade.getBid() > targetstock.getBid()){
-                    targetstock.setBid(newTrade.getBid());
-                    targetstock.setBid_volume(tradeFilledQuantity); 
-                }else if(newTrade.getBid() == targetstock.getBid()){
-                    targetstock.setBid_volume(targetstock.getBid_volume() + tradeFilledQuantity);
-                }
-                stockRepo.save(targetstock);
+                //update assests and portfolio
+                updateBuyerAssets(customer, newTrade, transaction_quantity, transaction_amt, lastPrice);
+                updateSellerAssets(seller, newTrade, transaction_quantity, transaction_amt, lastPrice);
                 
-                // Create/Update asset record
-                Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
-                
-                if(a == null){
-                    a = new Assets();
-                    a.setCode(newTrade.getSymbol());
-                    a.setCustomer(customer);
-                    a.setAvg_price(sAskPrice);
-                    a.setQuantity(a.getQuantity() + transaction_quantity);
-                }else{
-                    int priorQuantity = a.getQuantity();
-                    double priorAvgPrice = a.getAvg_price();
-                    double newAvgPrice = ((priorQuantity * priorAvgPrice) + transaction_amt)/(transaction_quantity + priorQuantity);
-                    a.setAvg_price(newAvgPrice);
-                    a.setQuantity(priorQuantity + transaction_quantity);
-                }
-                a.setCurrent_price(lastPrice);          //should keep updating for every trade???
-                a.CalculateValue();
-                a.CalculateGain_loss();
-                assetsRepo.save(a);
-
-                //need to check again ---
-                gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
-                cusPortfolio.updateTotal_gain_loss(gain_loss); 
-                cusPortfolio.updateUnrealised();
-                portfolioRepo.save(cusPortfolio);
-
                 stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
             }
         }
@@ -349,10 +473,11 @@ public class TradeServiceImp implements TradeService {
             int currentTradeQty = initialTradeQty;
             while(tradeNotFilled && i < bTrades.size()){
                 Trade b = bTrades.get(i);
+                Customer buyer = b.getAccount().getCustomer();
                 double bBidPrice = b.getBid();
 
                 if(newTradeAsk == 0){
-                    // skip the price checking
+                    return sellMarketOrder(newTrade, cusAcc, customer);
                 }else if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;
@@ -364,7 +489,6 @@ public class TradeServiceImp implements TradeService {
                 int transaction_quantity = 0;
                 int bAvailQuantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
                 int bFilledQuantity = b.getFilled_quantity();
-                double gain_loss = 0.0;     //to update in Portfolio
 
                 if(bAvailQuantity < currentTradeQty){  //partially filled in buy trade, but sell trade -> "filled"
                     bStatus = "filled";
@@ -420,45 +544,9 @@ public class TradeServiceImp implements TradeService {
                 tradeRepo.save(b);
                 tradeRepo.save(newTrade);
 
-                //update stock sell volumn and price
-                 Stock targetstock = stockRepo.findBySymbol(newTrade.getSymbol());
-                 if(newTrade.getAsk() > targetstock.getAsk()){
-                     targetstock.setAsk(newTrade.getAsk());
-                     targetstock.setAsk_volume(tradeFilledQuantity); 
-                 }else if(newTrade.getAsk() == targetstock.getAsk()){
-                     targetstock.setAsk_volume(targetstock.getAsk_volume() + tradeFilledQuantity);
-                 }
-                 stockRepo.save(targetstock);
-                
-                // Create/Update asset record
-                Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
-                if(a == null){
-                   System.out.println("asset not found");
-                   // Shld throw a real exception
-                }else{
-                    int priorQuantity = a.getQuantity();
-                    double priorAvgPrice = a.getAvg_price();
-                    int newQuantity = priorQuantity - transaction_quantity;
-                    System.out.println("after sell quantity" + newQuantity);
-                    double newAvgPrice = 0;
-                    if(newQuantity != 0){
-                        newAvgPrice = ((priorQuantity * priorAvgPrice) - (transaction_amt))/(priorQuantity - transaction_quantity);
-                    }
-
-                    a.setAvg_price(newAvgPrice);
-                    a.setQuantity(priorQuantity - transaction_quantity);
-                }
-
-                a.setCurrent_price(lastPrice);
-                a.CalculateValue();
-                a.CalculateGain_loss();
-                assetsRepo.save(a);
-
-                //need to check again ---
-                gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
-                cusPortfolio.updateTotal_gain_loss(gain_loss); 
-                cusPortfolio.updateUnrealised();
-                portfolioRepo.save(cusPortfolio);
+                //update assests and portfolio
+                updateBuyerAssets(buyer, newTrade, transaction_quantity, transaction_amt, lastPrice);
+                updateSellerAssets(customer, newTrade, transaction_quantity, transaction_amt, lastPrice);
 
                 stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
             }
@@ -477,7 +565,7 @@ public class TradeServiceImp implements TradeService {
     public Trade TradeGenerate(TradeRecord tradeRecord){
         
         boolean isValidSymbol = checkSymbol(tradeRecord.getSymbol());
-        boolean isValidTime = checkTime();
+        // boolean isValidTime = checkTime();
         boolean isValidQty = checkQuantity(tradeRecord.getQuantity());
 
         //if stock symbol is invalid, throw InvalidInputException
@@ -485,10 +573,10 @@ public class TradeServiceImp implements TradeService {
             throw new InvalidInputException(tradeRecord.getSymbol(), "Stock Symbol ");
         }
 
-        //if stock market is close, throw InvalidTradeTiming
-        if(!isValidTime) {
-            throw new InvalidTradeTiming();
-        }
+        // //if stock market is close, throw InvalidTradeTiming
+        // if(!isValidTime) {
+        //     throw new InvalidTradeTiming();
+        // }
 
         //if the quantity is not multiple of 100, throw InvalidInputException
         String qty = "" + tradeRecord.getQuantity();

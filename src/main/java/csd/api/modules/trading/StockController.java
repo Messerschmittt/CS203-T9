@@ -35,7 +35,7 @@ public class StockController {
 
     @PostMapping("/stock/initialiseStock")
     public HashSet<Stock> initialiseStock(){
-        if(!accts.findById(1).get().getCustomer().getUsername().equals(BANK_USERNAME)){
+        if(!accts.findById(3).get().getCustomer().getUsername().equals(BANK_USERNAME)){
             throw new RyverBankAccountException();
         }
         
@@ -64,7 +64,7 @@ public class StockController {
             newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
             newBuyTrade.setAsk(0.0);
             newBuyTrade.setFilled_quantity(0);
-            newBuyTrade.setAccount(accts.findById(1).get()); // Since the RYVERBANK account is the first acct created
+            newBuyTrade.setAccount(accts.findById(3).get()); // Since the RYVERBANK account is the 3rd acct created
             trades.save(newBuyTrade);
 
             // Create new sell trade

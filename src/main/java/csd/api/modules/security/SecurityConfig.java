@@ -87,11 +87,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // Stock Controller
             .antMatchers(HttpMethod.GET, "/stocks").hasAnyRole(onlyUser)
             .antMatchers(HttpMethod.GET, "/stocks/*").hasAnyRole(onlyUser)
+            
             // Content Controller
             .antMatchers(HttpMethod.GET, "/contents").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.GET, "/contents/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.GET, "/contents/*").hasAnyRole(allUsers)
             .antMatchers(HttpMethod.POST, "/contents").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.PUT, "/contents").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.PUT, "/contents/*").hasAnyRole(onlyEmp)
             .antMatchers(HttpMethod.DELETE, "/contents/*").hasAnyRole(onlyEmp)
 
             

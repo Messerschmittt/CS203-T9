@@ -24,6 +24,7 @@ import lombok.*;
 public class Assets {
     
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Integer id;
 
     private String code;

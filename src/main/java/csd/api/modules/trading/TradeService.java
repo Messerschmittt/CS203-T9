@@ -2,6 +2,9 @@ package csd.api.modules.trading;
 
 import java.util.List;
 import csd.api.tables.Trade;
+import csd.api.tables.Customer;
+import csd.api.tables.Account;
+import csd.api.tables.Assets;
 import csd.api.tables.templates.TradeRecord;
 
 public interface TradeService {
@@ -67,6 +70,16 @@ public interface TradeService {
      * @return list of sorted buy Trades
      */
     List<Trade> buyTradesSorting(String symbol);
+
+    Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
+    double transaction_amt, double currentPrice);
+
+    Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
+        double transaction_amt, double currentPrice);
+
+    Trade buyMarketOrder(Trade newTrade, Account cusAcc, Customer customer);
+
+    Trade sellMarketOrder(Trade newTrade, Account cusAcc, Customer customer);
 
     /**
      * Fullfil the customer trade order

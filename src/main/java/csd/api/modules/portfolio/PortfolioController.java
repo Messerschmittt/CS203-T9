@@ -15,8 +15,10 @@ import org.springframework.security.core.Authentication;
 public class PortfolioController {
     private PortfolioRepository portfolioRepo;
     private CustomerRepository customerRepo;
+    private AssetsRepository assetsRepo;
 
-    public PortfolioController(PortfolioRepository portfolioRepo, CustomerRepository customerRepo){
+    public PortfolioController(PortfolioRepository portfolioRepo, 
+            CustomerRepository customerRepo, AssetsRepository assetsRepo){
         this.portfolioRepo = portfolioRepo;
         this.customerRepo = customerRepo;
     }
