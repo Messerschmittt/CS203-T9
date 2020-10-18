@@ -1,0 +1,10 @@
+Default Users
+Manager: Basic manager_1:01_manager_01
+Analyst1: Basic analyst_1:01_analyst_01
+Analyst2: Basic analyst_2:02_analyst_02
+User1: Basic good_user_1:01_user_01
+User2: Basic good_user_2:02_user_02
+
+###
+GET http://localhost:8080/customers/1
+Authorization: Basic good_user_1:01_user_01

@@ -37,6 +37,7 @@ public class ContentController {
      */
     @GetMapping("/contents")
     public List<Content> getContents(Authentication auth){
+        System.out.println(auth.getPrincipal().toString());
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             // normal users can only see approved content
             List<Content> approvedContent = contents.findAll();

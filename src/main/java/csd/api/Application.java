@@ -27,7 +27,20 @@ public class Application {
         UserRepository userRepo = ctx.getBean(UserRepository.class);
         AccountRepository acctRepo = ctx.getBean(AccountRepository.class);
         BCryptPasswordEncoder encoder = ctx.getBean(BCryptPasswordEncoder.class);
-/*
+
+        List<ApplicationUser> initUsers = Arrays.asList(
+            new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
+            new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),
+            new ApplicationUser("analyst_2", encoder.encode("02_analyst_02"), "ROLE_ANALYST"),
+            new ApplicationUser(BANK_USERNAME, encoder.encode(BANK_PASSWORD), "ROLE_USER")
+            );
+
+        initUsers.forEach(user -> {
+            System.out.println("[User Initialised]" + userRepo.save(user).getUsername());
+        });
+
+
+        /*
         List<ApplicationUser> initUsers = Arrays.asList(
             new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
             new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),

@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 
 @RestController
@@ -61,7 +62,6 @@ public class UserController {
     @PostMapping("/customers")
     @ResponseStatus(HttpStatus.CREATED)
     public Customer addCustomer(@Valid @RequestBody Customer customer){
-
         String username = customer.getUsername();
         String authorities = customer.getAuthorities();
         String password = customer.getPassword();
@@ -72,6 +72,7 @@ public class UserController {
         try{
             if (!users.existsByUsername(username)) {
                 user = new ApplicationUser(username, password, authorities);
+                user.setPassword(encoder.encode(user.getPassword()));
                 user = users.save(user);
             } 
         }catch(Exception e){
@@ -123,32 +124,35 @@ public class UserController {
             throw new CustomerNotFoundException(id);
         }
 
+        System.out.println("get:"+ auth.getAuthorities().toString());
         // To ensure that customers can only view their own details and not other customers
-        // if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-        //     Customer c = customers.findByUsername(auth.getName());
-        //     if (c.getId() == id) {
-        //         return customer.get();
-        //     } else {
-        //         throw new UnauthorisedUserException("other customers details");
-        //     }
-        // }
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            Customer c = customers.findByUsername(auth.getName());
+            if (c.getId() == id) {
+                return customer.get();
+            } else {
+                throw new UnauthorisedUserException("other customers details");
+            }
+        }
         return customer.get();
     }
 
     @PutMapping("/customers/{id}")
     public Customer updateCustomer(@RequestBody Customer customer, @PathVariable Integer id, Authentication auth){
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("put:"+ auth.getAuthorities());
         Optional<Customer> c = customers.findById(id);
         if(!c.isPresent()){
             throw new CustomerNotFoundException(id);
         }
 
         Customer toUpdate = c.get();
-
-        // if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-        //     if (toUpdate != customers.findByUsername(auth.getName())) {
-        //         throw new UnauthorisedUserException("or update other customers details");
-        //     }
-        // }
+        
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            if (toUpdate != customers.findByUsername(auth.getName())) {
+                throw new UnauthorisedUserException("or update other customers details");
+            }
+        }
 
         
         toUpdate.setPhone(customer.getPhone());

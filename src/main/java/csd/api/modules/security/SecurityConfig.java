@@ -48,6 +48,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         String[] allUsers = new String[]{ "MANAGER", "ANALYST", "USER"};
         String[] onlyEmp = new String[]{ "MANAGER", "ANALYST"};
         String[] onlyManager = new String[]{ "MANAGER"};
+        String[] onlyManagerAndUser = new String[]{"MANAGER", "USER"};
         String[] onlyUser = new String[]{ "USER"};
         
         http
@@ -61,9 +62,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
         .authorizeRequests()
             // .anyRequest().authenticated() // All requests to API has to be authenticated
+            
             // User Controller
             // .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyManager   )
-            .antMatchers(HttpMethod.POST, "/user/createUser").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.POST, "/customers").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.PUT, "/customers/*").hasAnyRole(onlyManagerAndUser)
+            .antMatchers(HttpMethod.GET, "/customers/*").hasAnyRole(onlyManagerAndUser)
             
             // Account Controller
             .antMatchers(HttpMethod.GET, "/accounts").hasAnyRole(allUsers)

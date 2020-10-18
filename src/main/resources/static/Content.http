@@ -7,7 +7,7 @@ User2: Basic good_user_2:02_user_02
 
 
 ### Retrieve all content as employee
-GET http://34.239.105.123:8080/contents
+GET http://localhost:8080/contents
 Authorization: Basic manager_1:01_manager_01
 
 ### Retrieve all content as customer (normal user)
