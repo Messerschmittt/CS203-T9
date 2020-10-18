@@ -65,8 +65,20 @@ public class ContentControllerTest {
 
         assertEquals(result.size(), 0);
     }
-    // @Test
-    // void updateContent_IsPresent_ReturnContent() {
 
-    // }
+    @Test
+    void getContents_NonApproved_Manager() {
+        Authentication newAuth = new TestingAuthenticationToken(null, null, new String[]{"ROLE_MANAGER"});
+        Content newContent = new Content();
+        ArrayList<Content> list = new ArrayList<>();
+        newContent.setApproved(false);
+        list.add(newContent);
+
+        when(contents.findAll()).thenReturn(list);
+
+        ArrayList<Content> result = new ArrayList<>(contentController.getContents(newAuth));
+
+        assertEquals(result.size(), 1);
+    }
+
 }
