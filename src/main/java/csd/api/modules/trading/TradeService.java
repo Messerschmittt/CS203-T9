@@ -24,6 +24,12 @@ public interface TradeService {
     void deleteTrade(Integer id);
 
     /**
+     * update the status of specific trade record to cancel
+     * @param id
+     */
+    Trade CancelTrade(Integer id);
+
+    /**
      * Check validation of input stock symbol
      * @param symbol
      * @return boolean value

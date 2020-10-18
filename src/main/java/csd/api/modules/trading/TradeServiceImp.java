@@ -84,6 +84,19 @@ public class TradeServiceImp implements TradeService {
         }
         tradeRepo.deleteById(id);
     }
+
+    /**
+     * cancel the specific trade record using trade id
+     * If there is no trade with the given "id", throw a TradeNotFoundException
+     * @param id
+     */
+    @Override
+    public Trade CancelTrade(Integer id){
+        return tradeRepo.findById(id).map(trade -> {trade.setStatus("cancelled");
+            return tradeRepo.save(trade);
+        }).orElse(null);
+
+    }
     
     /**
      * Check the validation of input stock symbol
