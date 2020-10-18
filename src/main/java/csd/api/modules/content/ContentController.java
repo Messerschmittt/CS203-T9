@@ -52,14 +52,24 @@ public class ContentController {
 
     /**
      * Find a specific content by id
-     * API is restricted to only employees
+     * API is availaible to all users
      * @param id
      * @return content or null if no content with id specified
      */
     @GetMapping("/contents/{id}")
-    public Optional<Content> getSpecificContent(@PathVariable Integer id){
-        return contents.findById(id);
+    public Content getSpecificContent(@PathVariable Integer id, Authentication auth){
+        Optional<Content> c = contents.findById(id);
+        if(c.isEmpty()){
+            throw new ContentNotFoundException(id);
+        }
+        Content content = c.get();
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            if(content.isApproved() == false){
+                throw new UnauthorizedContentAccessException(id);
+            }
+        }
 
+        return content;
     }
 
     /**
