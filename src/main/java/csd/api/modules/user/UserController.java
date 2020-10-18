@@ -9,6 +9,7 @@ import javax.validation.Valid;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 
 
@@ -57,12 +58,23 @@ public class UserController {
     * @param user
      * @return
      */
-    @PostMapping("/customers")    
+    @PostMapping("/customers")
+    @ResponseStatus(HttpStatus.CREATED)
     public Customer addCustomer(@Valid @RequestBody Customer customer){
+
         String username = customer.getUsername();
+        String authorities = customer.getAuthorities();
+        String password = customer.getPassword();
+
+
+        ApplicationUser user = users.findByUsername(username);
+
+        
         if (!users.existsByUsername(username)) {
-            throw new UserNotFoundException(username);
-        }
+            user = new ApplicationUser(username, password, authorities);
+            user = users.save(user);
+        } 
+        
 
         if (customers.existsByUsername(username)) {
             throw new CustomerAlreadyExistsException(username);
@@ -77,10 +89,9 @@ public class UserController {
         }
 
         Portfolio portfolio = new Portfolio(customer);
-        ApplicationUser user = users.findByUsername(username);
-        customer.setPassword(user.getPassword()); 
+        customer.setPassword(password); 
         // if incorrect password was typed, wont matter as it is overwritten
-        customer.setAuthorities(user.getSimpleAuthorities());
+        customer.setAuthorities(authorities);
         customer.setActive(true);
         customer.setApplication_User(user);
         customer.setPortfolio(portfolio);
@@ -109,14 +120,14 @@ public class UserController {
         }
 
         // To ensure that customers can only view their own details and not other customers
-        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-            Customer c = customers.findByUsername(auth.getName());
-            if (c.getId() == id) {
-                return customer.get();
-            } else {
-                throw new UnauthorisedUserException("other customers details");
-            }
-        }
+        // if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+        //     Customer c = customers.findByUsername(auth.getName());
+        //     if (c.getId() == id) {
+        //         return customer.get();
+        //     } else {
+        //         throw new UnauthorisedUserException("other customers details");
+        //     }
+        // }
         return customer.get();
     }
 
