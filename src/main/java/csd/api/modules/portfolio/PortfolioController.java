@@ -43,15 +43,4 @@ public class PortfolioController {
         return p;
     }
     
-    @GetMapping("/portfolio/{id}")
-    public Portfolio getPortfolio(@PathVariable Integer id){
-        Optional<Portfolio> p = portfolioRepo.findById(id);
-        if(!p.isPresent()){
-            throw new PortfolioNotFoundException(id);
-        }
-
-        Portfolio portfolio = p.get();
-        return portfolio;
-    }
-
 }

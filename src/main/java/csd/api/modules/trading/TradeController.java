@@ -70,7 +70,7 @@ public class TradeController {
         return tradeService.getTrade(id);
     }
 
-    /**
+    /** this one can delete
      * Remove a trade with the DELETE request to "/trades/{id}"
      * For ROLE_USER only
      * If there is no trade with the given "id", will throw a TradeNotFoundException
@@ -82,7 +82,7 @@ public class TradeController {
         
         // To handle "trade not found" error using proper HTTP status code: 404
         if(trade == null) throw new TradeNotFoundException(id);
-        //-> need to check is this specific trade belong to the login user?-------------
+        //check is this specific trade belong to the login user
         Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
@@ -92,12 +92,36 @@ public class TradeController {
 
         tradeService.deleteTrade(id);
     }
+
+    /**
+     * If there is no trade with the given "id", throw a TradeNotFoundException
+     * @param id
+     * @param auth
+     * @return the updated trade
+     */
+    @PutMapping("/trades/{id}")
+    public Trade CancelTrade(@PathVariable Integer id, Authentication auth){
+        Trade trade = tradeService.getTrade(id);
+        //check is this specific trade belong to the login user
+        Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
+                throw new UnauthorisedAccountAccessException(id);
+            }
+        }
+        trade = tradeService.CancelTrade(id);
+        if(trade == null) throw new TradeNotFoundException(id);
+        
+        return trade;
+    }
+
     
     /**
      * Create trade via the POST request to "/trades"
      * @param tradeRecord
      * @return the latest info of trade
      */
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/trades")
     public Trade TradeGenerate(@RequestBody TradeRecord tradeRecord, Authentication auth){
          // Only allow role_user of create trade

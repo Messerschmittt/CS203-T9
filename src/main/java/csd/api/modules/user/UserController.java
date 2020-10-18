@@ -9,6 +9,9 @@ import javax.validation.Valid;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+
 
 @RestController
 public class UserController {
@@ -55,12 +58,27 @@ public class UserController {
     * @param user
      * @return
      */
-    @PostMapping("/user/createUser/customer")    
+    @PostMapping("/customers")
+    @ResponseStatus(HttpStatus.CREATED)
     public Customer addCustomer(@Valid @RequestBody Customer customer){
+
         String username = customer.getUsername();
-        if (!users.existsByUsername(username)) {
-            throw new UserNotFoundException(username);
+        String authorities = customer.getAuthorities();
+        String password = customer.getPassword();
+
+
+        ApplicationUser user = users.findByUsername(username);
+
+        try{
+            if (!users.existsByUsername(username)) {
+                user = new ApplicationUser(username, password, authorities);
+                user = users.save(user);
+            } 
+        }catch(Exception e){
+            throw new InvalidInputException();
         }
+        
+        
 
         if (customers.existsByUsername(username)) {
             throw new CustomerAlreadyExistsException(username);
@@ -75,10 +93,9 @@ public class UserController {
         }
 
         Portfolio portfolio = new Portfolio(customer);
-        ApplicationUser user = users.findByUsername(username);
-        customer.setPassword(user.getPassword()); 
+        customer.setPassword(password); 
         // if incorrect password was typed, wont matter as it is overwritten
-        customer.setAuthorities(user.getSimpleAuthorities());
+        customer.setAuthorities(authorities);
         customer.setActive(true);
         customer.setApplication_User(user);
         customer.setPortfolio(portfolio);
@@ -100,24 +117,52 @@ public class UserController {
 
 
     @GetMapping("/customers/{id}")
-    public Customer getCustomerDetails(@PathVariable Integer id){
-        // Optional<ApplicationUser> user = users.findById(id);
-        // System.out.println(user.get().getUsername());
-
-
-        // // Customer found = customers.findByApplication_User_Id(id);
-        // // System.out.println(found.getUsername());
-        // // return customers.findByApplication_User_Id(id);
-        // if (user == null) {
-        //     System.out.println("A");
-        //     return null;
-        // }
+    public Customer getCustomerDetails(@PathVariable Integer id, Authentication auth){
         Optional<Customer> customer = customers.findById(id);
-        try {
-            return customer.get();
-        } catch (NoSuchElementException e) {
+        if(!customer.isPresent()){
             throw new CustomerNotFoundException(id);
         }
+
+        // To ensure that customers can only view their own details and not other customers
+        // if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+        //     Customer c = customers.findByUsername(auth.getName());
+        //     if (c.getId() == id) {
+        //         return customer.get();
+        //     } else {
+        //         throw new UnauthorisedUserException("other customers details");
+        //     }
+        // }
+        return customer.get();
+    }
+
+    @PutMapping("/customers/{id}")
+    public Customer updateCustomer(@RequestBody Customer customer, @PathVariable Integer id, Authentication auth){
+        Optional<Customer> c = customers.findById(id);
+        if(!c.isPresent()){
+            throw new CustomerNotFoundException(id);
+        }
+
+        Customer toUpdate = c.get();
+
+        // if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+        //     if (toUpdate != customers.findByUsername(auth.getName())) {
+        //         throw new UnauthorisedUserException("or update other customers details");
+        //     }
+        // }
+
+        
+        toUpdate.setPhone(customer.getPhone());
+        toUpdate.setPassword(encoder.encode(customer.getPassword()));
+        toUpdate.setAddress(customer.getAddress());
+        
+        // // Only allow updating of the rest of the fields for manager
+        // if(auth.getAuthorities().toString().equals("[ROLE_MANAGER]")){
+        //     toUpdate.setFull_name(customer.getFull_name());
+        //     toUpdate.setNric(customer.getNric());
+        //     toUpdate.setAuthorities(customer.getAuthorities());
+        // }
+
+        return customers.save(toUpdate);
     }
    
     

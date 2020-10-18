@@ -12,8 +12,7 @@ public class AccountRecord {
     // class for parsing the json input from the rest client
 
 
-    private String username;
+    private int customer_id;
     private double balance;
-    private double available_balance;
     
 }

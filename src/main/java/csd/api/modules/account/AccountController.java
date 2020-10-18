@@ -86,14 +86,13 @@ public class AccountController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/accounts")
     public Account createAccount(@RequestBody AccountRecord accountRecord){
-        String username = accountRecord.getUsername();
-        if (!customers.existsByUsername(username)) {
-            throw new CustomerNotFoundException(username);
+        if (!customers.existsById(accountRecord.getCustomer_id())) {
+            throw new CustomerNotFoundException(accountRecord.getCustomer_id());
         }
 
 
-        Account newAcc = new Account(customers.findByUsername(username)
-                        , accountRecord.getBalance(), accountRecord.getAvailable_balance());
+        Account newAcc = new Account(customers.findById(accountRecord.getCustomer_id()).get()
+                        , accountRecord.getBalance(), accountRecord.getBalance());
         return accounts.save(newAcc);
         
     }

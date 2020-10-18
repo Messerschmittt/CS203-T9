@@ -84,6 +84,19 @@ public class TradeServiceImp implements TradeService {
         }
         tradeRepo.deleteById(id);
     }
+
+    /**
+     * cancel the specific trade record using trade id
+     * If there is no trade with the given "id", throw a TradeNotFoundException
+     * @param id
+     */
+    @Override
+    public Trade CancelTrade(Integer id){
+        return tradeRepo.findById(id).map(trade -> {trade.setStatus("cancelled");
+            return tradeRepo.save(trade);
+        }).orElse(null);
+
+    }
     
     /**
      * Check the validation of input stock symbol
@@ -193,9 +206,12 @@ public class TradeServiceImp implements TradeService {
     //find the matching trade   
     @Override    
     public Trade matching(Trade newTrade){
+        int cusId = newTrade.getAccount().getCustomer().getId();
         List<Trade> sTrades = sellTradesSorting(newTrade.getSymbol());  //sorted list of sellTrades
+        sTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
         List<Trade> bTrades = buyTradesSorting(newTrade.getSymbol());   //sorted list of buyTrades
-
+        bTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
+        
         Boolean tradeNotFilled = true;
         int i = 0;
         int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();

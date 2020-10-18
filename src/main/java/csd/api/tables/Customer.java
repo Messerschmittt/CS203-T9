@@ -4,6 +4,7 @@ package csd.api.tables;
 
 
 import com.fasterxml.jackson.annotation.*;
+import javax.validation.constraints.Pattern;
  
 
 import java.lang.Integer;
@@ -39,6 +40,8 @@ public class Customer {
 
     private String full_name;
     private String nric = null;
+
+    // @Pattern(message = "Invalid phone number.", regexp = "[89]\\d\\d\\d\\d\\d\\d\\d")
     private String phone = null;
     private String address;
     private String username;

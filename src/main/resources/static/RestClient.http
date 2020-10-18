@@ -99,10 +99,10 @@ Authorization: Basic manager_1:01_manager_01
 GET http://localhost:8080/portfolios
 Authorization: Basic manager_1:01_manager_01
 
-### -- View Individual Portfolio
+### -- View Individual Portfolio by user (use this)
 
-GET http://localhost:8080/portfolio/2
-Authorization: Basic manager_1:01_manager_01
+GET http://localhost:8080/portfolio
+Authorization: Basic good_user_2:02_user_02
 
 ### Customer
 
@@ -119,7 +119,7 @@ Content-Type: application/json
 
 ### -- Create Account From Customer2
 POST http://localhost:8080/accounts
-Authorization: Basic good_user_2:02_user_02
+Authorization: Basic manager_1:01_manager_01
 Content-Type: application/json
 
 {
@@ -131,7 +131,7 @@ Content-Type: application/json
 ###
 ### -- Create Invalid Account (invalid username)
 POST http://localhost:8080/accounts
-Authorization: Basic good_user_2:02_user_02
+Authorization: Basic manager_1:01_manager_01
 Content-Type: application/json
 
 {
@@ -219,6 +219,21 @@ Content-Type: application/json
     "address": "123 Still Rd"
 }
 
+###
+PUT http://localhost:8080/customers/1
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "id":1,
+    "username": "good_user_4",
+    "password":"abcde1234",
+    "full_name": "Good User",
+    "nric" : "S1234567I",
+    "phone" : "12345678",
+    "address": "123 Still Rd"
+}
+
 ### -- Create CUSTOMER (PASS, minimalist input)
 POST http://localhost:8080/user/createUser/customer
 Authorization: Basic manager_1:01_manager_01
@@ -254,8 +269,9 @@ Content-Type: application/json
     "available_balance": 100000.0
 }
 
-### - Create buy trade for Customer 1 - Account 1
+### - Create buy trade for Customer 3 - Account 1
 POST http://localhost:8080/trades
+Authorization: Basic good_user_2:01_user_02
 Content-Type: application/json
 
 {
@@ -263,8 +279,8 @@ Content-Type: application/json
     "symbol":"A17U.SI",
     "quantity":500,  
     "bid":0, 
-    "account_id":2, 
-    "customer_id":1, 
+    "account_id":1, 
+    "customer_id":3, 
     "status":"open"
 }
 
@@ -273,6 +289,7 @@ GET http://localhost:8080/assets
 
 ### - Create sell trade for Customer 1 - Account 1
 POST http://localhost:8080/trades
+Authorization: Basic good_user_2:01_user_02
 Content-Type: application/json
 
 {
@@ -284,6 +301,16 @@ Content-Type: application/json
     "customer_id":1, 
     "status":"open"
 }
+### -- cancel the trade for customer 1 - 
+PUT http://localhost:8080/trades/1
+Authorization: Basic good_user_2:01_user_02
+
+### -- view specific trade based on trade id -
+GET http://localhost:8080/trades/1
+Authorization: Basic good_user_2:01_user_02
+
+
+
 
 ### - View all contents
 GET http://localhost:8080/contents

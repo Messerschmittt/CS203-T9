@@ -85,9 +85,9 @@ public class ContentController {
      * @param auth
      * @return content updated
      */
-    @PutMapping("/contents")
-    public Content updateContent(@RequestBody Content content, Authentication auth){
-        Optional<Content> c = contents.findById(content.getId());
+    @PutMapping("/contents/{id}")
+    public Content updateContent(@RequestBody Content content, Authentication auth, @PathVariable Integer id){
+        Optional<Content> c = contents.findById(id);
         if(!c.isPresent()){
             throw new ContentNotFoundException(content.getId());
         }
