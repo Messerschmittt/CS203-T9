@@ -69,11 +69,15 @@ public class UserController {
 
         ApplicationUser user = users.findByUsername(username);
 
+        try{
+            if (!users.existsByUsername(username)) {
+                user = new ApplicationUser(username, password, authorities);
+                user = users.save(user);
+            } 
+        }catch(Exception e){
+            throw new InvalidInputException();
+        }
         
-        if (!users.existsByUsername(username)) {
-            user = new ApplicationUser(username, password, authorities);
-            user = users.save(user);
-        } 
         
 
         if (customers.existsByUsername(username)) {
@@ -133,30 +137,30 @@ public class UserController {
 
     @PutMapping("/customers/{id}")
     public Customer updateCustomer(@RequestBody Customer customer, @PathVariable Integer id, Authentication auth){
-        Optional<Customer> c = customers.findById(customer.getId());
+        Optional<Customer> c = customers.findById(id);
         if(!c.isPresent()){
-            throw new CustomerNotFoundException(customer.getId());
+            throw new CustomerNotFoundException(id);
         }
 
         Customer toUpdate = c.get();
 
-        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-            if (toUpdate != customers.findByUsername(auth.getName())) {
-                throw new UnauthorisedUserException("or update other customers details");
-            }
-        }
+        // if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+        //     if (toUpdate != customers.findByUsername(auth.getName())) {
+        //         throw new UnauthorisedUserException("or update other customers details");
+        //     }
+        // }
 
         
         toUpdate.setPhone(customer.getPhone());
         toUpdate.setPassword(encoder.encode(customer.getPassword()));
         toUpdate.setAddress(customer.getAddress());
         
-        // Only allow updating of the rest of the fields for manager
-        if(auth.getAuthorities().toString().equals("[ROLE_MANAGER]")){
-            toUpdate.setFull_name(customer.getFull_name());
-            toUpdate.setNric(customer.getNric());
-            toUpdate.setAuthorities(customer.getAuthorities());
-        }
+        // // Only allow updating of the rest of the fields for manager
+        // if(auth.getAuthorities().toString().equals("[ROLE_MANAGER]")){
+        //     toUpdate.setFull_name(customer.getFull_name());
+        //     toUpdate.setNric(customer.getNric());
+        //     toUpdate.setAuthorities(customer.getAuthorities());
+        // }
 
         return customers.save(toUpdate);
     }

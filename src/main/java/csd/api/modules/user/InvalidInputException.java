@@ -17,5 +17,9 @@ public class InvalidInputException extends RuntimeException{
     public InvalidInputException(String input1, String input2, String type1, String type2) {
         super( input1 + " is not a valid " + type1 + " and "  + input2 + " is not a valid " + type2);
     }
+
+    public InvalidInputException(){
+        super();
+    }
     
 }
