@@ -7,6 +7,8 @@ import csd.api.modules.user.*;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.BadRequestException;
+
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -51,7 +53,7 @@ public class AccountController {
         }
         Account acc = a.get();
 
-        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+        if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){
             if(!auth.getName().equals(acc.getCustomer().getUsername())){
                 throw new UnauthorisedAccountAccessException(id);
             }
@@ -98,7 +100,7 @@ public class AccountController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/transactions")
+    @PostMapping("/accounts/{account_id}/transactions")
     public Trans makeSimpleTrans(@RequestBody TransferRecord newTransRecord, Authentication auth){
         Optional<Account> f_a = accounts.findById(newTransRecord.getFrom_account());
         Optional<Account> t_a = accounts.findById(newTransRecord.getTo_account());
