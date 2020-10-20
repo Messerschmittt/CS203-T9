@@ -33,13 +33,14 @@ public class StockController {
         this.accts = accts;
     }
 
+    /*
     @PostMapping("/stock/initialiseStock")
     public HashSet<Stock> initialiseStock(){
-        if(!accts.findById(3).get().getCustomer().getUsername().equals(BANK_USERNAME)){
+        if(!accts.findById(1).get().getCustomer().getUsername().equals(BANK_USERNAME)){
             throw new RyverBankAccountException();
         }
         
-        int quantity = 20_000;
+        int quantity = 20000;
         String now = LocalDateTime.now().toString();
         
         // Took out U96.SI 
@@ -52,7 +53,7 @@ public class StockController {
         HashSet<Stock> initialisedStock = new HashSet<>();
         for(String symbol : SGX_top30){
             counter++;
-            HashMap<String,String> stockInfo = PriceController.getPrice(symbol);
+            HashMap<String,String> stockInfo = PriceController.getPrice(symbol);        //symbol with .SI
 
             // Create new buy trade
             Trade newBuyTrade = new Trade();
@@ -64,7 +65,7 @@ public class StockController {
             newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
             newBuyTrade.setAsk(0.0);
             newBuyTrade.setFilled_quantity(0);
-            newBuyTrade.setAccount(accts.findById(3).get()); // Since the RYVERBANK account is the 3rd acct created
+            newBuyTrade.setAccount(accts.findById(1).get()); // Since the RYVERBANK account is the first acct created
             trades.save(newBuyTrade);
 
             // Create new sell trade
@@ -86,12 +87,13 @@ public class StockController {
             stocks.save(newStock);
 
             initialisedStock.add(newStock);
-
         }
         System.out.println("Counter: " + counter);
         return initialisedStock;
     }
-    // this for only role_user also?
+    */
+    
+    // for only role_user
     @GetMapping("/stocks")
     public List<Stock> getAllStocks(){
         return stocks.findAll();
@@ -104,9 +106,39 @@ public class StockController {
             throw new UnauthorisedUserException("trade");
         }
         Stock stock = stocks.findBySymbol(symbol);
+        if(stock == null) throw new StockNotFoundException(symbol);
         return stock;
     }
     
+
+    // Initialise the stock at the start of the program
+    public HashSet<Stock> initialiseStock(){
+        int quantity = 20000;
+        String now = LocalDateTime.now().toString();
+        
+        // Took out U96.SI 
+        ArrayList<String> SGX_top30 = new ArrayList<>(
+            Arrays.asList("A17U.SI", "C61U.SI", "C31.SI", "C38U.SI","C09.SI", "C52.SI", "D01.SI", "D05.SI", 
+            "G13.SI", "H78.SI", "C07.SI", "J36.SI", "J37.SI", "BN4.SI", "N2IU.SI", "ME8U.SI", "M44U.SI", "O39.SI",
+            "S58.SI", "S68.SI", "C6L.SI", "Z74.SI", "S63.SI", "Y92.SI", "U11.SI", "U14.SI", "V03.SI", "F34.SI", "BS6.SI"));
+        
+        int counter = 0;
+        HashSet<Stock> initialisedStock = new HashSet<>();
+        for(String symbol: SGX_top30){
+            counter++;
+            HashMap<String,String> stockInfo = PriceController.getPrice(symbol);  //symbol with .SI (To get the stock info from YahooFinance)
+
+            // Create new stock record
+            String symbol_ = symbol.substring(0, symbol.length() - 3);          //symbol without .SI (to be store in Stock Repo)
+            Stock newStock = new Stock(symbol_, Double.parseDouble(stockInfo.get("price")),
+            quantity, Double.parseDouble(stockInfo.get("bid")), quantity, Double.parseDouble(stockInfo.get("ask")));
+            stocks.save(newStock);
+
+            initialisedStock.add(newStock);
+        }
+        System.out.println("Counter: " + counter);
+        return initialisedStock;
+    }
 
     public void refreshStockPrice(String symbol, double last_price){
         Stock s = stocks.findBySymbol(symbol);

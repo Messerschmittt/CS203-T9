@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import csd.api.modules.trading.StockController;
 import csd.api.tables.*;
 import static csd.api.modules.account.RyverBankAccountConstants.*;
 
@@ -27,6 +28,10 @@ public class Application {
         UserRepository userRepo = ctx.getBean(UserRepository.class);
         AccountRepository acctRepo = ctx.getBean(AccountRepository.class);
         BCryptPasswordEncoder encoder = ctx.getBean(BCryptPasswordEncoder.class);
+        StockRepository stockRepo = ctx.getBean(StockRepository.class);
+        TradeRepository tradeRepo = ctx.getBean(TradeRepository.class);
+
+        StockController stockController = new StockController(stockRepo, tradeRepo, acctRepo);
 
         List<ApplicationUser> initUsers = Arrays.asList(
             new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
@@ -66,19 +71,17 @@ public class Application {
             System.out.println("[User Initialised]" + empRepo.save(employee).getApplicationUser().getUsername());
 
         });
-
-
-
+        */
+    
         List<Customer> initCustomer = Arrays.asList(
-            new Customer(userRepo.findByUsername("good_user_1"), "Customer 1"),
-            new Customer(userRepo.findByUsername( "good_user_2"), "Customer 2"),
             new Customer(userRepo.findByUsername(BANK_USERNAME), BANK_FULL_NAME)
         );
 
         initCustomer.forEach(customer -> {
             customer.setPortfolio(new Portfolio(customer));
-            System.out.println("[User Initialised]" + cusRepo.save(customer).getUsername());
+            System.out.println("[Customer Initialised]" + cusRepo.save(customer).getUsername());
         });
+        
 
         List<Account> initAccount = Arrays.asList(
             new Account(cusRepo.findByUsername(BANK_USERNAME), BANK_BALANCE, BANK_AVAIL_BALANCE)
@@ -87,7 +90,8 @@ public class Application {
         initAccount.forEach(account -> {
             System.out.println("[Account Initialised]" + acctRepo.save(account).getCustomer().getUsername());
         });
-
+    
+/*
         List<Content> initContent = Arrays.asList(
             new Content("Content Title 1", "Content Summary 1", "Content Content 1", "Content Link 1"),
             new Content("Content Title 2", "Content Summary 2", "Content Content 2", "Content Link 2")
@@ -99,9 +103,8 @@ public class Application {
             // System.out.println(contRepo.findById(customer.getId()));
 
         });
-
-
 */
+        
+        stockController.initialiseStock();
     }
-    
 }
