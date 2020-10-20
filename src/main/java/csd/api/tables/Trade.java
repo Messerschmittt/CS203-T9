@@ -4,14 +4,14 @@ import java.security.Timestamp;
 import java.util.List;
 import javax.persistence.*;
 
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import com.fasterxml.jackson.annotation.*;
 
 import lombok.*;
 
@@ -36,15 +36,29 @@ public class Trade implements Comparable<Trade> {
     private double avg_price;
     private int filled_quantity = 0;
     private String date;
-    private String status = "open";
-  
-    @ManyToOne
+    
+    
+    
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty("account_id")
     @JoinColumn(name = "account_id") 
     private Account account;
 
+    private int customer_id;
+    private String status = "open";
+    // @ManyToOne
+    // @JoinColumn(name = "customer_id") 
+    // private Customer customer;
+
+
+    // public Trade(String action, String symbol, int quanitity, 
+    // double bid, double ask, double avg_price, int filled_quantity,
+    // String date, int accountid, int customerid, String status){
     public Trade(String action, String symbol, int quanitity, 
     double bid, double ask, double avg_price, int filled_quantity,
-    String date, String status, Account account){
+    String date, Account account,int customer_id,String status){
         this.action = action;
         this.symbol = symbol;
         this.quantity = quanitity;
@@ -53,8 +67,9 @@ public class Trade implements Comparable<Trade> {
         this.avg_price = avg_price;
         this.filled_quantity = filled_quantity;
         this.date = date;
-        this.status = status;
         this.account = account;
+        this.customer_id = customer_id;
+        this.status = status;
     }
 
     @Override

@@ -55,7 +55,7 @@ public class StockController {
             counter++;
             HashMap<String,String> stockInfo = PriceController.getPrice(symbol);        //symbol with .SI
 
-            // Create new buy trade
+            Create new buy trade
             Trade newBuyTrade = new Trade();
             newBuyTrade.setSymbol(symbol);
             newBuyTrade.setAction("buy");
@@ -110,8 +110,8 @@ public class StockController {
         return stock;
     }
     
-
-    // Initialise the stock at the start of the program
+    
+    //Initialise the stock at the start of the program
     public HashSet<Stock> initialiseStock(){
         int quantity = 20000;
         String now = LocalDateTime.now().toString();
@@ -135,6 +135,31 @@ public class StockController {
             stocks.save(newStock);
 
             initialisedStock.add(newStock);
+            // Create new buy trade
+            Trade newBuyTrade = new Trade();
+            newBuyTrade.setSymbol(symbol_);
+            newBuyTrade.setAction("buy");
+            newBuyTrade.setDate(now);
+            newBuyTrade.setStatus("open");
+            newBuyTrade.setQuantity(quantity);
+            newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
+            newBuyTrade.setAsk(0.0);
+            newBuyTrade.setFilled_quantity(0);
+            newBuyTrade.setAccount(accts.findById(1).get()); // Since the RYVERBANK account is the first acct created
+            trades.save(newBuyTrade);
+
+            // // Create new sell trade
+            Trade newSellTrade = new Trade();
+            newSellTrade.setSymbol(symbol_);
+            newSellTrade.setAction("sell");
+            newSellTrade.setDate(now);
+            newSellTrade.setStatus("open");
+            newSellTrade.setQuantity(quantity);
+            newSellTrade.setBid(0.0);
+            newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
+            newSellTrade.setFilled_quantity(0);
+            newSellTrade.setAccount(accts.findById(1).get());
+            trades.save(newSellTrade);
         }
         System.out.println("Counter: " + counter);
         return initialisedStock;

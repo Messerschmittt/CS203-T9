@@ -97,7 +97,7 @@ public class TradeServiceImp implements TradeService {
         }).orElse(null);
 
     }
-    
+
     /**
      * Check the validation of input stock symbol
      * @param symbol
@@ -586,9 +586,26 @@ public class TradeServiceImp implements TradeService {
 
         Account cusAcc = accRepo.findById(tradeRecord.getAccount_id()).get();
         List<Assets> cusAssets = cusAcc.getCustomer().getAssets();
-        Trade trade = new Trade(tradeRecord.getAction(), tradeRecord.getSymbol(), tradeRecord.getQuantity(), tradeRecord.getBid(), tradeRecord.getAsk(), 
-        tradeRecord.getAvg_price(), tradeRecord.getFilled_quantity(), tradeRecord.getDate(), tradeRecord.getStatus(),  cusAcc);
 
+        String action = tradeRecord.getAction();
+        Trade trade = new Trade();
+        trade.setAction(tradeRecord.getAction());
+        trade.setSymbol(tradeRecord.getSymbol());
+        if(action.equals("buy")){
+            trade.setBid(tradeRecord.getBid());
+        }else if(action.equals("sell")){
+            trade.setAsk(tradeRecord.getAsk());
+        }
+        trade.setQuantity(tradeRecord.getQuantity());
+        trade.setAvg_price(tradeRecord.getAvg_price());
+        trade.setFilled_quantity(tradeRecord.getFilled_quantity());
+        trade.setDate(tradeRecord.getDate());
+        trade.setAccount(cusAcc);
+        trade.setCustomer_id(cusAcc.getCustomer().getId());
+        trade.setStatus(tradeRecord.getStatus());
+        // Trade trade = new Trade(tradeRecord.getAction(), tradeRecord.getSymbol(), tradeRecord.getQuantity(), tradeRecord.getBid(), tradeRecord.getAsk(), 
+        // tradeRecord.getAvg_price(), tradeRecord.getFilled_quantity(), tradeRecord.getDate(), tradeRecord.getStatus(),  cusAcc);
+        // trade.setId(tradeRecord.getId());
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell
         if(trade.getAction().equals("buy")){

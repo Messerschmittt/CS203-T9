@@ -251,9 +251,11 @@ POST http://localhost:8080/stock/initialiseStock
 
 ### -- View Stock Repository
 GET http://localhost:8080/stocks
+Authorization: Basic good_user_1:01_user_01
 
 ### -- View Trade Repository
 GET http://localhost:8080/trades
+Authorization: Basic good_user_1:01_user_01
 
 ###
 GET http://localhost:8080/pricetest?stock=A17U.SI
@@ -271,15 +273,15 @@ Content-Type: application/json
 
 ### - Create buy trade for Customer 3 - Account 1
 POST http://localhost:8080/trades
-Authorization: Basic good_user_2:01_user_02
+Authorization: Basic good_user_2:02_user_02
 Content-Type: application/json
 
 {
     "action":"buy", 
-    "symbol":"A17U.SI",
+    "symbol":"A17U",
     "quantity":500,  
     "bid":0, 
-    "account_id":1, 
+    "account_id":3, 
     "customer_id":3, 
     "status":"open"
 }
@@ -303,11 +305,11 @@ Content-Type: application/json
 }
 ### -- cancel the trade for customer 1 - 
 PUT http://localhost:8080/trades/1
-Authorization: Basic good_user_2:01_user_02
+Authorization: Basic good_user_2:02_user_02
 
 ### -- view specific trade based on trade id -
-GET http://localhost:8080/trades/1
-Authorization: Basic good_user_2:01_user_02
+GET http://localhost:8080/trades/6
+Authorization: Basic good_user_1:01_user_01
 
 
 
