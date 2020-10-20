@@ -129,16 +129,16 @@ public class UserController {
         if(!customer.isPresent()){
             throw new CustomerNotFoundException(id);
         }
+        Customer c = customer.get();
 
-        System.out.println("get:"+ auth.getAuthorities().toString());
+        // System.out.println("get:"+ auth.getAuthorities().toString());
         // To ensure that customers can only view their own details and not other customers
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-            Customer c = customers.findByUsername(auth.getName());
-            if (c.getId() == id) {
-                return customer.get();
-            } else {
+            
+            if(!auth.getName().equals(c.getUsername())){
                 throw new UnauthorisedUserException("other customers details");
             }
+           
         }
         return customer.get();
     }
@@ -160,7 +160,9 @@ public class UserController {
             }
         }
 
-        
+        if (!customer.checkPhone() || !customer.validate()) {
+            throw new InvalidInputException();
+        }
         toUpdate.setPhone(customer.getPhone());
         toUpdate.setPassword(encoder.encode(customer.getPassword()));
         toUpdate.setAddress(customer.getAddress());
