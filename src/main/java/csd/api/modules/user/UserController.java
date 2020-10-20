@@ -165,11 +165,11 @@ public class UserController {
         toUpdate.setPassword(encoder.encode(customer.getPassword()));
         toUpdate.setAddress(customer.getAddress());
         
-        // Only allow updating of the rest of the fields for manager
+        // Only allow updating of active for manager
         if(auth.getAuthorities().toString().equals("[ROLE_MANAGER]")){
-            toUpdate.setFull_name(customer.getFull_name());
-            toUpdate.setNric(customer.getNric());
-            toUpdate.setAuthorities(customer.getAuthorities());
+            // toUpdate.setFull_name(customer.getFull_name());
+            // toUpdate.setNric(customer.getNric());
+            // toUpdate.setAuthorities(customer.getAuthorities());
             toUpdate.setActive(customer.getActive());
         }
 
