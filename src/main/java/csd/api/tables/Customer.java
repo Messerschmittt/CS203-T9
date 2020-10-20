@@ -64,16 +64,9 @@ public class Customer {
     @JsonIgnore
     private List<Assets> assets;
     
-    // @OneToOne(fetch = FetchType.LAZY, optional = false)
-    // @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    // @JsonIdentityReference(alwaysAsId = true)
-    // @JsonProperty("application_User_id")
-    // @JoinColumn(name = "application_User_id")
-    @OneToOne
-    // to deal with huge errors
-    
-    @JsonIgnore
 
+    @OneToOne
+    @JsonIgnore
     private ApplicationUser application_User;
 
 
@@ -129,7 +122,7 @@ public class Customer {
     // if input is null, then it is considered valid, 
     public boolean checkNRIC() {
         if (nric == null) {
-            return true;
+            return false;
         }
 
         nric = nric.toUpperCase();
@@ -236,12 +229,25 @@ public class Customer {
         
         return nric.charAt(8) == last;
     }
+    
 
     public boolean checkPhone() {
         if (phone == null) {
-            return true;
+            return false;
         }
 
-        return phone.matches("[89]\\d\\d\\d\\d\\d\\d\\d");
+        return phone.matches("[689]\\d\\d\\d\\d\\d\\d\\d");
+    }
+
+    public boolean validate() {
+        if (address == null || full_name == null) {
+            return false;
+        } 
+        return true;
+
+    }
+
+    public boolean getActive() {
+        return active;
     }
 }

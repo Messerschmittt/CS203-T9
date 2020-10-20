@@ -22,7 +22,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         csd.api.tables.ApplicationUser applicationUser = users.findByUsername(username);
         if (applicationUser == null) {
             throw new UsernameNotFoundException(username);
+        } else if (applicationUser.getCustomer() != null && 
+                        !applicationUser.getCustomer().getActive()) {
+            throw new CustomerNotActiveException();
         }
+
         System.out.println("" + applicationUser.getUsername() + " auth " + applicationUser.getAuthorities().size());
         return new User(applicationUser.getUsername(), applicationUser.getPassword(), applicationUser.getAuthorities());
     }

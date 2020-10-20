@@ -41,11 +41,9 @@ public class ApplicationUser implements UserDetails{
 
     
     @NotNull(message = "Username should not be null")
-    @Size(min = 5, max = 20, message = "Username should be between 5 and 20 characters")
     private String username;
     
     @NotNull(message = "Password should not be null")
-    @Size(min = 8, message = "Password should be at least 8 characters")
     private String password;
 
     @NotNull(message = "Authorities should not be null")

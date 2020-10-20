@@ -37,7 +37,7 @@ public class AccountController {
     @GetMapping("/accounts")
     public List<Account> getAccounts(Authentication auth){
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-            System.out.println("user = " + auth.getName());
+            // System.out.println("user = " + auth.getName());
             Customer c = customers.findByUsername(auth.getName());
             return accounts.findAllByCustomer_Id(c.getId());
         }
@@ -89,7 +89,7 @@ public class AccountController {
     @PostMapping("/accounts")
     public Account createAccount(@RequestBody AccountRecord accountRecord){
         if (!customers.existsById(accountRecord.getCustomer_id())) {
-            throw new CustomerNotFoundException(accountRecord.getCustomer_id());
+            throw new InvalidInputException();
         }
 
 

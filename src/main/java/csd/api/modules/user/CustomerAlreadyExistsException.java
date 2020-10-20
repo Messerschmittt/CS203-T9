@@ -3,7 +3,7 @@ package csd.api.modules.user;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND) // 404 Error
+@ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Error
 public class CustomerAlreadyExistsException extends RuntimeException{
     /**
      *
@@ -12,6 +12,10 @@ public class CustomerAlreadyExistsException extends RuntimeException{
 
     public CustomerAlreadyExistsException(String username) {
         super(username + " already has a customer account");
+    }
+
+    public CustomerAlreadyExistsException() {
+        super();
     }
 
 

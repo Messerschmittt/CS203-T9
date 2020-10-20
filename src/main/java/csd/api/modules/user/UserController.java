@@ -83,6 +83,9 @@ public class UserController {
 
         if (customers.existsByUsername(username)) {
             throw new CustomerAlreadyExistsException(username);
+        } 
+        if (customers.existsByNric(customer.getNric())) {
+            throw new CustomerAlreadyExistsException();
         }
 
         if (!customer.checkNRIC() && !customer.checkPhone()) {
@@ -95,11 +98,14 @@ public class UserController {
 
         Portfolio portfolio = new Portfolio(customer);
         customer.setPassword(password); 
-        // if incorrect password was typed, wont matter as it is overwritten
         customer.setAuthorities(authorities);
         customer.setActive(true);
         customer.setApplication_User(user);
         customer.setPortfolio(portfolio);
+
+        if (!customer.validate()) {
+            throw new InvalidInputException();
+        }
 
         return customers.save(customer);
     }
@@ -159,12 +165,13 @@ public class UserController {
         toUpdate.setPassword(encoder.encode(customer.getPassword()));
         toUpdate.setAddress(customer.getAddress());
         
-        // // Only allow updating of the rest of the fields for manager
-        // if(auth.getAuthorities().toString().equals("[ROLE_MANAGER]")){
-        //     toUpdate.setFull_name(customer.getFull_name());
-        //     toUpdate.setNric(customer.getNric());
-        //     toUpdate.setAuthorities(customer.getAuthorities());
-        // }
+        // Only allow updating of the rest of the fields for manager
+        if(auth.getAuthorities().toString().equals("[ROLE_MANAGER]")){
+            toUpdate.setFull_name(customer.getFull_name());
+            toUpdate.setNric(customer.getNric());
+            toUpdate.setAuthorities(customer.getAuthorities());
+            toUpdate.setActive(customer.getActive());
+        }
 
         return customers.save(toUpdate);
     }

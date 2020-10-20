@@ -3,7 +3,7 @@ package csd.api.modules.user;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND) // 404 Error
+@ResponseStatus(HttpStatus.CONFLICT) // 409 Error
 public class UsernameAlreadyTakenException extends RuntimeException{
     /**
      *

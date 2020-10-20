@@ -3,7 +3,7 @@ package csd.api.modules.account;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND) // 404 Error
+@ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Error
 public class ExceedAvailableBalanceException extends RuntimeException{
     /**
      *

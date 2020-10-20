@@ -3,6 +3,9 @@ package csd.api.modules.user;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+
+// may not be used, consider removing
+
 @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Error
 public class UserNotFoundException extends RuntimeException{
     /**
