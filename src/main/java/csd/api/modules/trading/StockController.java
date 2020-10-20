@@ -26,11 +26,14 @@ public class StockController {
     public StockRepository stocks;
     public TradeRepository trades;
     public AccountRepository accts;
+    public CustomerRepository customers;
 
-    public StockController(StockRepository stocks, TradeRepository trades, AccountRepository accts){
+    public StockController(StockRepository stocks, TradeRepository trades, AccountRepository accts,
+    CustomerRepository customers){
         this.stocks = stocks;
         this.trades = trades;
         this.accts = accts;
+        this.customers = customers;
     }
 
     /*
@@ -145,7 +148,7 @@ public class StockController {
             newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
             newBuyTrade.setAsk(0.0);
             newBuyTrade.setFilled_quantity(0);
-            newBuyTrade.setAccount(accts.findById(1).get()); // Since the RYVERBANK account is the first acct created
+            newBuyTrade.setAccount(accts.findByCustomer_Id(customers.findByUsername(BANK_USERNAME).getId())); // Since the RYVERBANK account is the first acct created
             trades.save(newBuyTrade);
 
             // // Create new sell trade
@@ -158,7 +161,7 @@ public class StockController {
             newSellTrade.setBid(0.0);
             newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
             newSellTrade.setFilled_quantity(0);
-            newSellTrade.setAccount(accts.findById(1).get());
+            newSellTrade.setAccount(accts.findByCustomer_Id(customers.findByUsername(BANK_USERNAME).getId()));
             trades.save(newSellTrade);
         }
         System.out.println("Counter: " + counter);

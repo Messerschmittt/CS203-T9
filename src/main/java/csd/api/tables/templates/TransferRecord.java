@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class TransferRecord {
-    private int from_account;
-    private int to_account;
+    private int from;
+    private int to;
     private double amount;
 }

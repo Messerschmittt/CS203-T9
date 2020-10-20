@@ -31,7 +31,7 @@ public class Application {
         StockRepository stockRepo = ctx.getBean(StockRepository.class);
         TradeRepository tradeRepo = ctx.getBean(TradeRepository.class);
 
-        StockController stockController = new StockController(stockRepo, tradeRepo, acctRepo);
+        StockController stockController = new StockController(stockRepo, tradeRepo, acctRepo, cusRepo);
 
         List<ApplicationUser> initUsers = Arrays.asList(
             new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),

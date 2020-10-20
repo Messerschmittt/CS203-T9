@@ -55,7 +55,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .httpBasic()
         .and() //  "and()"" method allows us to continue configuring the parent
         .authorizeRequests()
-        .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
+        .antMatchers(HttpMethod.GET, "/reset").permitAll()
         .and()
         .addFilter(new JWTAuthenticationFilter(authenticationManager()))
         .addFilter(new JWTAuthorizationFilter(authenticationManager(), userDetailsService))

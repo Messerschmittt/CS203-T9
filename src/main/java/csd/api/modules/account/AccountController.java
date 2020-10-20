@@ -53,7 +53,9 @@ public class AccountController {
         }
         Account acc = a.get();
 
-        if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            System.out.println("Accessing account" + auth.getName());
+            System.out.println("Account: " + acc.getId() + "name" + acc.getCustomer().getUsername());
             if(!auth.getName().equals(acc.getCustomer().getUsername())){
                 throw new UnauthorisedAccountAccessException(id);
             }
@@ -102,13 +104,13 @@ public class AccountController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/accounts/{account_id}/transactions")
     public Trans makeSimpleTrans(@RequestBody TransferRecord newTransRecord, Authentication auth){
-        Optional<Account> f_a = accounts.findById(newTransRecord.getFrom_account());
-        Optional<Account> t_a = accounts.findById(newTransRecord.getTo_account());
+        Optional<Account> f_a = accounts.findById(newTransRecord.getFrom());
+        Optional<Account> t_a = accounts.findById(newTransRecord.getTo());
         if(f_a.isEmpty()){
-            throw new AccountNotFoundException(newTransRecord.getFrom_account());
+            throw new AccountNotFoundException(newTransRecord.getFrom());
         }
         if(t_a.isEmpty()){
-            throw new AccountNotFoundException(newTransRecord.getTo_account());
+            throw new AccountNotFoundException(newTransRecord.getTo());
         }
 
         Account from_acc = f_a.get();
