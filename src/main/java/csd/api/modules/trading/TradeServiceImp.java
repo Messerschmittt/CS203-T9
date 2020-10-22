@@ -92,9 +92,14 @@ public class TradeServiceImp implements TradeService {
      */
     @Override
     public Trade CancelTrade(Integer id){
-        return tradeRepo.findById(id).map(trade -> {trade.setStatus("cancelled");
-            return tradeRepo.save(trade);
-        }).orElse(null);
+        String tradestatus =  tradeRepo.findById(id).get().getStatus();
+        if(tradestatus.equals("open") || tradestatus.equals("partial-filled")){
+                return tradeRepo.findById(id).map(trade -> {trade.setStatus("cancelled");
+                return tradeRepo.save(trade);
+            }).orElse(null);
+        }else{
+            throw new InvalidTradeCancelStatusException(tradestatus);
+        }       
 
     }
 
@@ -364,6 +369,10 @@ public class TradeServiceImp implements TradeService {
     //find the matching trade   
     @Override    
     public Trade matching(Trade newTrade){
+        Account cusAcc = newTrade.getAccount();
+        Customer customer = cusAcc.getCustomer();   
+
+        
         int cusId = newTrade.getAccount().getCustomer().getId();
         List<Trade> sTrades = sellTradesSorting(newTrade.getSymbol());  //sorted list of sellTrades
         sTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
@@ -373,11 +382,12 @@ public class TradeServiceImp implements TradeService {
         Boolean tradeNotFilled = true;
         int i = 0;
         int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();
-        Account cusAcc = newTrade.getAccount();
-        Customer customer = cusAcc.getCustomer();
         double lastPrice = 0.0;
 
         if(newTrade.getAction().equals("buy")){
+            if(newTrade.getBid() == 0){ // check if market order
+                return buyMarketOrder(newTrade, cusAcc, customer);
+            }
             double newTradeBid = newTrade.getBid();
             int tradeFilledQuantity = 0;
             int currentTradeQty = initialTradeQty;
@@ -386,9 +396,8 @@ public class TradeServiceImp implements TradeService {
                 Customer seller = s.getAccount().getCustomer();
                 double sAskPrice = s.getAsk();
 
-                if(newTradeBid == 0){ // check if market order
-                    return buyMarketOrder(newTrade, cusAcc, customer);
-                }else if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
+                
+                if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;
                 }
@@ -468,6 +477,10 @@ public class TradeServiceImp implements TradeService {
         //for sell action
         if(newTrade.getAction().equals("sell")){
             System.out.println("In sell");
+
+            if(newTrade.getAsk() == 0){
+                return sellMarketOrder(newTrade, cusAcc, customer);
+            }
             double newTradeAsk = newTrade.getAsk();
             int tradeFilledQuantity = 0;
             int currentTradeQty = initialTradeQty;
@@ -476,9 +489,8 @@ public class TradeServiceImp implements TradeService {
                 Customer buyer = b.getAccount().getCustomer();
                 double bBidPrice = b.getBid();
 
-                if(newTradeAsk == 0){
-                    return sellMarketOrder(newTrade, cusAcc, customer);
-                }else if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
+                
+                if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;
                 }

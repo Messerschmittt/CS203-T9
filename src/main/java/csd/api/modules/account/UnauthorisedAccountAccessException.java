@@ -14,4 +14,7 @@ public class UnauthorisedAccountAccessException extends RuntimeException{
         super("Access to this account " + id + " is unauthorised");
     }
     
+    public UnauthorisedAccountAccessException() {
+        super("Access to this trade is unauthorised");
+    }
 }

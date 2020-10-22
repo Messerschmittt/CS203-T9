@@ -33,12 +33,13 @@ public class TradeController {
     private TradeService tradeService;
     private AccountRepository accRepo;
 
-    public TradeController(TradeService tradeService){
+    public TradeController(TradeService tradeService, AccountRepository accRepo){
         this.tradeService = tradeService;
+        this.accRepo = accRepo;
     }
 
      /**
-     * List all trades in the system
+     * List all trades in the system (ONLY FOR TESTING)
      * @return list of all trades
      */
     @GetMapping("/trades")
@@ -63,7 +64,7 @@ public class TradeController {
         Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
-                throw new UnauthorisedAccountAccessException(id);
+                throw new UnauthorisedAccountAccessException();
             }
         }
 
@@ -106,7 +107,7 @@ public class TradeController {
         Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
-                throw new UnauthorisedAccountAccessException(id);
+                throw new UnauthorisedAccountAccessException();
             }
         }
         trade = tradeService.CancelTrade(id);
@@ -115,7 +116,6 @@ public class TradeController {
         return trade;
     }
 
-    
     /**
      * Create trade via the POST request to "/trades"
      * @param tradeRecord

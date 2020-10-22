@@ -138,33 +138,11 @@ public class StockController {
             stocks.save(newStock);
 
             initialisedStock.add(newStock);
-            // Create new buy trade
-            Trade newBuyTrade = new Trade();
-            newBuyTrade.setSymbol(symbol_);
-            newBuyTrade.setAction("buy");
-            newBuyTrade.setDate(now);
-            newBuyTrade.setStatus("open");
-            newBuyTrade.setQuantity(quantity);
-            newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
-            newBuyTrade.setAsk(0.0);
-            newBuyTrade.setFilled_quantity(0);
-            newBuyTrade.setAccount(accts.findByCustomer_Id(customers.findByUsername(BANK_USERNAME).getId())); // Since the RYVERBANK account is the first acct created
-            trades.save(newBuyTrade);
-
-            // // Create new sell trade
-            Trade newSellTrade = new Trade();
-            newSellTrade.setSymbol(symbol_);
-            newSellTrade.setAction("sell");
-            newSellTrade.setDate(now);
-            newSellTrade.setStatus("open");
-            newSellTrade.setQuantity(quantity);
-            newSellTrade.setBid(0.0);
-            newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
-            newSellTrade.setFilled_quantity(0);
-            newSellTrade.setAccount(accts.findByCustomer_Id(customers.findByUsername(BANK_USERNAME).getId()));
-            trades.save(newSellTrade);
         }
         System.out.println("Counter: " + counter);
+        
+
+
         return initialisedStock;
     }
 
