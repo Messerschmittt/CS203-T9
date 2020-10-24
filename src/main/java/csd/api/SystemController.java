@@ -56,38 +56,10 @@ public class SystemController {
         trades.deleteAll();
         trans.deleteAll();
         users.deleteAll();
+        assets.deleteAll();
+        customers.deleteAll();
 
-        List<ApplicationUser> initUsers = Arrays.asList(
-            new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
-            new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),
-            new ApplicationUser("analyst_2", encoder.encode("02_analyst_02"), "ROLE_ANALYST"),
-            new ApplicationUser(BANK_USERNAME, encoder.encode(BANK_PASSWORD), "ROLE_USER")
-            );
-
-        initUsers.forEach(user -> {
-            System.out.println("[User Initialised]" + users.save(user).getUsername());
-        });
-
-        List<Customer> initCustomer = Arrays.asList(
-            new Customer(users.findByUsername(BANK_USERNAME), BANK_FULL_NAME)
-        );
-
-        initCustomer.forEach(customer -> {
-            customer.setPortfolio(new Portfolio(customer));
-            System.out.println("[Customer Initialised]" + customers.save(customer).getUsername());
-        });
-        
-
-        List<Account> initAccount = Arrays.asList(
-            new Account(customers.findByUsername(BANK_USERNAME), BANK_BALANCE, BANK_AVAIL_BALANCE)
-        );
-
-        initAccount.forEach(account -> {
-            System.out.println("[Account Initialised]" + accounts.save(account).getCustomer().getUsername());
-        });
-    
-
-        stockController.initialiseStock();
+        Application.initialise();
 
     }
 

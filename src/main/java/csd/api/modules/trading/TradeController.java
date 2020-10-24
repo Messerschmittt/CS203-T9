@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 
 import csd.api.modules.user.*;
@@ -32,10 +31,12 @@ import csd.api.modules.trading.*;
 public class TradeController {
     private TradeService tradeService;
     private AccountRepository accRepo;
+    private CustomerRepository cusRepo;
 
-    public TradeController(TradeService tradeService, AccountRepository accRepo){
+    public TradeController(TradeService tradeService, AccountRepository accRepo, CustomerRepository cusRepo){
         this.tradeService = tradeService;
         this.accRepo = accRepo;
+        this.cusRepo = cusRepo;
     }
 
      /**
@@ -43,8 +44,14 @@ public class TradeController {
      * @return list of all trades
      */
     @GetMapping("/trades")
-    public List<Trade> getTrades(){
-        return tradeService.listTrades();
+    public List<Trade> getAllTrades(Authentication auth){
+        List<Trade> trades = tradeService.getAllTrades();
+        if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
+            int c = cusRepo.findByUsername(auth.getName()).getId();
+            trades.removeIf(t -> t.getCustomer_id() != c);
+            return trades;
+        }
+        return trades;
     }
 
     //for ROLE_USER

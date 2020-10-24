@@ -8,11 +8,11 @@ import csd.api.tables.Assets;
 import csd.api.tables.templates.TradeRecord;
 
 public interface TradeService {
+
     /**
-     * Get all trade list in the trade repository
-     * @return list of all Trades
+     * Get specific trade record by trade id
      */
-    List<Trade> listTrades();
+    List<Trade> getAllTrades();
 
     /**
      * Get specific trade record by trade id
@@ -77,9 +77,6 @@ public interface TradeService {
     Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
         double transaction_amt, double currentPrice);
 
-    Trade buyMarketOrder(Trade newTrade, Account cusAcc, Customer customer);
-
-    Trade sellMarketOrder(Trade newTrade, Account cusAcc, Customer customer);
 
     /**
      * Fullfil the customer trade order

@@ -6,8 +6,8 @@ User1: Basic good_user_1:01_user_01
 User2: Basic good_user_2:02_user_02
 
 ###
-GET http://localhost:8080/assets
-Authorization: Basic good_user_1:01_user_01
+GET http://localhost:8080/customers
+Authorization: Basic manager_1:01_manager_01
 
 ###
 POST http://localhost:8080/reset
@@ -21,4 +21,21 @@ Content-Type: application/json
     "from": 3,
     "to": 2,
     "amount": 10000.0
+}
+
+
+###
+POST http://localhost:8080/customers
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "full_name": "John Tan",
+    "nric": "S8529649C",
+    "phone": "93233235",
+    "address": "27 Jalan Alamak S680234",
+    "username": "good_user_1",
+    "passowrd": "01_user_01",
+    "authorities": "ROLE_USER",
+    "active": true
 }

@@ -10,6 +10,7 @@ import javax.validation.Valid;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import csd.api.tables.*;
@@ -27,9 +28,9 @@ public class TradeServiceImp implements TradeService {
     private PortfolioRepository portfolioRepo;
     private AssetsRepository assetsRepo;
     private StockRepository stockRepo;
-    private CustomerRepository customerRepo;
     private AccountController accController;
     private StockController stockController;
+    private CustomerRepository cusRepo;
 
     /**
      * Constructor of TradeServiceImp implementing TradeService
@@ -43,27 +44,23 @@ public class TradeServiceImp implements TradeService {
      */
     public TradeServiceImp(TradeRepository tradeRepo, AccountRepository accRepo, 
             PortfolioRepository portfolioRepo, AssetsRepository assetsRepo,
-            StockRepository stockRepo, CustomerRepository customerRepo, AccountController accController, StockController stockController) {
+            StockRepository stockRepo, AccountController accController, StockController stockController, CustomerRepository cusRepo) {
         this.tradeRepo = tradeRepo;
         this.accRepo = accRepo;
         this.portfolioRepo = portfolioRepo;
         this.assetsRepo = assetsRepo;
         this.stockRepo = stockRepo;
-        this.customerRepo = customerRepo;
         this.accController = accController;
         this.stockController = stockController;
+        this.cusRepo = cusRepo;
     }
 
-     /**
-     * List all trades in the system
-     * @return list of all trades
-     */
+     
+    //for ROLE_USER
     @Override
-    public List<Trade> listTrades(){
+    public List<Trade> getAllTrades(){
         return tradeRepo.findAll();
     }
-
-    //for ROLE_USER
     /**
      * Search for trade with the given id
      * If there is no trade with the given "id", throw a TradeNotFoundException
@@ -123,6 +120,8 @@ public class TradeServiceImp implements TradeService {
 
     /**
      * Check does stock market open or not. Market open on Weekdays 9am tp 5pm.
+     * If now is past 5pm of the day, expire all trades before 5pm that day
+     * if its after 5pm return false
      * @return boolean value
      */
     @Override
@@ -214,19 +213,23 @@ public class TradeServiceImp implements TradeService {
     @Override
     public Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
                 double transaction_amt, double currentPrice){
-        
-                    // Create/Update asset record
+        // if its the bank, no need update assests
+        if (customer.getId() == BANK_CUSTOMER.getId()) {
+            return null;
+        }
+        // Create/Update asset record
         Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
-        if(a == null){          //create new assets
+        if (a == null) { // create new assets
             a = new Assets();
             a.setCode(newTrade.getSymbol());
             a.setCustomer(customer);
             a.setAvg_price(currentPrice);
             a.setQuantity(transaction_quantity);
-        } else{                 //update assets
+        } else { // update assets
             int priorQuantity = a.getQuantity();
             double priorAvgPrice = a.getAvg_price();
-            double newAvgPrice = ((priorQuantity * priorAvgPrice) + transaction_amt)/(transaction_quantity + priorQuantity);
+            double newAvgPrice = ((priorQuantity * priorAvgPrice) + transaction_amt)
+                    / (transaction_quantity + priorQuantity);
             a.setAvg_price(newAvgPrice);
             a.setQuantity(priorQuantity + transaction_quantity);
         }
@@ -250,7 +253,9 @@ public class TradeServiceImp implements TradeService {
     @Override
     public Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
     double transaction_amt, double currentPrice){
-
+        if(customer.getId() == BANK_CUSTOMER.getId()){
+            return null;
+        }
         // Create/Update asset record
         Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
         int priorQuantity = a.getQuantity();
@@ -283,101 +288,7 @@ public class TradeServiceImp implements TradeService {
         return a;
     }
 
-    @Override
-    public Trade buyMarketOrder(Trade newTrade, Account cusAcc, Customer customer){
-        Stock stock = stockRepo.findBySymbol(newTrade.getSymbol());
-        String status = null;
-        int askVolume = stock.getAsk_volume();      //20,000
-        int tradeQty = newTrade.getQuantity();      //2,000
-        int filledQty = 0;          //buyer side
-        double total_amt;
-        int volume = 0;
-        if(askVolume == 0){     //no stock available
-            tradeRepo.save(newTrade);
-            return newTrade;
-        }
-        if( askVolume < tradeQty){  //partially filled in newTrade(buy)
-            status = "partial-filled";          //at buyer
-            filledQty = askVolume;
-        } else {
-            status = "filled";
-            filledQty = tradeQty;       //2,000
-            volume = askVolume - tradeQty;          //ask volume of stock would not be 0 //18,000
-        }
-        total_amt = stock.getAsk() * filledQty;
-
-        // Create transaction between buyer and seller
-        Account acc = accRepo.findByCustomer_Id(customerRepo.findByUsername(BANK_USERNAME).getId());//Ryver Bank account
-        Trans t = new Trans();
-        t.setAmount(total_amt);
-        t.setFrom_account(cusAcc);
-        t.setTo_account(acc);
-
-        // if(acc == null){
-        //     System.out.println("Faulty account accessed");
-        //     t.setTo_account(new Account());
-        // }
-        tradeRepo.save(newTrade);
-        accController.makeTransaction(t);
-
-        newTrade.setAvg_price(stock.getAsk());
-        newTrade.setStatus(status);
-        newTrade.setFilled_quantity(filledQty);
-        tradeRepo.save(newTrade);
-
-        stock.setAsk_volume(volume);
-        stockRepo.save(stock);
-
-        updateBuyerAssets(customer, newTrade, filledQty, total_amt, stock.getAsk());
-        return newTrade;
-    }
-
-    @Override
-    public Trade sellMarketOrder(Trade newTrade, Account cusAcc, Customer customer){
-        Stock stock = stockRepo.findBySymbol(newTrade.getSymbol());
-        String status = null;
-        int bidVolume = stock.getBid_volume();
-        int tradeQty = newTrade.getQuantity();
-        int filledQty = 0;
-        double total_amt;
-        int volume = 0;
-        if(bidVolume == 0){     //no stock available
-            tradeRepo.save(newTrade);
-            return newTrade;
-        }
-        if( bidVolume < tradeQty){  //partially filled in newTrade(buy)
-            status = "partial-filled";
-            filledQty = bidVolume;
-        } else {
-            status = "filled";
-            filledQty = tradeQty;
-            volume = bidVolume - tradeQty;          //ask volume of stock would not be 0
-        }
-        total_amt = stock.getBid() * filledQty;
-
-        // Create transaction between buyer and seller   
-        Account acc = accRepo.findByCustomer_Id(customerRepo.findByUsername(BANK_USERNAME).getId());    //Ryver Bank account
-        Trans t = new Trans();
-        t.setAmount(total_amt);
-        t.setFrom_account(cusAcc);
-        t.setTo_account(acc);
-
-        tradeRepo.save(newTrade);
-        accController.makeTransaction(t);
-
-        newTrade.setAvg_price(stock.getBid());
-        newTrade.setStatus(status);
-        newTrade.setFilled_quantity(filledQty);
-        tradeRepo.save(newTrade);
-
-        stock.setAsk_volume(volume);
-        stockRepo.save(stock);
-
-        updateSellerAssets(customer, newTrade, filledQty, total_amt, stock.getBid());
-        return newTrade;
-    }
-
-    //find the matching trade   
+   //find the matching trade   
     @Override    
     public Trade matching(Trade newTrade){
         Account cusAcc = newTrade.getAccount();
@@ -396,10 +307,6 @@ public class TradeServiceImp implements TradeService {
         double lastPrice = 0.0;
 
         if(newTrade.getAction().equals("buy")){
-            if(newTrade.getBid() == 0){ // check if market order
-                return buyMarketOrder(newTrade, cusAcc, customer);
-            }
-
             if(sTrades == null || sTrades.size() == 0){     //no matching trade
                 return tradeRepo.save(newTrade);
             }
@@ -412,7 +319,10 @@ public class TradeServiceImp implements TradeService {
                 Customer seller = s.getAccount().getCustomer();
                 double sAskPrice = s.getAsk();
 
-                if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
+                if(newTrade.getBid() == 0){ // if market order can skip the price checking
+                    System.out.println("Doing Market Order");
+                }else if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
+                    System.out.println("Closing trade");
                     tradeRepo.save(newTrade);
                     return newTrade;
                 }
@@ -470,6 +380,7 @@ public class TradeServiceImp implements TradeService {
 
                 // Update newTrade trade status
                 newTrade.setStatus(newTradeStatus);
+                newTrade.setAvg_price((newTrade.getAvg_price()*newTrade.getFilled_quantity()+transaction_amt) / tradeFilledQuantity );
                 newTrade.setFilled_quantity(tradeFilledQuantity);
 
                 // Check if new trade is filled
@@ -493,13 +404,10 @@ public class TradeServiceImp implements TradeService {
         if(newTrade.getAction().equals("sell")){
             System.out.println("In sell");
             
-            if(newTrade.getAsk() == 0){     //market order
-                return sellMarketOrder(newTrade, cusAcc, customer);
-            }
-
             if(bTrades == null || bTrades.size() == 0){     //no matching trade
                 return tradeRepo.save(newTrade);
             }
+
             double newTradeAsk = newTrade.getAsk();
             int tradeFilledQuantity = 0;
             int currentTradeQty = initialTradeQty;
@@ -508,7 +416,10 @@ public class TradeServiceImp implements TradeService {
                 Customer buyer = b.getAccount().getCustomer();
                 double bBidPrice = b.getBid();
 
-                if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
+                if(newTradeAsk == 0){ // skip price checking for market order
+
+                }
+                else if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;
                 }
@@ -563,7 +474,9 @@ public class TradeServiceImp implements TradeService {
 
                 // Update newTrade trade status
                 newTrade.setStatus(newTradeStatus);
+                newTrade.setAvg_price((newTrade.getAvg_price()*newTrade.getFilled_quantity()+transaction_amt) / tradeFilledQuantity );
                 newTrade.setFilled_quantity(tradeFilledQuantity);
+                
 
                 // Check if new trade is filled
                 if(tradeFilledQuantity == initialTradeQty){
@@ -642,6 +555,8 @@ public class TradeServiceImp implements TradeService {
             if(trade.getBid() * trade.getQuantity() > cusAcc.getAvailable_balance()){
                 throw new InsufficientBalanceForTradeException(trade.getId());
             }
+
+            // reduce avaialble balance of customer
         }
 
         //To check the customer has sufficient stock in assets to sell
@@ -669,7 +584,8 @@ public class TradeServiceImp implements TradeService {
                 throw new InsufficientStockException();
             }
         }
-        
+        // Add a function to match all open trades
+        // if(checktiming()) -> match
         // Enter Create and Matching Function (return the latest trade info)
         return matching(trade);
     }

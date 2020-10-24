@@ -72,7 +72,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // Account Controller
             .antMatchers(HttpMethod.GET, "/accounts").hasAnyRole(allUsers)
             .antMatchers(HttpMethod.POST, "/accounts").hasAnyRole(onlyManager)
-            .antMatchers(HttpMethod.GET, "/accounts/**").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.GET, "/accounts/**").hasAnyRole(onlyManagerAndUser)
             .antMatchers(HttpMethod.GET, "/transactions").hasAnyRole(onlyManager)
             .antMatchers(HttpMethod.POST, "/accounts/{account_id}/transactions").hasAnyRole(onlyUser)
             .antMatchers(HttpMethod.POST, "/transactions/makeTransfer").hasAnyRole(onlyUser)

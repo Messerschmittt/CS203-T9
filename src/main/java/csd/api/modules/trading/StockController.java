@@ -134,6 +134,32 @@ public class StockController {
             quantity, Double.parseDouble(stockInfo.get("bid")), quantity, Double.parseDouble(stockInfo.get("ask")));
             stocks.save(newStock);
 
+            // Create new buy trade
+            Trade newBuyTrade = new Trade();
+            newBuyTrade.setSymbol(symbol_);
+            newBuyTrade.setAction("buy");
+            newBuyTrade.setDate(now);
+            newBuyTrade.setStatus("open");
+            newBuyTrade.setQuantity(quantity);
+            newBuyTrade.setBid(Double.parseDouble(stockInfo.get("bid")));
+            newBuyTrade.setAsk(0.0);
+            newBuyTrade.setFilled_quantity(0);
+            newBuyTrade.setAccount(BANK_ACCOUNT); // Since the RYVERBANK account is the first acct created
+            trades.save(newBuyTrade);
+
+            // Create new sell trade
+            Trade newSellTrade = new Trade();
+            newSellTrade.setSymbol(symbol_);
+            newSellTrade.setAction("sell");
+            newSellTrade.setDate(now);
+            newSellTrade.setStatus("open");
+            newSellTrade.setQuantity(quantity);
+            newSellTrade.setBid(0.0);
+            newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
+            newSellTrade.setFilled_quantity(0);
+            newSellTrade.setAccount(BANK_ACCOUNT);
+            trades.save(newSellTrade);
+
             initialisedStock.add(newStock);
         }
         System.out.println("Counter: " + counter);
@@ -152,23 +178,27 @@ public class StockController {
         bTrades.addAll(bTrades2);
         Collections.sort(bTrades);
         Collections.reverse(bTrades);   //descending order
-        s.setBid(bTrades.get(0).getBid());
-        int bid_volume = 0;
-        for(Trade t : bTrades){
-            bid_volume += t.getQuantity() - t.getFilled_quantity();
+        if(bTrades == null || bTrades.isEmpty()){
+            s.setBid(-1);
+            s.setBid_volume(0);
+        } else {
+            s.setBid(bTrades.get(0).getBid());
+            s.setBid_volume(bTrades.get(0).getQuantity());
         }
-        s.setBid_volume(bid_volume);
+        
 
         List<Trade> sTrades = trades.findByActionAndStatusAndSymbol("sell","open", symbol);
         List<Trade> sTrades2 = trades.findByActionAndStatusAndSymbol("sell","partial-filled", symbol);
         sTrades.addAll(sTrades2);
         Collections.sort(sTrades);
-        s.setAsk(sTrades.get(0).getAsk());
-        int ask_volume = 0;
-        for(Trade t : sTrades){
-            ask_volume += t.getQuantity() - t.getFilled_quantity();
+        if(sTrades == null || sTrades.isEmpty()){
+            s.setAsk(-1);
+            s.setAsk_volume(0);
+        }else{
+            s.setAsk(sTrades.get(0).getAsk());
+            s.setAsk_volume(sTrades.get(0).getQuantity());
         }
-        s.setAsk_volume(ask_volume);
+        
 
         stocks.save(s);
     }
