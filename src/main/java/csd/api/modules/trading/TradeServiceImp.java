@@ -18,6 +18,7 @@ import csd.api.modules.user.*;
 import csd.api.modules.account.*;
 import csd.api.modules.trading.*;
 import csd.api.modules.portfolio.*;
+import static csd.api.modules.account.RyverBankAccountConstants.*;
 
 @Service
 public class TradeServiceImp implements TradeService {
@@ -26,6 +27,7 @@ public class TradeServiceImp implements TradeService {
     private PortfolioRepository portfolioRepo;
     private AssetsRepository assetsRepo;
     private StockRepository stockRepo;
+    private CustomerRepository customerRepo;
     private AccountController accController;
     private StockController stockController;
 
@@ -41,12 +43,13 @@ public class TradeServiceImp implements TradeService {
      */
     public TradeServiceImp(TradeRepository tradeRepo, AccountRepository accRepo, 
             PortfolioRepository portfolioRepo, AssetsRepository assetsRepo,
-            StockRepository stockRepo, AccountController accController, StockController stockController) {
+            StockRepository stockRepo, CustomerRepository customerRepo, AccountController accController, StockController stockController) {
         this.tradeRepo = tradeRepo;
         this.accRepo = accRepo;
         this.portfolioRepo = portfolioRepo;
         this.assetsRepo = assetsRepo;
         this.stockRepo = stockRepo;
+        this.customerRepo = customerRepo;
         this.accController = accController;
         this.stockController = stockController;
     }
@@ -289,6 +292,10 @@ public class TradeServiceImp implements TradeService {
         int filledQty = 0;          //buyer side
         double total_amt;
         int volume = 0;
+        if(askVolume == 0){     //no stock available
+            tradeRepo.save(newTrade);
+            return newTrade;
+        }
         if( askVolume < tradeQty){  //partially filled in newTrade(buy)
             status = "partial-filled";          //at buyer
             filledQty = askVolume;
@@ -300,7 +307,7 @@ public class TradeServiceImp implements TradeService {
         total_amt = stock.getAsk() * filledQty;
 
         // Create transaction between buyer and seller
-        Account acc = accRepo.findById(3).get();      //Ryver Bank account
+        Account acc = accRepo.findByCustomer_Id(customerRepo.findByUsername(BANK_USERNAME).getId());//Ryver Bank account
         Trans t = new Trans();
         t.setAmount(total_amt);
         t.setFrom_account(cusAcc);
@@ -334,6 +341,10 @@ public class TradeServiceImp implements TradeService {
         int filledQty = 0;
         double total_amt;
         int volume = 0;
+        if(bidVolume == 0){     //no stock available
+            tradeRepo.save(newTrade);
+            return newTrade;
+        }
         if( bidVolume < tradeQty){  //partially filled in newTrade(buy)
             status = "partial-filled";
             filledQty = bidVolume;
@@ -344,8 +355,8 @@ public class TradeServiceImp implements TradeService {
         }
         total_amt = stock.getBid() * filledQty;
 
-        // Create transaction between buyer and seller
-        Account acc = accRepo.findById(3).get();      //Ryver Bank account
+        // Create transaction between buyer and seller   
+        Account acc = accRepo.findByCustomer_Id(customerRepo.findByUsername(BANK_USERNAME).getId());    //Ryver Bank account
         Trans t = new Trans();
         t.setAmount(total_amt);
         t.setFrom_account(cusAcc);
@@ -388,6 +399,11 @@ public class TradeServiceImp implements TradeService {
             if(newTrade.getBid() == 0){ // check if market order
                 return buyMarketOrder(newTrade, cusAcc, customer);
             }
+
+            if(sTrades == null || sTrades.size() == 0){     //no matching trade
+                return tradeRepo.save(newTrade);
+            }
+
             double newTradeBid = newTrade.getBid();
             int tradeFilledQuantity = 0;
             int currentTradeQty = initialTradeQty;
@@ -396,7 +412,6 @@ public class TradeServiceImp implements TradeService {
                 Customer seller = s.getAccount().getCustomer();
                 double sAskPrice = s.getAsk();
 
-                
                 if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;
@@ -477,9 +492,13 @@ public class TradeServiceImp implements TradeService {
         //for sell action
         if(newTrade.getAction().equals("sell")){
             System.out.println("In sell");
-
-            if(newTrade.getAsk() == 0){
+            
+            if(newTrade.getAsk() == 0){     //market order
                 return sellMarketOrder(newTrade, cusAcc, customer);
+            }
+
+            if(bTrades == null || bTrades.size() == 0){     //no matching trade
+                return tradeRepo.save(newTrade);
             }
             double newTradeAsk = newTrade.getAsk();
             int tradeFilledQuantity = 0;
@@ -489,7 +508,6 @@ public class TradeServiceImp implements TradeService {
                 Customer buyer = b.getAccount().getCustomer();
                 double bBidPrice = b.getBid();
 
-                
                 if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
                     tradeRepo.save(newTrade);
                     return newTrade;

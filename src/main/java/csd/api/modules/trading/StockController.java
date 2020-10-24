@@ -26,14 +26,11 @@ public class StockController {
     public StockRepository stocks;
     public TradeRepository trades;
     public AccountRepository accts;
-    public CustomerRepository customers;
 
-    public StockController(StockRepository stocks, TradeRepository trades, AccountRepository accts,
-    CustomerRepository customers){
+    public StockController(StockRepository stocks, TradeRepository trades, AccountRepository accts){
         this.stocks = stocks;
         this.trades = trades;
         this.accts = accts;
-        this.customers = customers;
     }
 
     /*

@@ -31,27 +31,27 @@ public class Application {
         StockRepository stockRepo = ctx.getBean(StockRepository.class);
         TradeRepository tradeRepo = ctx.getBean(TradeRepository.class);
 
-        StockController stockController = new StockController(stockRepo, tradeRepo, acctRepo, cusRepo);
+        StockController stockController = new StockController(stockRepo, tradeRepo, acctRepo);
 
+        // List<ApplicationUser> initUsers = Arrays.asList(
+        //     new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
+        //     new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),
+        //     new ApplicationUser("analyst_2", encoder.encode("02_analyst_02"), "ROLE_ANALYST"),
+        //     new ApplicationUser(BANK_USERNAME, encoder.encode(BANK_PASSWORD), "ROLE_USER")
+        //     );
+
+        // initUsers.forEach(user -> {
+        //     System.out.println("[User Initialised]" + userRepo.save(user).getUsername());
+        // });
+
+
+        
         List<ApplicationUser> initUsers = Arrays.asList(
             new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
             new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),
             new ApplicationUser("analyst_2", encoder.encode("02_analyst_02"), "ROLE_ANALYST"),
-            new ApplicationUser(BANK_USERNAME, encoder.encode(BANK_PASSWORD), "ROLE_USER")
-            );
-
-        initUsers.forEach(user -> {
-            System.out.println("[User Initialised]" + userRepo.save(user).getUsername());
-        });
-
-
-        /*
-        List<ApplicationUser> initUsers = Arrays.asList(
-            new ApplicationUser("manager_1", encoder.encode("01_manager_01"), "ROLE_MANAGER"),
-            new ApplicationUser("analyst_1", encoder.encode("01_analyst_01"), "ROLE_ANALYST"),
-            new ApplicationUser("analyst_2", encoder.encode("02_analyst_02"), "ROLE_ANALYST"),
-            new ApplicationUser("good_user_1", encoder.encode("01_user_01"), "ROLE_USER"),
-            new ApplicationUser("good_user_2", encoder.encode("02_user_02"), "ROLE_USER"),
+            // new ApplicationUser("good_user_1", encoder.encode("01_user_01"), "ROLE_USER"),
+            // new ApplicationUser("good_user_2", encoder.encode("02_user_02"), "ROLE_USER"),
             new ApplicationUser(BANK_USERNAME, encoder.encode(BANK_PASSWORD), "ROLE_USER")
             );
 
@@ -71,10 +71,12 @@ public class Application {
             System.out.println("[User Initialised]" + empRepo.save(employee).getApplicationUser().getUsername());
 
         });
-        */
+        
     
         List<Customer> initCustomer = Arrays.asList(
             new Customer(userRepo.findByUsername(BANK_USERNAME), BANK_FULL_NAME)
+            // new Customer(userRepo.findByUsername("good_user_1"), "01_user_01"),
+            // new Customer(userRepo.findByUsername("good_user_2"), "02_user_02")
         );
 
         initCustomer.forEach(customer -> {
@@ -85,6 +87,8 @@ public class Application {
 
         List<Account> initAccount = Arrays.asList(
             new Account(cusRepo.findByUsername(BANK_USERNAME), BANK_BALANCE, BANK_AVAIL_BALANCE)
+            // new Account(cusRepo.findByUsername("good_user_1"),500000,500000),
+            // new Account(cusRepo.findByUsername("good_user_2"),100000,100000)
         );
 
         initAccount.forEach(account -> {
