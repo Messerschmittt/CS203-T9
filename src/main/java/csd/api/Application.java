@@ -93,6 +93,7 @@ public class Application {
         });
 
         BANK_CUSTOMER = cusRepo.findByUsername(BANK_USERNAME);
+        System.out.println("BANK_CUSTOMER Set - " + BANK_CUSTOMER.getUsername());
         BANK_ACCOUNT = acctRepo.findByCustomer_Id(BANK_CUSTOMER.getId());
 
         stockController.initialiseStock();

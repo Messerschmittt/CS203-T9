@@ -145,6 +145,7 @@ public class StockController {
             newBuyTrade.setAsk(0.0);
             newBuyTrade.setFilled_quantity(0);
             newBuyTrade.setAccount(BANK_ACCOUNT); // Since the RYVERBANK account is the first acct created
+            newBuyTrade.setCustomer_id(BANK_CUSTOMER.getId());
             trades.save(newBuyTrade);
 
             // Create new sell trade
@@ -158,6 +159,7 @@ public class StockController {
             newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
             newSellTrade.setFilled_quantity(0);
             newSellTrade.setAccount(BANK_ACCOUNT);
+            newBuyTrade.setCustomer_id(BANK_CUSTOMER.getId());
             trades.save(newSellTrade);
 
             initialisedStock.add(newStock);
@@ -179,11 +181,11 @@ public class StockController {
         Collections.sort(bTrades);
         Collections.reverse(bTrades);   //descending order
         if(bTrades == null || bTrades.isEmpty()){
-            s.setBid(-1);
+            // s.setBid();
             s.setBid_volume(0);
         } else {
             s.setBid(bTrades.get(0).getBid());
-            s.setBid_volume(bTrades.get(0).getQuantity());
+            s.setBid_volume(bTrades.get(0).getQuantity()-bTrades.get(0).getFilled_quantity());
         }
         
 
@@ -192,14 +194,17 @@ public class StockController {
         sTrades.addAll(sTrades2);
         Collections.sort(sTrades);
         if(sTrades == null || sTrades.isEmpty()){
-            s.setAsk(-1);
+            // s.setAsk(-1);
             s.setAsk_volume(0);
         }else{
             s.setAsk(sTrades.get(0).getAsk());
-            s.setAsk_volume(sTrades.get(0).getQuantity());
+            s.setAsk_volume(sTrades.get(0).getQuantity()-sTrades.get(0).getFilled_quantity());
         }
         
 
         stocks.save(s);
+        System.out.println("Refreshed Stock: " + s.getSymbol());
+        System.out.println("Bidvol " + s.getBid_volume() + " Bidprice " + s.getBid());
+        System.out.println("Askvol " + s.getAsk_volume() + " Askprice " + s.getAsk());
     }
 }

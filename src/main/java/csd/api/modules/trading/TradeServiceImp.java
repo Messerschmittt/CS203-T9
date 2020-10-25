@@ -395,8 +395,9 @@ public class TradeServiceImp implements TradeService {
                 //update assests and portfolio
                 updateBuyerAssets(customer, newTrade, transaction_quantity, transaction_amt, lastPrice);
                 updateSellerAssets(seller, newTrade, transaction_quantity, transaction_amt, lastPrice);
-                
+                System.out.println("Entering update stock price");
                 stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
+                System.out.println("Finish update stock price");
             }
         }
         
@@ -494,6 +495,7 @@ public class TradeServiceImp implements TradeService {
                 stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
             }
         }
+        stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
         return newTrade;
     } 
     
