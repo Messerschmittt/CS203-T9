@@ -58,6 +58,21 @@ public interface TradeService {
     boolean checkQuantity(int quantity);
 
     /**
+     * Check the validation of input bid and sell price
+     * @param price
+     * @return boolean value
+     */
+    boolean checkValidPrice(int price);
+
+    /**
+     * check is the customer has enough stock to sell
+     * @param customerID
+     * @param symbol
+     * @param qty
+     */
+    void checkAssets(int customerID, String symbol, int qty);
+
+    /**
      * Sort the specific stock sell trades with price and time
      * @param symbol
      * @return list of sorted sell Trades
@@ -84,6 +99,11 @@ public interface TradeService {
      * @return the updated Trade object
      */
     Trade matching(Trade newTrade);
+
+    /**
+     * Match the trades created in unofficial hours
+     */
+    void preMatch();
 
     /**
      * To fullfil the customer's trade order and save the trade info to the repo

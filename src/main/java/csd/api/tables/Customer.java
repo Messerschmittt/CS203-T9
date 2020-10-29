@@ -54,7 +54,10 @@ public class Customer {
     @JsonIgnore
     private List<Account> accounts;
 
-
+    @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Trade> trades;
+    
     @OneToOne(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)
     @JsonIgnore
     private Portfolio portfolio;

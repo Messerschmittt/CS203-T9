@@ -48,7 +48,7 @@ public class TradeController {
         List<Trade> trades = tradeService.getAllTrades();
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             int c = cusRepo.findByUsername(auth.getName()).getId();
-            trades.removeIf(t -> t.getCustomer_id() != c);
+            trades.removeIf(t -> t.getCustomer().getId() != c);
             return trades;
         }
         return trades;
@@ -134,6 +134,29 @@ public class TradeController {
          // Only allow role_user of create trade
          if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){
             throw new UnauthorisedUserException("trade");
+        }
+
+        // account id and customer id should match with login customer
+        //checking account id is belong to login user
+        int loginCusID = cusRepo.findByUsername(auth.getName()).getId();        //login user id
+        List<Account> loginAcc = accRepo.findAllByCustomer_Id(loginCusID);      //list of account belongs to login user
+        if(loginAcc == null || loginAcc.isEmpty()){
+            throw new InvalidInputException("Your input", "account id.");
+        } else {
+            int count = 0;
+            for(Account acc: loginAcc){
+                if(acc.getId() == tradeRecord.getAccount_id()){
+                    count++;
+                }
+            }
+            if(count != 1){
+                throw new InvalidInputException("Your input", "account id.");
+            }
+        }
+
+        // checking customer id is belongs to login customer
+        if(tradeRecord.getCustomer_id() != loginCusID){
+            throw new InvalidInputException("Your input", "customer id.");
         }
 
         return tradeService.TradeGenerate(tradeRecord);

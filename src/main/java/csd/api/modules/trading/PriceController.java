@@ -86,6 +86,7 @@ public class PriceController{
             newTrade.setQuantity(Integer.parseInt(info.get("askVol")));
         }
         newTrade.setAccount(null);
+        newTrade.setCustomer(null);
         newTrade.setDate(info.get("date"));
         //newTrade.setDate(info.get("date").substring(0, 10));
 

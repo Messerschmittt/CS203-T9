@@ -46,7 +46,13 @@ public class Trade implements Comparable<Trade> {
     @JoinColumn(name = "account_id") 
     private Account account;
 
-    private int customer_id;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty("customer_id")
+    @JoinColumn(name = "customer_id") 
+    private Customer customer;
+
     private String status = "open";
     // @ManyToOne
     // @JoinColumn(name = "customer_id") 
@@ -58,7 +64,7 @@ public class Trade implements Comparable<Trade> {
     // String date, int accountid, int customerid, String status){
     public Trade(String action, String symbol, int quanitity, 
     double bid, double ask, double avg_price, int filled_quantity,
-    String date, Account account,int customer_id,String status){
+    String date, Account account,Customer customer,String status){
         this.action = action;
         this.symbol = symbol;
         this.quantity = quanitity;
@@ -68,7 +74,7 @@ public class Trade implements Comparable<Trade> {
         this.filled_quantity = filled_quantity;
         this.date = date;
         this.account = account;
-        this.customer_id = customer_id;
+        this.customer = customer;
         this.status = status;
     }
 

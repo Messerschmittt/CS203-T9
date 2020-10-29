@@ -145,7 +145,7 @@ public class StockController {
             newBuyTrade.setAsk(0.0);
             newBuyTrade.setFilled_quantity(0);
             newBuyTrade.setAccount(BANK_ACCOUNT); // Since the RYVERBANK account is the first acct created
-            newBuyTrade.setCustomer_id(BANK_CUSTOMER.getId());
+            newBuyTrade.setCustomer(BANK_CUSTOMER);
             trades.save(newBuyTrade);
 
             // Create new sell trade
@@ -159,7 +159,7 @@ public class StockController {
             newSellTrade.setAsk(Double.parseDouble(stockInfo.get("ask")));
             newSellTrade.setFilled_quantity(0);
             newSellTrade.setAccount(BANK_ACCOUNT);
-            newBuyTrade.setCustomer_id(BANK_CUSTOMER.getId());
+            newSellTrade.setCustomer(BANK_CUSTOMER);
             trades.save(newSellTrade);
 
             initialisedStock.add(newStock);

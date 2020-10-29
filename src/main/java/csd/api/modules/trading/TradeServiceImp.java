@@ -129,18 +129,17 @@ public class TradeServiceImp implements TradeService {
         boolean isValid = false;
         LocalDateTime now = LocalDateTime.now();
         String date = now.toString().substring(0, 11);      //for checking the date of trades are same or not
-        
         //for checking the market open time
         int nowtime = now.getHour();
         DayOfWeek day = now.getDayOfWeek();
         switch (day) {
             case SATURDAY:
-                throw new InvalidTradeTiming();
+                return isValid;
             case SUNDAY:
-                throw new InvalidTradeTiming();
+                return isValid;
             default:
                 if(nowtime < 9 || nowtime >= 17){
-                    updateStatusToExpired();
+                    return isValid;
                 } else{     //if stock market open
                     //check if the date of open or partial-filled trades is same with the date of current trade
                     List<Trade> trades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
@@ -157,31 +156,101 @@ public class TradeServiceImp implements TradeService {
         return isValid;
     }
 
+    //check the quantity of stock the customer can buy based on available balance
+    // public int checkBalance(Trade trade, int qty, int price, Account cusAcc){
+    //     boolean valid = true;
+    //     if(trade.getAction().equals("buy")){
+    //         double lastPrice = stockRepo.findBySymbol(trade.getSymbol()).getLast_price();
+    //         double total = lastPrice * trade.getQuantity();
+    //         double available = cusAcc.getAvailable_balance();
+    //         if(trade.getBid() == 0 && total > available){
+
+    //         }
+    //         if(trade.getBid() * trade.getQuantity() > available){
+    //             valid = false;
+    //         }
+
+    //         // reduce avaialble balance of customer
+            
+    //         return valid;
+    //     }
+    // }
+
     /**
      * Update the trades status of "open" and "partial-filled" as expired
      */
+    @Override
     public void updateStatusToExpired(){
-        List<Trade> invalidTrades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
-        if (invalidTrades == null || invalidTrades.isEmpty()){
+        //check openTrade time is between 9am and 5pm -> set it expired
+        List<Trade> OpenPartialTrades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial");
+        if(OpenPartialTrades == null || OpenPartialTrades.isEmpty()){
             return;
         }
-        for(Trade t: invalidTrades){
-            t.setStatus("expired");
-            tradeRepo.save(t);
+
+        for(Trade t: OpenPartialTrades){
+            String time = t.getDate().substring(11,13);
+            int hr = Integer.parseInt(time);
+            if(hr >= 9 && hr < 17){
+                t.setStatus("expired");
+                tradeRepo.save(t);
+            }
         }
     }
 
     /**
-     * Check the validation of input quantity. Quantity should be multiple of 100
+     * Check the validation of input quantity. Quantity should be multiple of 100 (and not negative)
      * @param quantity
      * @return boolean value
      */
     @Override
     public boolean checkQuantity(int quantity){
-        if(quantity % 100 == 0){
+        if(quantity % 100 == 0 && quantity > 0){
             return true;
         }
         return false;
+    }
+
+    /**
+     * Check the validation of input bid and sell price. Should not be negative
+     * @param price
+     * @return boolean value
+     */
+    @Override
+    public boolean checkValidPrice(int price){
+        if(price >= 0){
+            return true;
+        }
+        return false;
+    }
+
+    
+    // check is the customer has enough stock to sell
+    @Override 
+    public void checkAssets(int customerID, String symbol, int qty){
+        List<Trade> cusOpenTrade = tradeRepo.findByCustomer_IdAndSymbolAndStatus(customerID, symbol,"open");
+        List<Trade> cusPartialTrade = tradeRepo.findByCustomer_IdAndSymbolAndStatus(customerID, symbol,"partial-filled");
+        int selling = 0;
+        
+        for(Trade ot: cusOpenTrade){
+            selling += ot.getQuantity();
+        }
+        for(Trade pt: cusPartialTrade){
+            selling += pt.getQuantity() - pt.getFilled_quantity();
+        }
+
+        //check if the user have the stock
+        Assets assets = assetsRepo.findByCustomer_IdAndCode(customerID, symbol);
+        
+        //if not found the stock in assets list, throw AssetsNotFoundException with stock symbol
+        if(assets == null){
+            throw new AssetsNotFoundException(symbol);
+        }
+
+        //if there is stock in assets, check if the quantity is enough, if not throw InsufficientStockException
+        int available = assets.getQuantity() - selling;
+        if(qty >= available){
+            throw new InsufficientStockException();
+        }
     }
 
     /**
@@ -288,12 +357,12 @@ public class TradeServiceImp implements TradeService {
         return a;
     }
 
+
    //find the matching trade   
     @Override    
     public Trade matching(Trade newTrade){
         Account cusAcc = newTrade.getAccount();
         Customer customer = cusAcc.getCustomer();   
-
         
         int cusId = newTrade.getAccount().getCustomer().getId();
         List<Trade> sTrades = sellTradesSorting(newTrade.getSymbol());  //sorted list of sellTrades
@@ -498,6 +567,19 @@ public class TradeServiceImp implements TradeService {
         stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
         return newTrade;
     } 
+
+    //match for the trades created during market closing time
+    @Override
+    public void preMatch(){
+        Sort sort = Sort.by("date").ascending();        //Sort by time
+        List<Trade> openTrades = tradeRepo.findByStatusContaining("open", sort);
+
+        if(openTrades != null || openTrades.size() != 0){
+            for(Trade t: openTrades){
+                matching(t);
+            }
+        }
+    }
     
     /** 
      * To fullfil the customer's trade order and save the trade info to the repo.
@@ -510,7 +592,6 @@ public class TradeServiceImp implements TradeService {
     public Trade TradeGenerate(TradeRecord tradeRecord){
         
         boolean isValidSymbol = checkSymbol(tradeRecord.getSymbol());
-        // boolean isValidTime = checkTime();
         boolean isValidQty = checkQuantity(tradeRecord.getQuantity());
 
         //if stock symbol is invalid, throw InvalidInputException
@@ -518,20 +599,13 @@ public class TradeServiceImp implements TradeService {
             throw new InvalidInputException(tradeRecord.getSymbol(), "Stock Symbol ");
         }
 
-        // //if stock market is close, throw InvalidTradeTiming
-        // if(!isValidTime) {
-        //     throw new InvalidTradeTiming();
-        // }
-
         //if the quantity is not multiple of 100, throw InvalidInputException
         String qty = "" + tradeRecord.getQuantity();
         if(!isValidQty){
-            throw new InvalidInputException(qty, "Input quantity. It should be multiiple of 100");
+            throw new InvalidInputException(qty, "Input quantity. It should be multiiple of 100 and positive number");
         }
 
         Account cusAcc = accRepo.findById(tradeRecord.getAccount_id()).get();
-        List<Assets> cusAssets = cusAcc.getCustomer().getAssets();
-
         String action = tradeRecord.getAction();
         Trade trade = new Trade();
         trade.setAction(tradeRecord.getAction());
@@ -546,48 +620,34 @@ public class TradeServiceImp implements TradeService {
         trade.setFilled_quantity(tradeRecord.getFilled_quantity());
         trade.setDate(tradeRecord.getDate());
         trade.setAccount(cusAcc);
-        trade.setCustomer_id(cusAcc.getCustomer().getId());
+        trade.setCustomer(cusAcc.getCustomer());
         trade.setStatus(tradeRecord.getStatus());
-        // Trade trade = new Trade(tradeRecord.getAction(), tradeRecord.getSymbol(), tradeRecord.getQuantity(), tradeRecord.getBid(), tradeRecord.getAsk(), 
-        // tradeRecord.getAvg_price(), tradeRecord.getFilled_quantity(), tradeRecord.getDate(), tradeRecord.getStatus(),  cusAcc);
-        // trade.setId(tradeRecord.getId());
+
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell
-        if(trade.getAction().equals("buy")){
-            if(trade.getBid() * trade.getQuantity() > cusAcc.getAvailable_balance()){
-                throw new InsufficientBalanceForTradeException(trade.getId());
-            }
+        // if(!checkBalance(trade)){
 
-            // reduce avaialble balance of customer
-        }
+        //     throw new InsufficientBalanceForTradeException(trade.getId());
+        // }
 
         //To check the customer has sufficient stock in assets to sell
+        
+        Integer customerID = trade.getCustomer().getId();
         if(trade.getAction().equals("sell")){
-            if(cusAssets == null || cusAssets.isEmpty()){       //assets is empty
-                throw new AssetsNotFoundException();
-            }
-
-            //check if the user have the stock
-            //if there is stock in the assets, assign it to "assets" variable
-            Assets assets = null;
-            for(Assets a: cusAssets){
-                if(a.getCode().equals(trade.getSymbol())){    
-                    assets = a;
-                }
-            }
-
-            //if not found the stock in assets list, throw AssetsNotFoundException with stock symbol
-            if(assets == null){
-                throw new AssetsNotFoundException(trade.getSymbol());
-            }
-
-            //if there is stock in assets, check if the quantity is enough, if not throw InsufficientStockException
-            if(trade.getQuantity() > assets.getQuantity()){
-                throw new InsufficientStockException();
-            }
+            checkAssets(customerID, trade.getSymbol(), trade.getQuantity());
         }
+
         // Add a function to match all open trades
         // if(checktiming()) -> match
+        
+        //if stock market is close, save the trade and throw InvalidTradeTiming
+        boolean isValidTime = checkTime();
+        if(!isValidTime) {
+            updateStatusToExpired();
+            return tradeRepo.save(trade);
+        }
+        preMatch();
+        
         // Enter Create and Matching Function (return the latest trade info)
         return matching(trade);
     }
