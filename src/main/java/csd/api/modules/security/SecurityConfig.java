@@ -67,35 +67,35 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             
             // User Controller
             // .antMatchers(HttpMethod.GET, "/users").hasAnyRole(onlyManager   )
-            .antMatchers(HttpMethod.POST, "/customers").hasAnyRole(onlyManager)
-            .antMatchers(HttpMethod.PUT, "/customers/*").hasAnyRole(onlyManagerAndUser)
-            .antMatchers(HttpMethod.GET, "/customers/*").hasAnyRole(onlyManagerAndUser)
+            .antMatchers(HttpMethod.POST, "/api/customers").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.PUT, "/api/customers/*").hasAnyRole(onlyManagerAndUser)
+            .antMatchers(HttpMethod.GET, "/api/customers/*").hasAnyRole(onlyManagerAndUser)
             
             // Account Controller
-            .antMatchers(HttpMethod.GET, "/accounts").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.POST, "/accounts").hasAnyRole(onlyManager)
-            .antMatchers(HttpMethod.GET, "/accounts/**").hasAnyRole(onlyManagerAndUser)
-            .antMatchers(HttpMethod.GET, "/transactions").hasAnyRole(onlyManager)
-            .antMatchers(HttpMethod.POST, "/accounts/{account_id}/transactions").hasAnyRole(onlyUser)
-            .antMatchers(HttpMethod.POST, "/transactions/makeTransfer").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/api/accounts").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.POST, "/api/accounts").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.GET, "/api/accounts/**").hasAnyRole(onlyManagerAndUser)
+            .antMatchers(HttpMethod.GET, "/api/transactions").hasAnyRole(onlyManager)
+            .antMatchers(HttpMethod.POST, "/api/accounts/{account_id}/transactions").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.POST, "/api/transactions/makeTransfer").hasAnyRole(onlyUser)
 
             // Trade Controller
-            .antMatchers(HttpMethod.GET, "/trades").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.POST, "/trades").hasAnyRole(onlyUser)
-            .antMatchers(HttpMethod.GET, "/trades/*").hasAnyRole(onlyUser)
-            .antMatchers(HttpMethod.DELETE, "/trades/*").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/api/trades").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.POST, "/api/trades").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/api/trades/*").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.DELETE, "/api/trades/*").hasAnyRole(onlyUser)
             // Porfolio Controller
-            .antMatchers(HttpMethod.GET, "/portfolio").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/api/portfolio").hasAnyRole(onlyUser)
             // Stock Controller
-            .antMatchers(HttpMethod.GET, "/stocks").hasAnyRole(onlyUser)
-            .antMatchers(HttpMethod.GET, "/stocks/*").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/api/stocks").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.GET, "/api/stocks/*").hasAnyRole(onlyUser)
             
             // Content Controller
-            .antMatchers(HttpMethod.GET, "/contents").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.GET, "/contents/*").hasAnyRole(allUsers)
-            .antMatchers(HttpMethod.POST, "/contents").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.PUT, "/contents/*").hasAnyRole(onlyEmp)
-            .antMatchers(HttpMethod.DELETE, "/contents/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.GET, "/api/contents").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.GET, "/api/contents/*").hasAnyRole(allUsers)
+            .antMatchers(HttpMethod.POST, "/api/contents").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.PUT, "/api/contents/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.DELETE, "/api/contents/*").hasAnyRole(onlyEmp)
 
             
             .and()

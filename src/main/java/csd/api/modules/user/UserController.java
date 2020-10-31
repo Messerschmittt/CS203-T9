@@ -27,12 +27,12 @@ public class UserController {
         this.customers = customers;
     }
 
-    @GetMapping("/users")
+    @GetMapping("/api/users")
     public List<ApplicationUser> getUsers() {
         return users.findAll();
     }
 
-    @GetMapping("/customers")
+    @GetMapping("/api/customers")
     public List<Customer> getCustomers() {
         return customers.findAll();
     }
@@ -42,7 +42,7 @@ public class UserController {
     * @param user
      * @return
      */
-    @PostMapping("/user/createUser")    
+    @PostMapping("/api/user/createUser")    
     public ApplicationUser addUser(@Valid @RequestBody ApplicationUser user){
         String username = user.getUsername();
         if (users.existsByUsername(username)) {
@@ -59,7 +59,7 @@ public class UserController {
     * @param user
      * @return
      */
-    @PostMapping("/customers")
+    @PostMapping("/api/customers")
     @ResponseStatus(HttpStatus.CREATED)
     public Customer addCustomer(@Valid @RequestBody Customer customer){
         String username = customer.getUsername();
@@ -110,26 +110,30 @@ public class UserController {
         return customers.save(customer);
     }
 
-    @PostMapping("/login_page")
+    @PostMapping("/api/login_page")
     public ApplicationUser loginUser(@RequestBody ApplicationUser user){
         ApplicationUser login = users.findByUsername(user.getUsername());
         return login;
     }
 
-    @PostMapping("/logoutSuccess")
+    @PostMapping("/api/logoutSuccess")
     @ResponseBody
     public String successLogout(){
         return "Successfully logged out";
     }
 
 
-    @GetMapping("/customers/{id}")
+    @GetMapping("/api/customers/{id}")
     public Customer getCustomerDetails(@PathVariable Integer id, Authentication auth){
         Optional<Customer> customer = customers.findById(id);
         if(!customer.isPresent()){
             throw new CustomerNotFoundException(id);
         }
         Customer c = customer.get();
+
+        if (auth == null) {
+            System.out.println("HAHAGAHHAGA");
+        }
 
         // System.out.println("get:"+ auth.getAuthorities().toString());
         // To ensure that customers can only view their own details and not other customers
@@ -143,7 +147,7 @@ public class UserController {
         return customer.get();
     }
 
-    @PutMapping("/customers/{id}")
+    @PutMapping("/api/customers/{id}")
     public Customer updateCustomer(@RequestBody Customer customer, @PathVariable Integer id, Authentication auth){
         // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("put:"+ auth.getAuthorities());

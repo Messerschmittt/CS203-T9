@@ -34,7 +34,7 @@ public class AccountController {
     }
 
     
-    @GetMapping("/accounts")
+    @GetMapping("/api/accounts")
     public List<Account> getAccounts(Authentication auth){
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             // System.out.println("user = " + auth.getName());
@@ -45,7 +45,7 @@ public class AccountController {
         return accounts.findAll();
     }
 
-    @GetMapping("/accounts/{id}")
+    @GetMapping("/api/accounts/{id}")
     public Account getAccountById(@PathVariable Integer id, Authentication auth){
         Optional<Account> a = accounts.findById(id);
         if(a.isEmpty()){
@@ -65,12 +65,12 @@ public class AccountController {
     }
 
 
-    @GetMapping("/transactions")
+    @GetMapping("/api/transactions")
     public List<Trans> getTransactions(Authentication auth){
         return transfers.findAll();
     }
 
-    @GetMapping("/accounts/{account_id}/transactions")
+    @GetMapping("/api/accounts/{account_id}/transactions")
     public List<Trans> getTransactionsByAccount(@PathVariable Integer account_id, Authentication auth){
         Optional<Account> a = accounts.findById(account_id);
         if(a.isEmpty()){
@@ -88,7 +88,7 @@ public class AccountController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/accounts")
+    @PostMapping("/api/accounts")
     public Account createAccount(@RequestBody AccountRecord accountRecord){
         if (!customers.existsById(accountRecord.getCustomer_id())) {
             throw new InvalidInputException();
@@ -102,7 +102,7 @@ public class AccountController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/accounts/{account_id}/transactions")
+    @PostMapping("/api/accounts/{account_id}/transactions")
     public Trans makeSimpleTrans(@RequestBody TransferRecord newTransRecord, Authentication auth){
         Optional<Account> f_a = accounts.findById(newTransRecord.getFrom());
         Optional<Account> t_a = accounts.findById(newTransRecord.getTo());
