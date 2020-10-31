@@ -42,6 +42,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
 
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         // Security classifications
@@ -52,6 +53,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         String[] onlyUser = new String[]{ "USER"};
         
         http
+        .requiresChannel().anyRequest().requiresSecure().and()  // For https
         .httpBasic()
         .and() //  "and()"" method allows us to continue configuring the parent
         .authorizeRequests()
