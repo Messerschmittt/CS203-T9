@@ -71,7 +71,13 @@ public interface TradeService {
      * @param qty
      */
     void checkAssets(int customerID, String symbol, int qty);
+    
+    List<Trade> getTradesBySymbol(String symbol);
 
+    boolean checkBalance(Trade trade, Account cusAcc);
+
+    int getMaxStock(int qty, double price, double availableBalance);
+    
     /**
      * Sort the specific stock sell trades with price and time
      * @param symbol
@@ -104,6 +110,7 @@ public interface TradeService {
      * Match the trades created in unofficial hours
      */
     void preMatch();
+
 
     /**
      * To fullfil the customer's trade order and save the trade info to the repo

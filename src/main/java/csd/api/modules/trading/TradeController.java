@@ -117,10 +117,7 @@ public class TradeController {
                 throw new UnauthorisedAccountAccessException();
             }
         }
-        trade = tradeService.CancelTrade(id);
-        if(trade == null) throw new TradeNotFoundException(id);
-        
-        return trade;
+        return tradeService.CancelTrade(id);
     }
 
     /**
@@ -168,10 +165,11 @@ public class TradeController {
     //     return tradeRepo.findByActionAndDateAndSymbol(action,date,symbol);
     // }
 
-    // //--can change to normal function (no need mapping)
-    // @GetMapping("/trades/{action}/{status}/{symbol}")
-    // public List<Trade> getAllvalidorder(@PathVariable String action,@PathVariable String status,@PathVariable String symbol) {
-    //     return tradeRepo.findByActionAndStatusAndSymbol(action,status, symbol);
-    // }
+    //--get all trade
+    @GetMapping("/Trades")
+    public List<Trade> getTrades() {
+        return tradeService.getAllTrades();
+    }
+    
 }
 

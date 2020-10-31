@@ -10,4 +10,8 @@ public class InsufficientBalanceForTradeException extends RuntimeException{
     public InsufficientBalanceForTradeException(Integer id) {
         super("Insufficient funds for trade:  " + id);
     }
+
+    public InsufficientBalanceForTradeException() {
+        super("Insufficient funds for trade matching.");
+    }
 }

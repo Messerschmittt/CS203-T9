@@ -92,15 +92,14 @@ public class TradeServiceImp implements TradeService {
      */
     @Override
     public Trade CancelTrade(Integer id){
-        String tradestatus =  tradeRepo.findById(id).get().getStatus();
-        if(tradestatus.equals("open") || tradestatus.equals("partial-filled")){
-                return tradeRepo.findById(id).map(trade -> {trade.setStatus("cancelled");
-                return tradeRepo.save(trade);
-            }).orElse(null);
-        }else{
-            throw new InvalidTradeCancelStatusException(tradestatus);
-        }       
-
+        Trade trade = tradeRepo.findById(id).get();
+        String tradestatus =  trade.getStatus();
+        if(tradestatus.equals("open")){
+                tradeRepo.findById(id).map(t -> {t.setStatus("cancelled");
+                return tradeRepo.save(t);
+            });
+        }
+        return trade;
     }
 
     /**
@@ -157,24 +156,36 @@ public class TradeServiceImp implements TradeService {
     }
 
     //check the quantity of stock the customer can buy based on available balance
-    // public int checkBalance(Trade trade, int qty, int price, Account cusAcc){
-    //     boolean valid = true;
-    //     if(trade.getAction().equals("buy")){
-    //         double lastPrice = stockRepo.findBySymbol(trade.getSymbol()).getLast_price();
-    //         double total = lastPrice * trade.getQuantity();
-    //         double available = cusAcc.getAvailable_balance();
-    //         if(trade.getBid() == 0 && total > available){
+    @Override
+    public boolean checkBalance(Trade trade, Account cusAcc){
+        boolean valid = true;
+    
+        double marketPrice = stockRepo.findBySymbol(trade.getSymbol()).getBid();
+        double total = marketPrice * trade.getQuantity();
+        double available = cusAcc.getAvailable_balance();
+        if(trade.getBid() == 0 && total > available){
+            return false;
+        }
+        if(trade.getBid() * trade.getQuantity() > available){
+            return false;
+        }
+        // reduce avaialble balance of customer
+        
+        return valid;
+    }
 
-    //         }
-    //         if(trade.getBid() * trade.getQuantity() > available){
-    //             valid = false;
-    //         }
-
-    //         // reduce avaialble balance of customer
-            
-    //         return valid;
-    //     }
-    // }
+    //during matching should be able to buy the stock quantity as much as possible
+    @Override
+    public int getMaxStock(int qty, double price, double availableBalance){        //qty want to buy, price of stock
+        int max = qty;
+        if(availableBalance < qty * price){
+            max = (int) ((availableBalance / price) / 100) * 100;        //ensure is multiple of 100
+        }
+        if(max == 0){
+            throw new InsufficientBalanceForTradeException();
+        }
+        return max;
+    }
 
     /**
      * Update the trades status of "open" and "partial-filled" as expired
@@ -279,6 +290,16 @@ public class TradeServiceImp implements TradeService {
         return bTrades;
     }
 
+    //update both side of sell and buy average price
+    public void updateAvg_Price(Trade trade, double price, double transaction_amt, int tradeFilledQuantity){
+        double avg_price = trade.getAvg_price();
+        if(avg_price == 0){
+            trade.setAvg_price(price);
+        } else{
+            trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / tradeFilledQuantity);
+        }
+    }
+
     @Override
     public Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
                 double transaction_amt, double currentPrice){
@@ -318,7 +339,7 @@ public class TradeServiceImp implements TradeService {
 
         return a;
     }
-
+    
     @Override
     public Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
     double transaction_amt, double currentPrice){
@@ -333,7 +354,7 @@ public class TradeServiceImp implements TradeService {
         // System.out.println("after sell quantity" + newQuantity);
         double newAvgPrice = 0;
 
-        newAvgPrice = ((priorQuantity * priorAvgPrice) - (transaction_amt))/(priorQuantity - transaction_quantity);
+        newAvgPrice = ((priorQuantity * priorAvgPrice) + (transaction_amt))/(priorQuantity + transaction_quantity);
         a.setAvg_price(newAvgPrice);
         a.setQuantity(newQuantity);
         a.setCurrent_price(currentPrice);
@@ -403,21 +424,33 @@ public class TradeServiceImp implements TradeService {
                 int sAvailQuantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
                 int sFilledQuantity = s.getFilled_quantity();
                 
-                if(sAvailQuantity < currentTradeQty){  //partially filled in newTrade(buy), but sell trade -> "filled"
-                    sStatus = "filled";
-                    newTradeStatus = "partial-filled";
-                    transaction_quantity = sAvailQuantity;
-
-                } else if(sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but newTrade(buy) -> "filled"
-                    sStatus = "partial-filled";
-                    newTradeStatus = "filled";
-                    transaction_quantity = currentTradeQty;
-    
-                } else if(sAvailQuantity == currentTradeQty){   //both trades status "filled"
-                    sStatus = "filled";
-                    newTradeStatus = "filled";
-                    transaction_quantity = currentTradeQty;
-
+                //check max stock that can buy
+                int maxBuy = getMaxStock(currentTradeQty, sAskPrice, cusAcc.getAvailable_balance());
+                if(maxBuy == currentTradeQty){
+                    if(sAvailQuantity < currentTradeQty){  //partially filled in newTrade(buy), but sell trade -> "filled"
+                        sStatus = "filled";
+                        newTradeStatus = "partial-filled";
+                        transaction_quantity = sAvailQuantity;
+                    } else if(sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but newTrade(buy) -> "filled"
+                        sStatus = "partial-filled";
+                        newTradeStatus = "filled";
+                        transaction_quantity = currentTradeQty;
+        
+                    } else if(sAvailQuantity == currentTradeQty){   //both trades status "filled"
+                        sStatus = "filled";
+                        newTradeStatus = "filled";
+                        transaction_quantity = currentTradeQty;
+                    } 
+                } else{
+                    if(sAvailQuantity > maxBuy && sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but newTrade(buy) -> "filled"
+                        sStatus = "partial-filled";
+                        newTradeStatus = "partial-filled";
+                        transaction_quantity = maxBuy;
+                    } else if(sAvailQuantity < maxBuy){  //partially filled in newTrade(buy), but sell trade -> "filled"
+                        sStatus = "filled";
+                        newTradeStatus = "partial-filled";
+                        transaction_quantity = sAvailQuantity;
+                    }
                 }
                 System.out.println("i:  " + i);
                 i++;
@@ -433,24 +466,25 @@ public class TradeServiceImp implements TradeService {
                 t.setAmount(transaction_amt);
                 t.setFrom_account(cusAcc);
                 t.setTo_account(s.getAccount());
-                
-                if(s.getAccount() == null){
-                    System.out.println("Faulty account accessed");
-                    t.setTo_account(new Account());
-                }
+                // can delete ?????
+                // if(s.getAccount() == null){
+                //     System.out.println("Faulty account accessed");
+                //     t.setTo_account(new Account());
+                // }
                 tradeRepo.save(newTrade);
                 accController.makeTransaction(t);
                 
                 // Only save when transaction is successful ie. theres sufficient funds
-                // Update s trade status
+                // Update s trade status, fill quantity, avg_price
                 sFilledQuantity += transaction_quantity;
                 s.setStatus(sStatus);
+                updateAvg_Price(s, lastPrice, transaction_amt, tradeFilledQuantity);
                 s.setFilled_quantity(sFilledQuantity);
 
-                // Update newTrade trade status
+                // Update newTrade trade status, fill quantity, avg_price
                 newTrade.setStatus(newTradeStatus);
-                newTrade.setAvg_price((newTrade.getAvg_price()*newTrade.getFilled_quantity()+transaction_amt) / tradeFilledQuantity );
-                newTrade.setFilled_quantity(tradeFilledQuantity);
+                updateAvg_Price(newTrade, lastPrice, transaction_amt, tradeFilledQuantity);
+                newTrade.setFilled_quantity(tradeFilledQuantity); 
 
                 // Check if new trade is filled
                 if(tradeFilledQuantity == initialTradeQty){
@@ -530,24 +564,26 @@ public class TradeServiceImp implements TradeService {
                 t.setAmount(transaction_amt);
                 t.setFrom_account(b.getAccount());
                 t.setTo_account(cusAcc);
-                if(b.getAccount() == null){
-                    System.out.println("Bank account accessed");
-                    t.setFrom_account(new Account(null, 1_000_000, 1_000_000)); //using an arbitary value for bank
-                }
+
+                // can delete ?????
+                // if(b.getAccount() == null){
+                //     System.out.println("Bank account accessed");
+                //     t.setFrom_account(new Account(null, 1_000_000, 1_000_000)); //using an arbitary value for bank
+                // }
                 tradeRepo.save(newTrade);
                 accController.makeTransaction(t);
                 
-                // Update s trade status
+                // Update b trade status, filled quantity, avg_price
                 bFilledQuantity += transaction_quantity;
                 b.setStatus(bStatus);
+                updateAvg_Price(b, lastPrice, transaction_amt, tradeFilledQuantity);
                 b.setFilled_quantity(bFilledQuantity);
 
-                // Update newTrade trade status
+                // Update newTrade trade status, filled quantity, avg_price
                 newTrade.setStatus(newTradeStatus);
-                newTrade.setAvg_price((newTrade.getAvg_price()*newTrade.getFilled_quantity()+transaction_amt) / tradeFilledQuantity );
+                updateAvg_Price(newTrade, lastPrice, transaction_amt, tradeFilledQuantity);
                 newTrade.setFilled_quantity(tradeFilledQuantity);
                 
-
                 // Check if new trade is filled
                 if(tradeFilledQuantity == initialTradeQty){
                     tradeNotFilled = false;
@@ -625,13 +661,13 @@ public class TradeServiceImp implements TradeService {
 
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell
-        // if(!checkBalance(trade)){
-
-        //     throw new InsufficientBalanceForTradeException(trade.getId());
-        // }
+        if(trade.getAction().equals("buy")){
+            if(!checkBalance(trade, cusAcc)){
+                throw new InsufficientBalanceForTradeException(trade.getId());
+            }
+        }
 
         //To check the customer has sufficient stock in assets to sell
-        
         Integer customerID = trade.getCustomer().getId();
         if(trade.getAction().equals("sell")){
             checkAssets(customerID, trade.getSymbol(), trade.getQuantity());
@@ -641,15 +677,20 @@ public class TradeServiceImp implements TradeService {
         // if(checktiming()) -> match
         
         //if stock market is close, save the trade and throw InvalidTradeTiming
-        boolean isValidTime = checkTime();
-        if(!isValidTime) {
-            updateStatusToExpired();
-            return tradeRepo.save(trade);
-        }
+        // boolean isValidTime = checkTime();
+        // if(!isValidTime) {
+        //     updateStatusToExpired();
+        //     return tradeRepo.save(trade);
+        // }
         preMatch();
         
         // Enter Create and Matching Function (return the latest trade info)
         return matching(trade);
+    }
+
+    @Override
+    public List<Trade> getTradesBySymbol(String symbol){
+        return tradeRepo.findBySymbol(symbol);
     }
 
 }
