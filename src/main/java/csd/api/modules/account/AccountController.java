@@ -170,9 +170,9 @@ public class AccountController {
         System.out.println("PRIOR to_acc - B: " + to_acc.getBalance() + " AB: " + to_acc.getAvailable_balance());
 
         from_acc.setBalance(from_acc.getBalance() - amt);
-        from_acc.setAvailable_balance(from_acc.getAvailable_balance() - amt);
+        // from_acc.setAvailable_balance(from_acc.getAvailable_balance() - amt);
         to_acc.setBalance(to_acc.getBalance() + amt);
-        to_acc.setAvailable_balance(to_acc.getAvailable_balance() + amt);
+        // to_acc.setAvailable_balance(to_acc.getAvailable_balance() + amt);
 
         System.out.println("AFTER from_acc - B: " + from_acc.getBalance() + " AB: " + from_acc.getAvailable_balance());
         System.out.println("AFTER to_acc - B: " + to_acc.getBalance() + " AB: " + to_acc.getAvailable_balance());

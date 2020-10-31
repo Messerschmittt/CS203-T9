@@ -43,7 +43,7 @@ public class TradeController {
      * List all trades in the system (ONLY FOR TESTING)
      * @return list of all trades
      */
-    @GetMapping("/trades")
+    @GetMapping("/api/trades")
     public List<Trade> getAllTrades(Authentication auth){
         List<Trade> trades = tradeService.getAllTrades();
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
@@ -61,7 +61,7 @@ public class TradeController {
      * @param id
      * @return trade with the given id
      */
-    @GetMapping("/trades/{id}")
+    @GetMapping("/api/trades/{id}")
     public Trade getTrade(@PathVariable Integer id,Authentication auth){
         Trade trade = tradeService.getTrade(id);
         
@@ -84,7 +84,7 @@ public class TradeController {
      * If there is no trade with the given "id", will throw a TradeNotFoundException
      * @param id
      */
-    @DeleteMapping("/trades/{id}")
+    @DeleteMapping("/api/trades/{id}")
     public void deleteTrade(@PathVariable Integer id, Authentication auth){
         Trade trade = tradeService.getTrade(id);
         
@@ -107,7 +107,7 @@ public class TradeController {
      * @param auth
      * @return the updated trade
      */
-    @PutMapping("/trades/{id}")
+    @PutMapping("/api/trades/{id}")
     public Trade CancelTrade(@PathVariable Integer id, Authentication auth){
         Trade trade = tradeService.getTrade(id);
         //check is this specific trade belong to the login user
@@ -126,7 +126,7 @@ public class TradeController {
      * @return the latest info of trade
      */
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/trades")
+    @PostMapping("/api/trades")
     public Trade TradeGenerate(@RequestBody TradeRecord tradeRecord, Authentication auth){
          // Only allow role_user of create trade
          if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){

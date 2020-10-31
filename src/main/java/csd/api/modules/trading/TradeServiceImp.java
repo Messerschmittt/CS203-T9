@@ -2,7 +2,9 @@ package csd.api.modules.trading;
 
 import java.util.List;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -12,6 +14,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import csd.api.tables.*;
 import csd.api.tables.templates.*;
@@ -98,7 +101,12 @@ public class TradeServiceImp implements TradeService {
                 tradeRepo.findById(id).map(t -> {t.setStatus("cancelled");
                 return tradeRepo.save(t);
             });
+
+            Account cusAcc = trade.getAccount();
+            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
         }
+
+        
         return trade;
     }
 
@@ -137,18 +145,16 @@ public class TradeServiceImp implements TradeService {
             case SUNDAY:
                 return isValid;
             default:
-                if(nowtime < 9 || nowtime >= 17){
+                if(nowtime < 9){
                     return isValid;
-                } else{     //if stock market open
+                } else if( nowtime >= 17){
                     //check if the date of open or partial-filled trades is same with the date of current trade
                     List<Trade> trades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
-                    if(trades != null || !trades.isEmpty()){
-                        String previousDate = trades.get(0).toString().substring(0, 11);
-                        //if date is not same, then update the staus of all open or partial-filled trades as expired
-                        if(!date.equals(previousDate)){
-                            updateStatusToExpired();
-                        }
+                    if(trades != null && !trades.isEmpty()){
+                        updateStatusToExpired();
                     }
+                }
+                else{     //if stock market open
                     isValid = true;
                 }
         }
@@ -161,16 +167,25 @@ public class TradeServiceImp implements TradeService {
         boolean valid = true;
     
         double marketPrice = stockRepo.findBySymbol(trade.getSymbol()).getBid();
-        double total = marketPrice * trade.getQuantity();
-        double available = cusAcc.getAvailable_balance();
-        if(trade.getBid() == 0 && total > available){
-            return false;
+        
+        List<Trade> allSellTradesForStock = tradeRepo.findBySymbol(trade.getSymbol());
+        allSellTradesForStock.removeIf(t -> t.getAsk() == 0.0);
+        double marketCap = 0;
+        for(Trade t : allSellTradesForStock){
+            marketCap += (t.getQuantity() - t.getFilled_quantity())*t.getAsk();
         }
+
+        double available = cusAcc.getAvailable_balance();
+        // if(trade.getBid() == 0 && marketCap > available){
+        //     return false;
+        // }
         if(trade.getBid() * trade.getQuantity() > available){
             return false;
         }
         // reduce avaialble balance of customer
         
+        cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - trade.getBid() * trade.getQuantity());
+
         return valid;
     }
 
@@ -198,12 +213,19 @@ public class TradeServiceImp implements TradeService {
             return;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        String day = now.toString().substring(0,9);
+
         for(Trade t: OpenPartialTrades){
             String time = t.getDate().substring(11,13);
+            String t_day = t.getDate().substring(0, 9);
             int hr = Integer.parseInt(time);
-            if(hr >= 9 && hr < 17){
+            if(hr >= 9 && hr < 17 || !day.equals(t_day)){ // check for nt same day or trades done in trading hours of same day
                 t.setStatus("expired");
                 tradeRepo.save(t);
+
+                Account cusAcc = t.getAccount();
+                cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(t.getQuantity()-t.getFilled_quantity())*t.getBid());
             }
         }
     }
@@ -272,8 +294,17 @@ public class TradeServiceImp implements TradeService {
      */
     @Override
     public List<Trade> sellTradesSorting(String symbol){
-        Sort sSort = Sort.by("ask").ascending().and(Sort.by("date").ascending());
-        List<Trade> sTrades = tradeRepo.findByActionAndSymbolAndStatusContainingOrStatusContaining("sell", symbol, "open", "partial", sSort);
+        List<Trade> sTrades = tradeRepo.findByActionAndSymbolAndStatus("sell", symbol, "open");
+        sTrades.addAll(tradeRepo.findByActionAndSymbolAndStatus("sell", symbol, "partial-filled"));
+        sTrades.sort((t1,t2) -> {
+            if(t1.getBid() == t2.getBid()){
+                LocalDateTime t1_date = LocalDateTime.parse(t1.getDate());
+                LocalDateTime t2_date = LocalDateTime.parse(t2.getDate());
+                return t1_date.compareTo(t2_date);
+            }else{
+                return (t1.compareTo(t2));
+            }
+        });
         return sTrades;
     }
 
@@ -285,18 +316,27 @@ public class TradeServiceImp implements TradeService {
      */
     @Override
     public List<Trade> buyTradesSorting(String symbol){
-        Sort bSort = Sort.by("bid").descending().and(Sort.by("date").ascending());
-        List<Trade> bTrades = tradeRepo.findByActionAndSymbolAndStatusContainingOrStatusContaining("buy", symbol, "open", "partial", bSort);
+        List<Trade> bTrades = tradeRepo.findByActionAndSymbolAndStatus("buy", symbol, "open");
+        bTrades.addAll(tradeRepo.findByActionAndSymbolAndStatus("buy", symbol, "partial-filled"));
+        bTrades.sort((t1,t2) -> {
+            if(t1.getBid() == t2.getBid()){
+                LocalDateTime t1_date = LocalDateTime.parse(t1.getDate());
+                LocalDateTime t2_date = LocalDateTime.parse(t2.getDate());
+                return t1_date.compareTo(t2_date);
+            }else{
+                return -(t1.compareTo(t2));
+            }
+        });
         return bTrades;
     }
 
     //update both side of sell and buy average price
-    public void updateAvg_Price(Trade trade, double price, double transaction_amt, int tradeFilledQuantity){
+    public void updateAvg_Price(Trade trade, double price, double transaction_amt, int transaction_quantity){
         double avg_price = trade.getAvg_price();
         if(avg_price == 0){
             trade.setAvg_price(price);
         } else{
-            trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / tradeFilledQuantity);
+            trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / (transaction_quantity + trade.getFilled_quantity()));
         }
     }
 
@@ -352,10 +392,7 @@ public class TradeServiceImp implements TradeService {
         double priorAvgPrice = a.getAvg_price();
         int newQuantity = priorQuantity - transaction_quantity;
         // System.out.println("after sell quantity" + newQuantity);
-        double newAvgPrice = 0;
-
-        newAvgPrice = ((priorQuantity * priorAvgPrice) + (transaction_amt))/(priorQuantity + transaction_quantity);
-        a.setAvg_price(newAvgPrice);
+        
         a.setQuantity(newQuantity);
         a.setCurrent_price(currentPrice);
         a.CalculateValue();
@@ -380,7 +417,7 @@ public class TradeServiceImp implements TradeService {
 
 
    //find the matching trade   
-    @Override    
+    @Override  
     public Trade matching(Trade newTrade){
         Account cusAcc = newTrade.getAccount();
         Customer customer = cusAcc.getCustomer();   
@@ -395,14 +432,18 @@ public class TradeServiceImp implements TradeService {
         int i = 0;
         int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();
         double lastPrice = 0.0;
-
+        System.out.println("Trade Action - " + newTrade.getAction() + " " + newTrade.getSymbol());
         if(newTrade.getAction().equals("buy")){
+            lastPrice = newTrade.getBid();
             if(sTrades == null || sTrades.size() == 0){     //no matching trade
-                return tradeRepo.save(newTrade);
+                tradeRepo.save(newTrade);
+                stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getBid());
+                return newTrade;
             }
+            System.out.println("selltrades- " + sTrades.get(0).getAction() + sTrades.get(0).getSymbol());
 
             double newTradeBid = newTrade.getBid();
-            int tradeFilledQuantity = 0;
+            int tradeFilledQuantity = newTrade.getFilled_quantity();
             int currentTradeQty = initialTradeQty;
             while(tradeNotFilled && i < sTrades.size()){
                 Trade s = sTrades.get(i);
@@ -414,6 +455,7 @@ public class TradeServiceImp implements TradeService {
                 }else if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
                     System.out.println("Closing trade");
                     tradeRepo.save(newTrade);
+                    stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getBid());
                     return newTrade;
                 }
 
@@ -426,7 +468,7 @@ public class TradeServiceImp implements TradeService {
                 
                 //check max stock that can buy
                 int maxBuy = getMaxStock(currentTradeQty, sAskPrice, cusAcc.getAvailable_balance());
-                if(maxBuy == currentTradeQty){
+                if(maxBuy >= currentTradeQty){
                     if(sAvailQuantity < currentTradeQty){  //partially filled in newTrade(buy), but sell trade -> "filled"
                         sStatus = "filled";
                         newTradeStatus = "partial-filled";
@@ -478,12 +520,12 @@ public class TradeServiceImp implements TradeService {
                 // Update s trade status, fill quantity, avg_price
                 sFilledQuantity += transaction_quantity;
                 s.setStatus(sStatus);
-                updateAvg_Price(s, lastPrice, transaction_amt, tradeFilledQuantity);
+                updateAvg_Price(s, lastPrice, transaction_amt, transaction_quantity);
                 s.setFilled_quantity(sFilledQuantity);
 
                 // Update newTrade trade status, fill quantity, avg_price
                 newTrade.setStatus(newTradeStatus);
-                updateAvg_Price(newTrade, lastPrice, transaction_amt, tradeFilledQuantity);
+                updateAvg_Price(newTrade, lastPrice, transaction_amt, transaction_quantity);
                 newTrade.setFilled_quantity(tradeFilledQuantity); 
 
                 // Check if new trade is filled
@@ -492,6 +534,8 @@ public class TradeServiceImp implements TradeService {
                 }
                 
                 // Save trades
+                printTrade(s);
+                printTrade(newTrade);
                 tradeRepo.save(s);
                 tradeRepo.save(newTrade);
 
@@ -507,11 +551,14 @@ public class TradeServiceImp implements TradeService {
         //for sell action
         if(newTrade.getAction().equals("sell")){
             System.out.println("In sell");
-            
+            lastPrice = newTrade.getAsk();
             if(bTrades == null || bTrades.size() == 0){     //no matching trade
-                return tradeRepo.save(newTrade);
+                tradeRepo.save(newTrade);
+                System.out.println("refersing" + newTrade.getSymbol() + "- " + newTrade.getAsk());
+                stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getAsk());
+                return newTrade;
             }
-
+            System.out.println(bTrades.get(0).getSymbol() + '-' + bTrades.get(0).getBid()+ "-" + bTrades.get(0).getQuantity());
             double newTradeAsk = newTrade.getAsk();
             int tradeFilledQuantity = 0;
             int currentTradeQty = initialTradeQty;
@@ -525,6 +572,7 @@ public class TradeServiceImp implements TradeService {
                 }
                 else if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
                     tradeRepo.save(newTrade);
+                    stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getAsk());
                     return newTrade;
                 }
 
@@ -576,12 +624,12 @@ public class TradeServiceImp implements TradeService {
                 // Update b trade status, filled quantity, avg_price
                 bFilledQuantity += transaction_quantity;
                 b.setStatus(bStatus);
-                updateAvg_Price(b, lastPrice, transaction_amt, tradeFilledQuantity);
+                updateAvg_Price(b, lastPrice, transaction_amt, transaction_quantity);
                 b.setFilled_quantity(bFilledQuantity);
 
                 // Update newTrade trade status, filled quantity, avg_price
                 newTrade.setStatus(newTradeStatus);
-                updateAvg_Price(newTrade, lastPrice, transaction_amt, tradeFilledQuantity);
+                updateAvg_Price(newTrade, lastPrice, transaction_amt, transaction_quantity);
                 newTrade.setFilled_quantity(tradeFilledQuantity);
                 
                 // Check if new trade is filled
@@ -589,6 +637,8 @@ public class TradeServiceImp implements TradeService {
                     tradeNotFilled = false;
                 }
 
+                printTrade(b);
+                printTrade(newTrade);
                 // Save trades
                 tradeRepo.save(b);
                 tradeRepo.save(newTrade);
@@ -610,7 +660,7 @@ public class TradeServiceImp implements TradeService {
         Sort sort = Sort.by("date").ascending();        //Sort by time
         List<Trade> openTrades = tradeRepo.findByStatusContaining("open", sort);
 
-        if(openTrades != null || openTrades.size() != 0){
+        if(openTrades != null && openTrades.size() != 0){
             for(Trade t: openTrades){
                 matching(t);
             }
@@ -691,6 +741,11 @@ public class TradeServiceImp implements TradeService {
     @Override
     public List<Trade> getTradesBySymbol(String symbol){
         return tradeRepo.findBySymbol(symbol);
+    }
+
+    private void printTrade(Trade trade){
+        System.out.println(trade.getAction());
+        System.out.println("avg " + trade.getAvg_price() + " filled " + trade.getFilled_quantity());
     }
 
 }

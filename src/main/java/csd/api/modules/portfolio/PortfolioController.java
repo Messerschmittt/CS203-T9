@@ -27,7 +27,7 @@ public class PortfolioController {
      * List all portfolio in the system
      * @return list of all portfolio
      */
-    @GetMapping("/portfolios")
+    @GetMapping("/api/portfolios")
     public List<Portfolio> listPortfolios(){
         return portfolioRepo.findAll();
     }
@@ -35,7 +35,7 @@ public class PortfolioController {
      * List portfolio owned by customer
      * @return portfoli of customer
      */
-    @GetMapping("/portfolio")
+    @GetMapping("/api/portfolio")
     public Portfolio listPortfolioforuser(Authentication auth){
         Portfolio p = null;
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){

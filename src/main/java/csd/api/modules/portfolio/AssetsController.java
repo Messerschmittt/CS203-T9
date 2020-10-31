@@ -22,7 +22,7 @@ public class AssetsController {
      * List all assets in the system
      * @return list of all assets
      */
-    @GetMapping("/assets")
+    @GetMapping("/api/assets")
     public List<Assets> listAssets(){
         return assetsRepo.findAll();
     }

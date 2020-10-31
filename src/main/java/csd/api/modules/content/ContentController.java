@@ -35,7 +35,7 @@ public class ContentController {
      * all the content stored in the system
      * @return
      */
-    @GetMapping("/contents")
+    @GetMapping("/api/contents")
     public List<Content> getContents(Authentication auth){
         System.out.println(auth.getPrincipal().toString());
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
@@ -56,7 +56,7 @@ public class ContentController {
      * @param id
      * @return content or null if no content with id specified
      */
-    @GetMapping("/contents/{id}")
+    @GetMapping("/api/contents/{id}")
     public Content getSpecificContent(@PathVariable Integer id, Authentication auth){
         Optional<Content> c = contents.findById(id);
         if(c.isEmpty()){
@@ -81,7 +81,7 @@ public class ContentController {
      * @return content created
      */
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/contents")
+    @PostMapping("/api/contents")
     public Content createContent(@RequestBody Content content){
         // Approval set to false by default regardless of input
         content.setApproved(false);
@@ -96,7 +96,7 @@ public class ContentController {
      * @param auth
      * @return content updated
      */
-    @PutMapping("/contents/{id}")
+    @PutMapping("/api/contents/{id}")
     public Content updateContent(@RequestBody Content content, Authentication auth, @PathVariable Integer id){
         Optional<Content> c = contents.findById(id);
         if(!c.isPresent()){
@@ -123,7 +123,7 @@ public class ContentController {
      * API is restricted to only employees
      * @param id
      */
-    @DeleteMapping("/contents/{id}")
+    @DeleteMapping("/api/contents/{id}")
     public void deleteContent(@PathVariable Integer id){
         try{
             contents.deleteById(id);
@@ -134,12 +134,12 @@ public class ContentController {
         return;
     }
 
-    @GetMapping("contents/test/topheadlines")
+    @GetMapping("/api/contents/test/topheadlines")
     public ArrayList<Content> getTopHeadlines(){
         return NewsAPI.apiTopHeadlines();
     }
 
-    @GetMapping("contents/test/specificQuery/{query}")
+    @GetMapping("/api/contents/test/specificQuery/{query}")
     public ArrayList<Content> getSpecificQuery(@PathVariable String query){
         System.out.println("Query: " + query);
         return NewsAPI.apiSpecificQuery(query);

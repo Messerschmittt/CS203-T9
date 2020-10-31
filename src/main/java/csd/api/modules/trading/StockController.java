@@ -94,12 +94,12 @@ public class StockController {
     */
     
     // for only role_user
-    @GetMapping("/stocks")
+    @GetMapping("/api/stocks")
     public List<Stock> getAllStocks(){
         return stocks.findAll();
     }
 
-    @GetMapping("/stocks/{symbol}")
+    @GetMapping("/api/stocks/{symbol}")
     public Stock getoneStock(@PathVariable String symbol, Authentication auth){
         // Only allow role_user of create stock
         if(!auth.getAuthorities().toString().equals("[ROLE_USER]")){
@@ -181,8 +181,8 @@ public class StockController {
         Collections.sort(bTrades);
         Collections.reverse(bTrades);   //descending order
         if(bTrades == null || bTrades.isEmpty()){
-            // s.setBid();
             s.setBid_volume(0);
+            s.setBid(last_price);
         } else {
             s.setBid(bTrades.get(0).getBid());
             s.setBid_volume(bTrades.get(0).getQuantity()-bTrades.get(0).getFilled_quantity());
@@ -194,7 +194,7 @@ public class StockController {
         sTrades.addAll(sTrades2);
         Collections.sort(sTrades);
         if(sTrades == null || sTrades.isEmpty()){
-            // s.setAsk(-1);
+            s.setAsk(last_price);
             s.setAsk_volume(0);
         }else{
             s.setAsk(sTrades.get(0).getAsk());

@@ -18,7 +18,7 @@ public interface TradeRepository extends JpaRepository <Trade, Integer> {
     List<Trade> findByActionAndDateAndSymbol(String action, String date, String symbol);
     List<Trade> findBySymbolAndBid(String Symbol, double bid);
     List<Trade> findByActionAndStatusAndSymbol(String action, String status, String symbol);
-    List<Trade> findByActionAndSymbolAndStatusContainingOrStatusContaining(String action, String symbol, String status1, String status2, Sort sort);
+    List<Trade> findByActionAndSymbolAndStatus(String action, String symbol, String status1);
     List<Trade> findByStatusContainingOrStatusContaining(String status1,String status2);
     List<Trade> findByStatusContaining(String status, Sort sort);
     List<Trade> findByCustomer_IdAndSymbolAndStatus(Integer customerId, String symbol, String status);
