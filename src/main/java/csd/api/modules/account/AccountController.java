@@ -55,7 +55,7 @@ public class AccountController {
 
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             System.out.println("Accessing account" + auth.getName());
-            System.out.println("Account: " + acc.getId() + "name" + acc.getCustomer().getUsername());
+            System.out.println("Account: " + acc.getId() + " name: " + acc.getCustomer().getUsername());
             if(!auth.getName().equals(acc.getCustomer().getUsername())){
                 throw new UnauthorisedAccountAccessException(id);
             }
@@ -94,7 +94,9 @@ public class AccountController {
             throw new InvalidInputException();
         }
 
+        System.out.println("----------");
 
+        System.out.println(customers.findById(accountRecord.getCustomer_id()).get().getUsername());
         Account newAcc = new Account(customers.findById(accountRecord.getCustomer_id()).get()
                         , accountRecord.getBalance(), accountRecord.getBalance());
         return accounts.save(newAcc);
@@ -107,10 +109,10 @@ public class AccountController {
         Optional<Account> f_a = accounts.findById(newTransRecord.getFrom());
         Optional<Account> t_a = accounts.findById(newTransRecord.getTo());
         if(f_a.isEmpty()){
-            throw new AccountNotFoundException(newTransRecord.getFrom());
+            throw new AccountDoesNotExistException(newTransRecord.getFrom());
         }
         if(t_a.isEmpty()){
-            throw new AccountNotFoundException(newTransRecord.getTo());
+            throw new AccountDoesNotExistException(newTransRecord.getTo());
         }
 
         Account from_acc = f_a.get();
