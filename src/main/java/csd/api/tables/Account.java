@@ -1,6 +1,6 @@
 package csd.api.tables;
 
-import java.util.List;
+import java.util.*;
 import javax.persistence.*;
 import com.fasterxml.jackson.annotation.*;
 import lombok.*;
@@ -51,6 +51,20 @@ public class Account {
         this.customer = customer;
         this.balance = balance;
         this.available_balance = available_balance;
+    }
+
+    @JsonIgnore
+    public List<Trans> getTransactions() {
+        List<Trans> merged = new ArrayList<>();
+
+        for (Trans t: transactions_from) {
+            merged.add(t);
+        }
+        
+        for (Trans t: transactions_to) {
+            merged.add(t);
+        }
+        return merged;
     }
 
 

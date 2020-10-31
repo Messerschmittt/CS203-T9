@@ -84,7 +84,7 @@ public class AccountController {
             }
         }
         
-        return acc.getTransactions_from();
+        return acc.getTransactions();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -94,9 +94,9 @@ public class AccountController {
             throw new InvalidInputException();
         }
 
-        System.out.println("----------");
+        // System.out.println("----------");
 
-        System.out.println(customers.findById(accountRecord.getCustomer_id()).get().getUsername());
+        // System.out.println(customers.findById(accountRecord.getCustomer_id()).get().getUsername());
         Account newAcc = new Account(customers.findById(accountRecord.getCustomer_id()).get()
                         , accountRecord.getBalance(), accountRecord.getBalance());
         return accounts.save(newAcc);
@@ -113,6 +113,10 @@ public class AccountController {
         }
         if(t_a.isEmpty()){
             throw new AccountDoesNotExistException(newTransRecord.getTo());
+        }
+
+        if (newTransRecord.getAmount() <= 0 ) {
+            throw new InvalidInputException(); 
         }
 
         Account from_acc = f_a.get();
