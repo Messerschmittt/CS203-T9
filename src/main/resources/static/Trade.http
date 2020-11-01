@@ -1,56 +1,132 @@
 
 ### -- View account Repository
-GET http://localhost:8080/accounts
+GET https://localhost:8443/api/accounts
 Authorization: Basic manager_1:01_manager_01
 
 ### -- View customers info
-GET http://localhost:8080/customers
-
-
-
-### -- View Portfolio Repository -- can remove 
-GET https://localhost:8443/api/trades
-Authorization: Basic manager_1:01_manager_01
-
-### -- View Individual Portfolio by ryverbank user (only Role user)
-GET https://localhost:8443/api/portfolio
-Authorization: Basic good_user_1:01_user_01
-
-### -- View Individual Portfolio by manager (invalid user -> should be unauthorize)
-GET https://localhost:8443/api/trades
-Authorization: Basic good_user_2:02_user_02
-
-### -- View Individual Portfolio by good user 1
-GET https://localhost:8443/api/accounts
-Authorization: Basic manager_1:01_manager_01
+GET https://localhost:8443/api/customers
 
 
 
 ### -- View all available Stock Info (only Role user)
 GET https://localhost:8443/api/stocks
-Authorization: Basic good_user_1:01_user_01
+Authorization: Basic ryverBank:ryverBankPassword
 
 ### -- View specific Stock Info (only Role user)
-GET http://localhost:8080/stocks/A17U
+GET https://localhost:8443/api/stocks/A17U
+Authorization: Basic ryverBank:ryverBankPassword
+
+
+### -- View specific Stock Info (with invalid symbol  -> 400)
+GET https://localhost:8443/api/stocks/A17U.SI
+Authorization: Basic ryverBank:ryverBankPassword
+
+
+
+### -- View Individual Portfolio (only Role user)
+GET https://localhost:8443/api/portfolio
+Authorization: Basic ryverBank:ryverBankPassword
+
+### -- View Individual Portfolio
+GET https://localhost:8443/api/portfolio
 Authorization: Basic good_user_1:01_user_01
 
+### -- View Individual Portfolio
+GET https://localhost:8443/api/portfolio
+Authorization: Basic good_user_2:02_user_02
 
-### -- View specific Stock Info with invalid symbol 
-GET http://localhost:8080/stocks/A17U.SI
-Authorization: Basic good_user_1:01_user_01
+### -- View Individual Portfolio    (if Manager view -> forbidden)
+GET https://localhost:8443/api/portfolio
+Authorization: Basic manager_1:01_manager_01
 
 
 
-### -- View Trade Repository
-GET http://localhost:8080/trades
-Authorization: Basic good_user_1:01_user_01
+### -- View Trade Repository (Manager can view all list) (Extra)
+GET https://localhost:8443/api/trades
+Authorization: Basic manager_1:01_manager_01
 
-### -- View Trade Repository
+### -- View all trades belongs to user
+GET https://localhost:8443/api/trades
+Authorization: Basic ryverBank:ryverBankPassword
+
+### -- View all trades belongs to user
 GET https://localhost:8443/api/trades
 Authorization: Basic good_user_1:01_user_01
 
+### -- View all trades belongs to user
+GET https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
 
-### - Create buy trade by user
+
+### - Create trade (with invalid/no account id -> 400)
+### check if customer doesnt own the account and tries to trade
+POST https://localhost:8443/api/trades
+Authorization: Basic ryverBank:ryverBankPassword
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17U",
+    "quantity":500,  
+    "ask":5, 
+    "account_id": 2,
+    "customer_id":1, 
+    "status":"open"
+}
+
+### - Create trade (with invalid customer id -> 400)
+POST https://localhost:8443/api/trades
+Authorization: Basic ryverBank:ryverBankPassword
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17U",
+    "quantity":500,  
+    "ask":5,  
+    "account_id":1,
+    "customer_id":2,
+    "status":"open"
+}
+
+### - Create trade (with invalid symbol -> 400)
+POST https://localhost:8443/api/trades
+Authorization: Basic ryverBank:ryverBankPassword
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17",
+    "quantity":500,  
+    "ask":5, 
+    "account_id":1,
+    "customer_id":1, 
+    "status":"open"
+}
+
+### - Create trade (with invalid quantity -> 400)
+POST https://localhost:8443/api/trades
+Authorization: Basic ryverBank:ryverBankPassword
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17U",
+    "quantity":550,  
+    "ask":5,  
+    "account_id":1,
+    "customer_id":1,
+    "status":"open"
+}
+
+
+
+### - Testing buy > available balance  --> throw insufficient fund
+### -- View account
+GET https://localhost:8443/api/accounts/3
+Authorization: Basic good_user_2:02_user_02
+
+### - Create buy trade
 POST https://localhost:8443/api/trades
 Authorization: Basic good_user_2:02_user_02
 Content-Type: application/json
@@ -59,13 +135,23 @@ Content-Type: application/json
     "action":"buy", 
     "symbol":"C31",
     "quantity":500,  
-    "bid":0, 
+    "bid":1000, 
     "account_id":3, 
-    "customer_id":3, 
-    "status":"open"
+    "customer_id":3
 }
 
-### - Create buy trade by user with invalid symbol
+### -- View account (no changes in account balance)
+GET https://localhost:8443/api/accounts/3
+Authorization: Basic good_user_2:02_user_02
+
+
+
+### - Testing buy as much as possible 
+### -- View trade
+GET https://localhost:8443/api/trades
+Authorization: Basic good_user_1:01_user_01
+
+### - Create buy trade
 POST https://localhost:8443/api/trades
 Authorization: Basic good_user_1:01_user_01
 Content-Type: application/json
@@ -74,13 +160,38 @@ Content-Type: application/json
     "action":"sell", 
     "symbol":"A17U",
     "quantity":500,  
-    "ask":5, 
+    "ask":30, 
     "account_id":2, 
-    "customer_id":2, 
-    "status":"open"
+    "customer_id":2
 }
 
-### - Create buy trade by user with invalid quantity
+### - Checking have enough stock for multiple selling 
+POST https://localhost:8443/api/trades
+Authorization: Basic good_user_1:01_user_01
+Content-Type: application/json
+
+{
+    "action":"sell", 
+    "symbol":"A17U",
+    "quantity":18000,  
+    "ask":30, 
+    "account_id":2, 
+    "customer_id":2
+}
+
+### -- View account
+GET https://localhost:8443/api/accounts
+Authorization: Basic manager_1:01_manager_01
+
+### -- View trade
+GET https://localhost:8443/api/trades
+Authorization: Basic good_user_1:01_user_01
+
+### -- View trade
+GET https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
+
+### - Create buy trade
 POST https://localhost:8443/api/trades
 Authorization: Basic good_user_2:02_user_02
 Content-Type: application/json
@@ -88,32 +199,47 @@ Content-Type: application/json
 {
     "action":"buy", 
     "symbol":"A17U",
-    "quantity":200,  
-    "bid":0, 
+    "quantity":3000,  
+    "bid":30, 
     "account_id":3, 
-    "customer_id":3, 
-    "status":"open"
+    "customer_id":3
 }
 
-### - Create buy trade for Customer 3 - Account 3
-POST http://localhost:8080/trades
+### -- View Portfolio
+GET https://localhost:8443/api/portfolios
+Authorization: Basic manager_1:01_manager_01
+
+
+### -- View account
+GET https://localhost:8443/api/accounts/3
 Authorization: Basic good_user_2:02_user_02
-Content-Type: application/json
-
-{
-    "action":"buy", 
-    "symbol":"A17U",
-    "quantity":500,  
-    "bid":0, 
-    "account_id":3, 
-    "customer_id":3, 
-    "status":"open"
-}
 
 
-### - Create sell trade for Customer 3 - Account 3
-POST http://localhost:8080/trades
-Authorization: Basic good_user_2:02_user_02
+### -- Test
+### -- cancel the open trade 
+PUT https://localhost:8443/api/trades/1
+Authorization: Basic ryverBank:ryverBankPassword
+
+
+### -- view specific trade by id which belong to user
+GET https://localhost:8443/api/trades/2
+Authorization: Basic ryverBank:ryverBankPassword
+
+### -- cancel the filled trade
+PUT https://localhost:8443/api/trades/2
+Authorization: Basic ryverBank:ryverBankPassword
+
+
+### -- cancel the filed or partial-filled trade
+PUT https://localhost:8443/api/trades/60
+Authorization: Basic good_user_1:01_user_01
+
+
+
+### - Test sell stock which is not in assets -> 404 ?? 400
+### - Create sell trade that can be fufilled 
+POST https://localhost:8443/api/trades
+Authorization: Basic ryverBank:ryverBankPassword
 Content-Type: application/json
 
 {
@@ -121,23 +247,80 @@ Content-Type: application/json
     "symbol":"A17U",
     "quantity":500,  
     "ask":0, 
+    "account_id":1, 
+    "customer_id":1, 
+    "status":"open"
+}
+
+
+
+### - Testing -- customers buy on 2 different accounts -> both reflected on portfolio
+### create a new account for user 2     //try to fix
+POST http://localhost:8080/accounts
+Authorization: Basic manager_1:01_manager_01
+Content-Type: application/json
+
+{
+    "username": "good_user_2",
+    "balance": 10000.0,
+    "available_balance": 10000.0
+}
+
+### buy using first account 
+POST https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
+
+{
+    "action":"buy", 
+    "symbol":"A17U",
+    "quantity":100,  
+    "ask":0, 
     "account_id":3, 
     "customer_id":3, 
     "status":"open"
 }
 
+### buy using second account 
+POST https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
 
-### -- View asset  -- can remove
-GET http://localhost:8080/assets
+{
+    "action":"buy", 
+    "symbol":"A17U",
+    "quantity":500,  
+    "ask":0, 
+    "account_id":4, 
+    "customer_id":4, 
+    "status":"open"
+}
 
-### -- View all trades
-GET http://localhost:8080/trades
-Authorization: Basic good_user_1:01_user_01
+### -- View Individual Portfolio
+GET https://localhost:8443/api/portfolio
+Authorization: Basic good_user_2:02_user_02
 
-### -- cancel the trade 
-PUT http://localhost:8080/trades/1
-Authorization: Basic good_user_1:01_user_01
+### - Testing
+### create after hour trade
+POST https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
 
-### -- view specific trade by id
-GET http://localhost:8080/trades/1
-Authorization: Basic good_user_1:01_user_01
+{
+    "action":"buy", 
+    "symbol":"A17U",
+    "quantity":500,  
+    "ask":0, 
+    "date":"2020-11-02T11:44:44.797",
+    "account_id":3, 
+    "customer_id":3, 
+    "status":"open"
+}
+
+### view trade of user
+GET https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
+
+### view all trade
+GET https://localhost:8443/api/trades
+Authorization: Basic manager_1:01_manager_01

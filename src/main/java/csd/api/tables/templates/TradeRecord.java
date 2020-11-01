@@ -32,8 +32,8 @@ public class TradeRecord{
     private String action;
     private String symbol;
     private int quantity;
-    private double bid = -1;
-    private double ask = -1;
+    private double bid = 0.0;
+    private double ask = 0.0;
     private double avg_price;
     private int filled_quantity = 0;
     private String date = LocalDateTime.now().toString();

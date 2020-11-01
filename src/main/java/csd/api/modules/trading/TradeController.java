@@ -74,7 +74,6 @@ public class TradeController {
                 throw new UnauthorisedAccountAccessException();
             }
         }
-
         return tradeService.getTrade(id);
     }
 
@@ -158,18 +157,5 @@ public class TradeController {
 
         return tradeService.TradeGenerate(tradeRecord);
     }
-    
-    // //--can change to normal function (no need mapping)
-    // @GetMapping("/trades/{action}/{date}/{symbol}")
-    // public List<Trade> getAllmatchingorder(@PathVariable String action,@PathVariable String date,@PathVariable String symbol) {
-    //     return tradeRepo.findByActionAndDateAndSymbol(action,date,symbol);
-    // }
-
-    //--get all trade
-    @GetMapping("/Trades")
-    public List<Trade> getTrades() {
-        return tradeService.getAllTrades();
-    }
-    
 }
 

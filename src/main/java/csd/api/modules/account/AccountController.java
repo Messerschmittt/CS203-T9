@@ -170,6 +170,10 @@ public class AccountController {
         System.out.println("PRIOR to_acc - B: " + to_acc.getBalance() + " AB: " + to_acc.getAvailable_balance());
 
         from_acc.setBalance(from_acc.getBalance() - amt);
+        //for market order
+        if(from_acc.getBalance() < from_acc.getAvailable_balance()){
+            from_acc.setAvailable_balance(from_acc.getBalance());
+        }
         // from_acc.setAvailable_balance(from_acc.getAvailable_balance() - amt);
         to_acc.setBalance(to_acc.getBalance() + amt);
         // to_acc.setAvailable_balance(to_acc.getAvailable_balance() + amt);

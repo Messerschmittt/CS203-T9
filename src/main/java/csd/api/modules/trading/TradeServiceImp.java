@@ -64,6 +64,7 @@ public class TradeServiceImp implements TradeService {
     public List<Trade> getAllTrades(){
         return tradeRepo.findAll();
     }
+
     /**
      * Search for trade with the given id
      * If there is no trade with the given "id", throw a TradeNotFoundException
@@ -195,6 +196,7 @@ public class TradeServiceImp implements TradeService {
         int max = qty;
         if(availableBalance < qty * price){
             max = (int) ((availableBalance / price) / 100) * 100;        //ensure is multiple of 100
+            System.out.println("max: " + max + ", original: " + qty);
         }
         if(max == 0){
             throw new InsufficientBalanceForTradeException();
@@ -261,7 +263,9 @@ public class TradeServiceImp implements TradeService {
     @Override 
     public void checkAssets(int customerID, String symbol, int qty){
         List<Trade> cusOpenTrade = tradeRepo.findByCustomer_IdAndSymbolAndStatus(customerID, symbol,"open");
+        cusOpenTrade.removeIf(t -> (t.getAction().equals("buy")) );
         List<Trade> cusPartialTrade = tradeRepo.findByCustomer_IdAndSymbolAndStatus(customerID, symbol,"partial-filled");
+        cusPartialTrade.removeIf(t -> (t.getAction().equals("buy")) );
         int selling = 0;
         
         for(Trade ot: cusOpenTrade){
@@ -281,7 +285,7 @@ public class TradeServiceImp implements TradeService {
 
         //if there is stock in assets, check if the quantity is enough, if not throw InsufficientStockException
         int available = assets.getQuantity() - selling;
-        if(qty >= available){
+        if(qty > available){
             throw new InsufficientStockException();
         }
     }
@@ -466,10 +470,9 @@ public class TradeServiceImp implements TradeService {
                 int sAvailQuantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
                 int sFilledQuantity = s.getFilled_quantity();
                 
-                //check max stock that can buy
                 int maxBuy = getMaxStock(currentTradeQty, sAskPrice, cusAcc.getAvailable_balance());
-                if(maxBuy >= currentTradeQty){
-                    if(sAvailQuantity < currentTradeQty){  //partially filled in newTrade(buy), but sell trade -> "filled"
+                if(maxBuy == currentTradeQty){
+                    if( (sAvailQuantity < currentTradeQty) ){  //partially filled in newTrade(buy), but sell trade -> "filled"
                         sStatus = "filled";
                         newTradeStatus = "partial-filled";
                         transaction_quantity = sAvailQuantity;
@@ -483,15 +486,15 @@ public class TradeServiceImp implements TradeService {
                         newTradeStatus = "filled";
                         transaction_quantity = currentTradeQty;
                     } 
-                } else{
-                    if(sAvailQuantity > maxBuy && sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but newTrade(buy) -> "filled"
-                        sStatus = "partial-filled";
-                        newTradeStatus = "partial-filled";
-                        transaction_quantity = maxBuy;
-                    } else if(sAvailQuantity < maxBuy){  //partially filled in newTrade(buy), but sell trade -> "filled"
+                } else{     //if (maxBuy < currentTradeQty)
+                    if( sAvailQuantity <= maxBuy ){  //partially filled in newTrade(buy), but sell trade -> "filled"
                         sStatus = "filled";
                         newTradeStatus = "partial-filled";
                         transaction_quantity = sAvailQuantity;
+                    } else if(sAvailQuantity > maxBuy){  //partially filled in both side
+                        sStatus = "partial-filled";
+                        newTradeStatus = "partial-filled";
+                        transaction_quantity = maxBuy;
                     }
                 }
                 System.out.println("i:  " + i);
@@ -582,23 +585,36 @@ public class TradeServiceImp implements TradeService {
                 int transaction_quantity = 0;
                 int bAvailQuantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
                 int bFilledQuantity = b.getFilled_quantity();
+                
+                int maxBuy = getMaxStock(bAvailQuantity, bBidPrice, b.getAccount().getAvailable_balance());
+                if(maxBuy == bAvailQuantity){
+                    if( (bAvailQuantity > currentTradeQty) ){
+                        bStatus = "partial-filled";
+                        newTradeStatus = "filled";
+                        transaction_quantity = currentTradeQty;
+                    } else if(bAvailQuantity < currentTradeQty){
+                        bStatus = "filled";
+                        newTradeStatus = "partial-filled";
+                        transaction_quantity = bAvailQuantity;
 
-                if(bAvailQuantity < currentTradeQty){  //partially filled in buy trade, but sell trade -> "filled"
-                    bStatus = "filled";
-                    newTradeStatus = "partial-filled";
-                    transaction_quantity = bAvailQuantity;
+                    } else if(bAvailQuantity == currentTradeQty){
+                        bStatus = "filled";
+                        newTradeStatus = "filled";
+                        transaction_quantity = currentTradeQty;
 
-                } else if(bAvailQuantity > currentTradeQty){  //partially filled in sell trade, but buy trade -> "filled"
-                    bStatus = "partial-filled";
-                    newTradeStatus = "filled";
-                    transaction_quantity = currentTradeQty;
-    
-                } else if(bAvailQuantity == currentTradeQty){
-                    bStatus = "filled";
-                    newTradeStatus = "filled";
-                    transaction_quantity = currentTradeQty;
-
+                    }
+                } else{     // (maxBuy < bAvailQuantity)
+                    if(maxBuy >= currentTradeQty){
+                        bStatus = "partial-filled";
+                        newTradeStatus = "filled";
+                        transaction_quantity = currentTradeQty;
+                    } else if(maxBuy < currentTradeQty){
+                        bStatus = "partial-filled";
+                        newTradeStatus = "partial-filled";
+                        transaction_quantity = maxBuy;
+                    }
                 }
+                
                 System.out.println("i:  " + i);
                 i++;
                 tradeFilledQuantity += transaction_quantity;
@@ -650,6 +666,7 @@ public class TradeServiceImp implements TradeService {
                 stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
             }
         }
+        
         stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
         return newTrade;
     } 
@@ -713,7 +730,7 @@ public class TradeServiceImp implements TradeService {
         // U only need sufficient balance to buy not to sell
         if(trade.getAction().equals("buy")){
             if(!checkBalance(trade, cusAcc)){
-                throw new InsufficientBalanceForTradeException(trade.getId());
+                throw new InsufficientBalanceForTradeException();
             }
         }
 
@@ -727,20 +744,15 @@ public class TradeServiceImp implements TradeService {
         // if(checktiming()) -> match
         
         //if stock market is close, save the trade and throw InvalidTradeTiming
-        // boolean isValidTime = checkTime();
-        // if(!isValidTime) {
-        //     updateStatusToExpired();
-        //     return tradeRepo.save(trade);
-        // }
+        boolean isValidTime = checkTime();
+        if(!isValidTime) {
+            updateStatusToExpired();
+            return tradeRepo.save(trade);
+        }
         preMatch();
         
         // Enter Create and Matching Function (return the latest trade info)
         return matching(trade);
-    }
-
-    @Override
-    public List<Trade> getTradesBySymbol(String symbol){
-        return tradeRepo.findBySymbol(symbol);
     }
 
     private void printTrade(Trade trade){

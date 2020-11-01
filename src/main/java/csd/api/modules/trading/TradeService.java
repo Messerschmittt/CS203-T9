@@ -71,8 +71,6 @@ public interface TradeService {
      * @param qty
      */
     void checkAssets(int customerID, String symbol, int qty);
-    
-    List<Trade> getTradesBySymbol(String symbol);
 
     boolean checkBalance(Trade trade, Account cusAcc);
 
