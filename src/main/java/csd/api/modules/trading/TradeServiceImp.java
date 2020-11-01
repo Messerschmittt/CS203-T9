@@ -4,6 +4,8 @@ import java.util.List;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -135,7 +137,7 @@ public class TradeServiceImp implements TradeService {
     @Override
     public boolean checkTime(){
         boolean isValid = false;
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.ofHours(8));
         // LocalDateTime now = LocalDateTime.parse("2020-11-02T11:44:44.797");
         String date = now.toString().substring(0, 11);      //for checking the date of trades are same or not
         //for checking the market open time
@@ -216,7 +218,7 @@ public class TradeServiceImp implements TradeService {
             return;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.ofHours(8));
         String day = now.toString().substring(0,9);
 
         for(Trade t: OpenPartialTrades){

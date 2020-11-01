@@ -5,6 +5,8 @@ import csd.api.tables.*;
 import static csd.api.modules.account.RyverBankAccountConstants.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,7 +116,7 @@ public class StockController {
     //Initialise the stock at the start of the program
     public HashSet<Stock> initialiseStock(){
         int quantity = 20000;
-        String now = LocalDateTime.now().toString();
+        String now = LocalDateTime.now(ZoneOffset.ofHours(8)).toString();
         
         // Took out U96.SI 
         ArrayList<String> SGX_top30 = new ArrayList<>(

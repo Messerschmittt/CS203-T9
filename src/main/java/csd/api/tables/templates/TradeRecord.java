@@ -2,6 +2,8 @@ package csd.api.tables.templates;
 
 import java.security.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import javax.persistence.*;
 
@@ -36,7 +38,7 @@ public class TradeRecord{
     private double ask = 0.0;
     private double avg_price;
     private int filled_quantity = 0;
-    private String date = LocalDateTime.now().toString();
+    private String date = LocalDateTime.now(ZoneOffset.ofHours(8)).toString();
     private Integer account_id;
     private Integer customer_id;
     private String status = "open";

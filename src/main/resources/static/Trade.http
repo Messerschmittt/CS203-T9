@@ -1,6 +1,6 @@
 
 ### -- View account Repository
-GET https://localhost:8443/api/accounts
+GET https://ryverbank.digital/api/trades
 Authorization: Basic manager_1:01_manager_01
 
 ### -- View customers info
@@ -133,9 +133,9 @@ Content-Type: application/json
 
 {
     "action":"buy", 
-    "symbol":"C31",
+    "symbol":"A17U",
     "quantity":500,  
-    "bid":1000, 
+    "bid":1, 
     "account_id":3, 
     "customer_id":3
 }
@@ -166,17 +166,17 @@ Content-Type: application/json
 }
 
 ### - Checking have enough stock for multiple selling 
-POST https://localhost:8443/api/trades
-Authorization: Basic good_user_1:01_user_01
+POST https://ryverbank.digital/api/trades
+Authorization: Basic good_user_2:02_user_02
 Content-Type: application/json
 
 {
-    "action":"sell", 
+    "action":"buy", 
     "symbol":"A17U",
-    "quantity":18000,  
-    "ask":30, 
-    "account_id":2, 
-    "customer_id":2
+    "quantity":500,  
+    "bid":5, 
+    "account_id":12, 
+    "customer_id":12
 }
 
 ### -- View account
