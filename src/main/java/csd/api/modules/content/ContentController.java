@@ -134,12 +134,12 @@ public class ContentController {
         return;
     }
 
-    @GetMapping("/api/contents/test/topheadlines")
+    @GetMapping("/api/contents/topheadlines")
     public ArrayList<Content> getTopHeadlines(){
         return NewsAPI.apiTopHeadlines();
     }
 
-    @GetMapping("/api/contents/test/specificQuery/{query}")
+    @GetMapping("/api/contents/specificQuery/{query}")
     public ArrayList<Content> getSpecificQuery(@PathVariable String query){
         System.out.println("Query: " + query);
         return NewsAPI.apiSpecificQuery(query);

@@ -256,12 +256,12 @@ Content-Type: application/json
 
 ### - Testing -- customers buy on 2 different accounts -> both reflected on portfolio
 ### create a new account for user 2     //try to fix
-POST http://localhost:8080/accounts
+POST https://localhost:8443/api/accounts
 Authorization: Basic manager_1:01_manager_01
 Content-Type: application/json
 
 {
-    "username": "good_user_2",
+    "customer_id": 3,
     "balance": 10000.0,
     "available_balance": 10000.0
 }
@@ -292,7 +292,7 @@ Content-Type: application/json
     "quantity":500,  
     "ask":0, 
     "account_id":4, 
-    "customer_id":4, 
+    "customer_id":3, 
     "status":"open"
 }
 
@@ -311,7 +311,23 @@ Content-Type: application/json
     "symbol":"A17U",
     "quantity":500,  
     "ask":0, 
-    "date":"2020-11-02T11:44:44.797",
+    "date":"2020-11-02T22:44:44.797",
+    "account_id":3, 
+    "customer_id":3, 
+    "status":"open"
+}
+
+### create after hour trade
+POST https://localhost:8443/api/trades
+Authorization: Basic good_user_2:02_user_02
+Content-Type: application/json
+
+{
+    "action":"buy", 
+    "symbol":"C61U",
+    "quantity":500,  
+    "ask":0, 
+    "date":"2020-11-02T22:44:44.797",
     "account_id":3, 
     "customer_id":3, 
     "status":"open"

@@ -136,6 +136,7 @@ public class TradeServiceImp implements TradeService {
     public boolean checkTime(){
         boolean isValid = false;
         LocalDateTime now = LocalDateTime.now();
+        // LocalDateTime now = LocalDateTime.parse("2020-11-02T11:44:44.797");
         String date = now.toString().substring(0, 11);      //for checking the date of trades are same or not
         //for checking the market open time
         int nowtime = now.getHour();
@@ -746,7 +747,6 @@ public class TradeServiceImp implements TradeService {
         //if stock market is close, save the trade and throw InvalidTradeTiming
         boolean isValidTime = checkTime();
         if(!isValidTime) {
-            updateStatusToExpired();
             return tradeRepo.save(trade);
         }
         preMatch();

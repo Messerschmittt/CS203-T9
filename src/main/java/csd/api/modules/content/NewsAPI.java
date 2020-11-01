@@ -15,8 +15,8 @@ public class NewsAPI {
         RequestBuilder topHeadlinesRequest = 
             new RequestBuilder()
             .setLanguage("en")
-            .setCountry("us")
-            .setCategory("business");
+            .setCountry("us");
+            // .setCategory("business");
 
         ApiArticlesResponse apiArticles = newsApi.sendTopRequest(topHeadlinesRequest);
 

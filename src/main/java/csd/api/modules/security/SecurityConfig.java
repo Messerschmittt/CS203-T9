@@ -96,6 +96,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers(HttpMethod.POST, "/api/contents").hasAnyRole(onlyEmp)
             .antMatchers(HttpMethod.PUT, "/api/contents/*").hasAnyRole(onlyEmp)
             .antMatchers(HttpMethod.DELETE, "/api/contents/*").hasAnyRole(onlyEmp)
+            .antMatchers(HttpMethod.GET, "/api/contents/**").hasAnyRole(allUsers)
 
             
             .and()
