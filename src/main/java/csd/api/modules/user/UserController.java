@@ -159,7 +159,7 @@ public class UserController {
         Customer toUpdate = c.get();
         
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
-            if (toUpdate != customers.findByUsername(auth.getName())) {
+            if (toUpdate.getUsername() != customers.findByUsername(auth.getName()).getUsername()) {
                 throw new UnauthorisedUserException("or update other customers details");
             }
         }
@@ -167,8 +167,13 @@ public class UserController {
         if (!customer.checkPhone() || !customer.validate()) {
             throw new InvalidInputException();
         }
+
+        System.out.println("Updating detais" + customer.getUsername() + "--" + customer.getPassword());
         toUpdate.setPhone(customer.getPhone());
-        toUpdate.setPassword(encoder.encode(customer.getPassword()));
+
+        ApplicationUser toupdate_user = users.findByUsername(customer.getUsername());
+        toupdate_user.setPassword(encoder.encode(customer.getPassword()));
+        // toUpdate.setPassword(encoder.encode(customer.getPassword()));
         toUpdate.setAddress(customer.getAddress());
         
         // Only allow updating of active for manager
@@ -178,7 +183,8 @@ public class UserController {
             // toUpdate.setAuthorities(customer.getAuthorities());
             toUpdate.setActive(customer.getActive());
         }
-
+        System.out.println("Updated detais" + toUpdate.getUsername() + "--" + toUpdate.getPassword());
+        users.save(toupdate_user);
         return customers.save(toUpdate);
     }
    
