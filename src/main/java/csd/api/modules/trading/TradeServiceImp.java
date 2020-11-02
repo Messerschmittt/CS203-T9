@@ -111,8 +111,8 @@ public class TradeServiceImp implements TradeService {
 
         Account cusAcc = trade.getAccount();
         if(trade.getBid() == 0){
-            double marketBid = stockRepo.findBySymbol(trade.getSymbol()).getBid();
-            double priceCheck = marketBid * (trade.getQuantity()-trade.getFilled_quantity());
+            double marketAsk = stockRepo.findBySymbol(trade.getSymbol()).getAsk();
+            double priceCheck = marketAsk * (trade.getQuantity()-trade.getFilled_quantity());
             cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
         }else{
             cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
@@ -190,8 +190,8 @@ public class TradeServiceImp implements TradeService {
 
         double available = cusAcc.getAvailable_balance();
         if(trade.getBid() == 0){
-            double marketBid = stockRepo.findBySymbol(trade.getSymbol()).getBid();
-            double priceCheck = marketBid * (trade.getQuantity()-trade.getFilled_quantity());
+            double marketAsk= stockRepo.findBySymbol(trade.getSymbol()).getAsk();
+            double priceCheck = marketAsk * (trade.getQuantity()-trade.getFilled_quantity());
             if(cusAcc.getAvailable_balance() < priceCheck){
                 return false;
             }
@@ -246,8 +246,8 @@ public class TradeServiceImp implements TradeService {
 
                 Account cusAcc = t.getAccount();
                 if(t.getBid() == 0){
-                    double marketBid = stockRepo.findBySymbol(t.getSymbol()).getBid();
-                    double priceCheck = marketBid * (t.getQuantity()-t.getFilled_quantity());
+                    double marketAsk = stockRepo.findBySymbol(t.getSymbol()).getAsk();
+                    double priceCheck = marketAsk * (t.getQuantity()-t.getFilled_quantity());
                     cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
                 }else{
                     cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(t.getBid()*(t.getQuantity()-t.getFilled_quantity())));
