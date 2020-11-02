@@ -98,18 +98,20 @@ public class TradeServiceImp implements TradeService {
      */
     @Override
     public Trade CancelTrade(Integer id){
+        System.out.println("Cancelling Trade");
         Trade trade = tradeRepo.findById(id).get();
+        System.out.println("Before Trade --" + trade.getSymbol() + " -- " + trade.getStatus());
         String tradestatus =  trade.getStatus();
         if(tradestatus.equals("open")){
-                tradeRepo.findById(id).map(t -> {t.setStatus("cancelled");
-                return tradeRepo.save(t);
-            });
+                // tradeRepo.findById(id).map(t -> {t.setStatus("cancelled");
+                trade.setStatus("cancelled");
+                tradeRepo.save(trade);
+            }
 
-            Account cusAcc = trade.getAccount();
-            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
-        }
 
-        
+        Account cusAcc = trade.getAccount();
+        cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
+        System.out.println("Cancelled Trade --" + trade.getSymbol() + " -- " + trade.getStatus());      
         return trade;
     }
 
@@ -727,7 +729,8 @@ public class TradeServiceImp implements TradeService {
         trade.setDate(tradeRecord.getDate());
         trade.setAccount(cusAcc);
         trade.setCustomer(cusAcc.getCustomer());
-        trade.setStatus(tradeRecord.getStatus());
+        trade.setStatus("open");
+        // trade.setStatus(tradeRecord.getStatus());
 
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell

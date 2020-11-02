@@ -84,6 +84,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers(HttpMethod.POST, "/api/trades").hasAnyRole(onlyUser)
             .antMatchers(HttpMethod.GET, "/api/trades/*").hasAnyRole(onlyUser)
             .antMatchers(HttpMethod.DELETE, "/api/trades/*").hasAnyRole(onlyUser)
+            .antMatchers(HttpMethod.PUT, "/api/trades/*").hasAnyRole(onlyUser)
+            
             // Porfolio Controller
             .antMatchers(HttpMethod.GET, "/api/portfolio").hasAnyRole(onlyUser)
             // Stock Controller
