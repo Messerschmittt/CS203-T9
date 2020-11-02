@@ -110,7 +110,14 @@ public class TradeServiceImp implements TradeService {
 
 
         Account cusAcc = trade.getAccount();
-        cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
+        if(trade.getBid() == 0){
+            double marketBid = stockRepo.findBySymbol(trade.getSymbol()).getBid();
+            double priceCheck = marketBid * (trade.getQuantity()-trade.getFilled_quantity());
+            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
+        }else{
+            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
+        }
+        accRepo.save(cusAcc);
         System.out.println("Cancelled Trade --" + trade.getSymbol() + " -- " + trade.getStatus());      
         return trade;
     }
@@ -182,16 +189,22 @@ public class TradeServiceImp implements TradeService {
         }
 
         double available = cusAcc.getAvailable_balance();
-        // if(trade.getBid() == 0 && marketCap > available){
-        //     return false;
-        // }
+        if(trade.getBid() == 0){
+            double marketBid = stockRepo.findBySymbol(trade.getSymbol()).getBid();
+            double priceCheck = marketBid * (trade.getQuantity()-trade.getFilled_quantity());
+            if(cusAcc.getAvailable_balance() < priceCheck){
+                return false;
+            }
+            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - priceCheck);
+            accRepo.save(cusAcc);
+        }
         if(trade.getBid() * trade.getQuantity() > available){
             return false;
         }
         // reduce avaialble balance of customer
         
         cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - trade.getBid() * trade.getQuantity());
-
+        accRepo.save(cusAcc);
         return valid;
     }
 
@@ -232,7 +245,14 @@ public class TradeServiceImp implements TradeService {
                 tradeRepo.save(t);
 
                 Account cusAcc = t.getAccount();
-                cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(t.getQuantity()-t.getFilled_quantity())*t.getBid());
+                if(t.getBid() == 0){
+                    double marketBid = stockRepo.findBySymbol(t.getSymbol()).getBid();
+                    double priceCheck = marketBid * (t.getQuantity()-t.getFilled_quantity());
+                    cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
+                }else{
+                    cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(t.getBid()*(t.getQuantity()-t.getFilled_quantity())));
+                }
+                accRepo.save(cusAcc);
             }
         }
     }
