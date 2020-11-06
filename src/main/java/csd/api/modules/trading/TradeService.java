@@ -37,7 +37,7 @@ public interface TradeService {
      * @param symbol
      * @return boolean value
      */
-    boolean checkSymbol(String symbol);
+    void checkSymbol(String symbol);
 
     /**
      * Check does stock market open or not.
@@ -55,14 +55,14 @@ public interface TradeService {
      * @param quantity
      * @return boolean value
      */
-    boolean checkQuantity(int quantity);
+    void checkQuantity(int quantity);
 
     /**
      * Check the validation of input bid and sell price
      * @param price
      * @return boolean value
      */
-    boolean checkValidPrice(int price);
+    // void checkValidPrice(int price);
 
     /**
      * check is the customer has enough stock to sell
@@ -102,11 +102,12 @@ public interface TradeService {
      * @param newTrade
      * @return the updated Trade object
      */
-    Trade matching(Trade newTrade);
+    // Trade matching(Trade newTrade);
 
     /**
      * Match the trades created in unofficial hours
      */
+    // void preMatch(Account cusAcc, Customer customer, int customerID);
     void preMatch();
 
 

@@ -60,8 +60,9 @@ public class TradeServiceImp implements TradeService {
         this.cusRepo = cusRepo;
     }
 
-     
-    //for ROLE_USER
+    /**
+     * List all the trades in the trade repository
+     */
     @Override
     public List<Trade> getAllTrades(){
         return tradeRepo.findAll();
@@ -69,7 +70,7 @@ public class TradeServiceImp implements TradeService {
 
     /**
      * Search for trade with the given id
-     * If there is no trade with the given "id", throw a TradeNotFoundException
+     * If there is no trade with the given "id", return null
      * @param id
      * @return trade with the given id
      */
@@ -100,15 +101,14 @@ public class TradeServiceImp implements TradeService {
     public Trade CancelTrade(Integer id){
         System.out.println("Cancelling Trade");
         Trade trade = tradeRepo.findById(id).get();
-        System.out.println("Before Trade --" + trade.getSymbol() + " -- " + trade.getStatus());
         String tradestatus =  trade.getStatus();
+        // if trade status is open -> set it expired
         if(tradestatus.equals("open")){
-                // tradeRepo.findById(id).map(t -> {t.setStatus("cancelled");
-                trade.setStatus("cancelled");
-                tradeRepo.save(trade);
-            }
+            trade.setStatus("cancelled");
+            tradeRepo.save(trade);
+        }
 
-
+        ///need to check again ---------
         Account cusAcc = trade.getAccount();
         if(trade.getBid() == 0){
             double marketAsk = stockRepo.findBySymbol(trade.getSymbol()).getAsk();
@@ -117,26 +117,35 @@ public class TradeServiceImp implements TradeService {
         }else{
             cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
         }
-        accRepo.save(cusAcc);
-        System.out.println("Cancelled Trade --" + trade.getSymbol() + " -- " + trade.getStatus());      
+        accRepo.save(cusAcc);   
         return trade;
     }
 
     /**
      * Check the validation of input stock symbol
+     * If stock symbol is invalid, throw InvalidInputException
      * @param symbol
-     * @return boolean value
      */
     @Override
-    public boolean checkSymbol(String symbol){
-        //check symbol 
-        boolean isValid = true;
+    public void checkSymbol(String symbol){
         if(stockRepo.findBySymbol(symbol) == null){
-            isValid = false;
+            throw new InvalidInputException(symbol, "Stock Symbol ");
         }
-        return isValid;
+    }
+    
+    /**
+     * Check the validation of input quantity. Quantity should be multiple of 100 (and not negative)
+     * If quantity is not multiple of 100 or is negative number, throw InvalidInputException (400)
+     * @param quantity
+     */
+    @Override
+    public void checkQuantity(int quantity){
+        if(quantity % 100 != 0 || quantity < 0){
+            throw new InvalidInputException(""+ quantity, "input quantity. It should be multiiple of 100 and positive number");
+        }
     }
 
+    //check -------------------
     /**
      * Check does stock market open or not. Market open on Weekdays 9am tp 5pm.
      * If now is past 5pm of the day, expire all trades before 5pm that day
@@ -178,15 +187,13 @@ public class TradeServiceImp implements TradeService {
     @Override
     public boolean checkBalance(Trade trade, Account cusAcc){
         boolean valid = true;
-    
-        double marketPrice = stockRepo.findBySymbol(trade.getSymbol()).getBid();
-        
-        List<Trade> allSellTradesForStock = tradeRepo.findBySymbol(trade.getSymbol());
-        allSellTradesForStock.removeIf(t -> t.getAsk() == 0.0);
-        double marketCap = 0;
-        for(Trade t : allSellTradesForStock){
-            marketCap += (t.getQuantity() - t.getFilled_quantity())*t.getAsk();
-        }
+        // double marketPrice = stockRepo.findBySymbol(trade.getSymbol()).getBid();
+        // List<Trade> allSellTradesForStock = tradeRepo.findBySymbol(trade.getSymbol());
+        // allSellTradesForStock.removeIf(t -> t.getAsk() == 0.0);
+        // double marketCap = 0;
+        // for(Trade t : allSellTradesForStock){
+        //     marketCap += (t.getQuantity() - t.getFilled_quantity())*t.getAsk();
+        // }
 
         double available = cusAcc.getAvailable_balance();
         if(trade.getBid() == 0){
@@ -257,31 +264,16 @@ public class TradeServiceImp implements TradeService {
         }
     }
 
-    /**
-     * Check the validation of input quantity. Quantity should be multiple of 100 (and not negative)
-     * @param quantity
-     * @return boolean value
-     */
-    @Override
-    public boolean checkQuantity(int quantity){
-        if(quantity % 100 == 0 && quantity > 0){
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check the validation of input bid and sell price. Should not be negative
-     * @param price
-     * @return boolean value
-     */
-    @Override
-    public boolean checkValidPrice(int price){
-        if(price >= 0){
-            return true;
-        }
-        return false;
-    }
+    // /**
+    //  * Check the validation of input bid and sell price. Should not be negative
+    //  * @param price
+    //  */
+    // @Override
+    // public void checkValidPrice(int price){
+    //     if(price < 0){
+    //         throw new InvalidInputException(""+ price, "input price. It should not be negative");
+    //     }
+    // }
 
     
     // check is the customer has enough stock to sell
@@ -359,18 +351,19 @@ public class TradeServiceImp implements TradeService {
         return bTrades;
     }
 
+    //--check ------------------------------
     //update both side of sell and buy average price
-    public void updateAvg_Price(Trade trade, double price, double transaction_amt, int transaction_quantity){
+    public void updateAvg_Price(Trade trade, double price, double transaction_amt, int transaction_qty ){
         double avg_price = trade.getAvg_price();
         if(avg_price == 0){
             trade.setAvg_price(price);
         } else{
-            trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / (transaction_quantity + trade.getFilled_quantity()));
+            trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / (transaction_qty + trade.getFilled_quantity()));
         }
     }
 
     @Override
-    public Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
+    public Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_qty , 
                 double transaction_amt, double currentPrice){
         // if its the bank, no need update assests
         if (customer.getId() == BANK_CUSTOMER.getId()) {
@@ -383,14 +376,14 @@ public class TradeServiceImp implements TradeService {
             a.setCode(newTrade.getSymbol());
             a.setCustomer(customer);
             a.setAvg_price(currentPrice);
-            a.setQuantity(transaction_quantity);
+            a.setQuantity(transaction_qty );
         } else { // update assets
             int priorQuantity = a.getQuantity();
             double priorAvgPrice = a.getAvg_price();
             double newAvgPrice = ((priorQuantity * priorAvgPrice) + transaction_amt)
-                    / (transaction_quantity + priorQuantity);
+                    / (transaction_qty + priorQuantity);
             a.setAvg_price(newAvgPrice);
-            a.setQuantity(priorQuantity + transaction_quantity);
+            a.setQuantity(priorQuantity + transaction_qty );
         }
         a.setCurrent_price(currentPrice);
         a.CalculateValue();
@@ -410,7 +403,7 @@ public class TradeServiceImp implements TradeService {
     }
     
     @Override
-    public Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_quantity, 
+    public Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_qty , 
     double transaction_amt, double currentPrice){
         if(customer.getId() == BANK_CUSTOMER.getId()){
             return null;
@@ -419,8 +412,7 @@ public class TradeServiceImp implements TradeService {
         Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
         int priorQuantity = a.getQuantity();
         double priorAvgPrice = a.getAvg_price();
-        int newQuantity = priorQuantity - transaction_quantity;
-        // System.out.println("after sell quantity" + newQuantity);
+        int newQuantity = priorQuantity - transaction_qty ;
         
         a.setQuantity(newQuantity);
         a.setCurrent_price(currentPrice);
@@ -444,257 +436,273 @@ public class TradeServiceImp implements TradeService {
         return a;
     }
 
+    // During matching, compare buyqty and sellqty, update the status and transaction qt 
+    public String[] update_Status_Qty(int maxBuy, int buyQty, int sellQty){
+        //Trade buyTrade, Trade sellTrade
+        String[] ans = new String[3];
+        String sellStatus = null;
+        String buyStatus = null;
+        int transaction_qty = 0;
 
-   //find the matching trade   
-    @Override  
-    public Trade matching(Trade newTrade){
-        Account cusAcc = newTrade.getAccount();
-        Customer customer = cusAcc.getCustomer();   
+        if(maxBuy == buyQty){
+            if( (sellQty < buyQty) ){  //"partial-filled" in buyTrade, sellTrade "filled"
+                sellStatus = "filled";
+                buyStatus = "partial-filled";
+                transaction_qty = sellQty;
+            } else if(sellQty > buyQty){  //"partial-filled" in sellTrade, buyTrade "filled"
+                sellStatus = "partial-filled";
+                buyStatus = "filled";
+                transaction_qty = buyQty;
+            } else if(sellQty == buyQty){   //both trades status "filled"
+                sellStatus = "filled";
+                buyStatus = "filled";
+                transaction_qty = buyQty;
+            } 
+        } else{     //if (maxBuy < buyQty)
+            if( sellQty <= maxBuy ){  //partially filled in buyTrade, sell trade "filled"
+                sellStatus = "filled";
+                buyStatus = "partial-filled";
+                transaction_qty = sellQty;
+            } else if(sellQty > maxBuy){  //partially filled in both trade
+                sellStatus = "partial-filled";
+                buyStatus = "partial-filled";
+                transaction_qty = maxBuy;
+            }
+        }
+
+        ans[0] = buyStatus;
+        ans[1] = sellStatus;
+        ans[2] = String.valueOf(transaction_qty);
+        return ans;
+    }
+
+    // if no trade to be matched, save the trade and return false, else return true
+    public boolean HaveMatchTrade(List<Trade> tradeList, Trade Trade, double price){
+        if(tradeList == null || tradeList.size() == 0){     //if no matching trade
+            tradeRepo.save(Trade);
+            stockController.refreshStockPrice(Trade.getSymbol(), price);  ///------?need to check
+            return false;
+        }
+        return true;
+    }
+
+    // check would the trade is able to match. 
+    // If it is not able to match -> save the trade and return it, else return null (able to match)
+    public Trade checkHasMatching(double buyBid, double sellAsk, Trade currTrade){
+        if(buyBid == 0 && currTrade.getAction().equals("buy")){ // if the trade is buy, and is market order, should skip checking price
+            System.out.println("Doing Market Order");
+            return null;
+        }
+
+        if(sellAsk == 0 && currTrade.getAction().equals("sell")){ // sell market order
+            System.out.println("Doing Market Order");
+            return null;
+        } 
         
-        int cusId = newTrade.getAccount().getCustomer().getId();
-        List<Trade> sTrades = sellTradesSorting(newTrade.getSymbol());  //sorted list of sellTrades
+        if(buyBid < sellAsk){    // there is no ask orders below bid, save & return it
+            System.out.println("Closing trade");
+            tradeRepo.save(currTrade);
+            stockController.refreshStockPrice(currTrade.getSymbol(), currTrade.getBid());
+            return currTrade;
+        }
+        return null;
+    }
+
+    /**
+     * 
+     */
+    public void makeTrans(Trade currTrade, Account fromAcc, Account toAcc, double transaction_amt) {
+        Trans t = new Trans();
+        t.setAmount(transaction_amt);
+        t.setFrom_account(fromAcc);
+        t.setTo_account(toAcc);
+
+        tradeRepo.save(currTrade);
+        accController.makeTransaction(t);
+    }
+
+
+    
+    public Trade buyMatching(Trade buyTrade, Account cusAcc, Customer customer, int cusId){
+        List<Trade> sTrades = sellTradesSorting(buyTrade.getSymbol());  //sorted list of sellTrades
         sTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
-        List<Trade> bTrades = buyTradesSorting(newTrade.getSymbol());   //sorted list of buyTrades
-        bTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
-        
+        sTrades.removeIf(t -> (t.getAsk() == 0));
+
+        System.out.println("Trade Action - " + buyTrade.getAction() + " " + buyTrade.getSymbol());
+
+        double buyBid = buyTrade.getBid();
+        int tradeFilledQuantity = buyTrade.getFilled_quantity();
+        int initialTradeQty = buyTrade.getQuantity() - buyTrade.getFilled_quantity();
+        int currentBuyQty = initialTradeQty;
+        //if no trade to be matched, exit
+        if(!HaveMatchTrade(sTrades, buyTrade, buyBid)){      
+            return buyTrade;
+        }
+
+        double lastPrice = 0.0;
         Boolean tradeNotFilled = true;
         int i = 0;
-        int initialTradeQty = newTrade.getQuantity() - newTrade.getFilled_quantity();
-        double lastPrice = 0.0;
-        System.out.println("Trade Action - " + newTrade.getAction() + " " + newTrade.getSymbol());
-        if(newTrade.getAction().equals("buy")){
-            lastPrice = newTrade.getBid();
-            if(sTrades == null || sTrades.size() == 0){     //no matching trade
-                tradeRepo.save(newTrade);
-                stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getBid());
-                return newTrade;
-            }
-            System.out.println("selltrades- " + sTrades.get(0).getAction() + sTrades.get(0).getSymbol());
-
-            double newTradeBid = newTrade.getBid();
-            int tradeFilledQuantity = newTrade.getFilled_quantity();
-            int currentTradeQty = initialTradeQty;
-            while(tradeNotFilled && i < sTrades.size()){
-                Trade s = sTrades.get(i);
-                Customer seller = s.getAccount().getCustomer();
-                double sAskPrice = s.getAsk();
-
-                if(newTrade.getBid() == 0){ // if market order can skip the price checking
-                    System.out.println("Doing Market Order");
-                }else if(newTradeBid < sAskPrice){ // once there are no more ask orders below bid --> save & return
-                    System.out.println("Closing trade");
-                    tradeRepo.save(newTrade);
-                    stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getBid());
-                    return newTrade;
-                }
-
-                String newTradeStatus = null;       //for update the status of newTrade
-                String sStatus = null;              //for update the status of sTrade
-                double transaction_amt = 0.0;
-                int transaction_quantity = 0;
-                int sAvailQuantity = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
-                int sFilledQuantity = s.getFilled_quantity();
-                
-                int maxBuy = getMaxStock(currentTradeQty, sAskPrice, cusAcc.getAvailable_balance());
-                if(maxBuy == currentTradeQty){
-                    if( (sAvailQuantity < currentTradeQty) ){  //partially filled in newTrade(buy), but sell trade -> "filled"
-                        sStatus = "filled";
-                        newTradeStatus = "partial-filled";
-                        transaction_quantity = sAvailQuantity;
-                    } else if(sAvailQuantity > currentTradeQty){  //partially filled in sell trade, but newTrade(buy) -> "filled"
-                        sStatus = "partial-filled";
-                        newTradeStatus = "filled";
-                        transaction_quantity = currentTradeQty;
+        while(tradeNotFilled && i < sTrades.size()){
+            Trade s = sTrades.get(i);
+            Customer seller = s.getAccount().getCustomer();
+            double sellAsk = s.getAsk();
         
-                    } else if(sAvailQuantity == currentTradeQty){   //both trades status "filled"
-                        sStatus = "filled";
-                        newTradeStatus = "filled";
-                        transaction_quantity = currentTradeQty;
-                    } 
-                } else{     //if (maxBuy < currentTradeQty)
-                    if( sAvailQuantity <= maxBuy ){  //partially filled in newTrade(buy), but sell trade -> "filled"
-                        sStatus = "filled";
-                        newTradeStatus = "partial-filled";
-                        transaction_quantity = sAvailQuantity;
-                    } else if(sAvailQuantity > maxBuy){  //partially filled in both side
-                        sStatus = "partial-filled";
-                        newTradeStatus = "partial-filled";
-                        transaction_quantity = maxBuy;
-                    }
-                }
-                System.out.println("i:  " + i);
-                i++;
-                tradeFilledQuantity += transaction_quantity;
-                currentTradeQty -= transaction_quantity;
-                transaction_amt = transaction_quantity * sAskPrice;
-                lastPrice = sAskPrice;
-
-                System.out.println("customerAcc: " + cusAcc.getId());
-                
-                // Create transaction between buyer and seller
-                Trans t = new Trans();
-                t.setAmount(transaction_amt);
-                t.setFrom_account(cusAcc);
-                t.setTo_account(s.getAccount());
-                // can delete ?????
-                // if(s.getAccount() == null){
-                //     System.out.println("Faulty account accessed");
-                //     t.setTo_account(new Account());
-                // }
-                tradeRepo.save(newTrade);
-                accController.makeTransaction(t);
-                
-                // Only save when transaction is successful ie. theres sufficient funds
-                // Update s trade status, fill quantity, avg_price
-                sFilledQuantity += transaction_quantity;
-                s.setStatus(sStatus);
-                updateAvg_Price(s, lastPrice, transaction_amt, transaction_quantity);
-                s.setFilled_quantity(sFilledQuantity);
-
-                // Update newTrade trade status, fill quantity, avg_price
-                newTrade.setStatus(newTradeStatus);
-                updateAvg_Price(newTrade, lastPrice, transaction_amt, transaction_quantity);
-                newTrade.setFilled_quantity(tradeFilledQuantity); 
-
-                // Check if new trade is filled
-                if(tradeFilledQuantity == initialTradeQty){
-                    tradeNotFilled = false;
-                }
-                
-                // Save trades
-                printTrade(s);
-                printTrade(newTrade);
-                tradeRepo.save(s);
-                tradeRepo.save(newTrade);
-
-                //update assests and portfolio
-                updateBuyerAssets(customer, newTrade, transaction_quantity, transaction_amt, lastPrice);
-                updateSellerAssets(seller, newTrade, transaction_quantity, transaction_amt, lastPrice);
-                System.out.println("Entering update stock price");
-                stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
-                System.out.println("Finish update stock price");
+            // check would the trade is able to match, if null, means able to match
+            Trade trade = checkHasMatching(buyBid, sellAsk , buyTrade);
+            if(trade != null){      //not null means not able to match, return it
+                return trade;
             }
+            
+            String buyStatus = null;       //for update the status of newTrade
+            String sellStatus = null;              //for update the status of sTrade
+            
+            double transaction_amt = 0.0;
+            int transaction_qty = 0;
+            int sellAvailQty = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
+            int sFilledQuantity = s.getFilled_quantity();
+            
+            int maxBuy = getMaxStock(currentBuyQty, sellAsk, cusAcc.getAvailable_balance());
+            //----
+            String[] ans = update_Status_Qty(maxBuy, currentBuyQty, sellAvailQty);         
+            buyStatus = ans[0];
+            sellStatus = ans[1];
+            transaction_qty =  Integer.parseInt(ans[2]);
+
+            System.out.println("i:  " + i);
+            i++;
+            tradeFilledQuantity += transaction_qty ;
+            currentBuyQty -= transaction_qty ;
+            transaction_amt = transaction_qty * sellAsk;
+            lastPrice = sellAsk;
+
+            // Create transaction between buyer and seller
+            makeTrans(buyTrade, cusAcc, s.getAccount(), transaction_amt);
+
+            // Only save when transaction is successful ie. theres sufficient funds
+            // Update s trade status, fill quantity, avg_price
+            sFilledQuantity += transaction_qty ;
+            s.setStatus(sellStatus);
+            updateAvg_Price(s, lastPrice, transaction_amt, transaction_qty );
+            s.setFilled_quantity(sFilledQuantity);
+
+            // Update newTrade trade status, fill quantity, avg_price
+            buyTrade.setStatus(buyStatus);
+            updateAvg_Price(buyTrade, lastPrice, transaction_amt, transaction_qty );
+            buyTrade.setFilled_quantity(tradeFilledQuantity); 
+
+            // Check if new trade is filled
+            if(tradeFilledQuantity == initialTradeQty){
+                tradeNotFilled = false;
+            }
+            
+            // Save trades
+            printTrade(s);
+            printTrade(buyTrade);
+            tradeRepo.save(s);
+            tradeRepo.save(buyTrade);
+
+            //update assests and portfolio
+            updateBuyerAssets(customer, buyTrade, transaction_qty , transaction_amt, lastPrice);
+            updateSellerAssets(seller, buyTrade, transaction_qty , transaction_amt, lastPrice);
+            System.out.println("\nEntering update stock price");
+            stockController.refreshStockPrice(buyTrade.getSymbol(), lastPrice);
+            System.out.println("Finish update stock price");
         }
+
+        stockController.refreshStockPrice(buyTrade.getSymbol(), lastPrice);
+        return buyTrade;
+    }
+
+
+    public Trade sellMatching(Trade sellTrade, Account cusAcc, Customer customer, int cusId){
+        List<Trade> bTrades = buyTradesSorting(sellTrade.getSymbol());   //sorted list of buyTrades
+        bTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
+        bTrades.removeIf(t -> (t.getBid() == 0));
         
+        System.out.println("\nTrade Action - " + sellTrade.getAction() + " " + sellTrade.getSymbol());
+
         //for sell action
-        if(newTrade.getAction().equals("sell")){
-            System.out.println("In sell");
-            lastPrice = newTrade.getAsk();
-            if(bTrades == null || bTrades.size() == 0){     //no matching trade
-                tradeRepo.save(newTrade);
-                System.out.println("refersing" + newTrade.getSymbol() + "- " + newTrade.getAsk());
-                stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getAsk());
-                return newTrade;
-            }
-            System.out.println(bTrades.get(0).getSymbol() + '-' + bTrades.get(0).getBid()+ "-" + bTrades.get(0).getQuantity());
-            double newTradeAsk = newTrade.getAsk();
-            int tradeFilledQuantity = 0;
-            int currentTradeQty = initialTradeQty;
-            while(tradeNotFilled && i < bTrades.size()){
-                Trade b = bTrades.get(i);
-                Customer buyer = b.getAccount().getCustomer();
-                double bBidPrice = b.getBid();
-
-                if(newTradeAsk == 0){ // skip price checking for market order
-
-                }
-                else if(newTradeAsk > bBidPrice){ // once there are no more bid orders above the ask --> save & return
-                    tradeRepo.save(newTrade);
-                    stockController.refreshStockPrice(newTrade.getSymbol(), newTrade.getAsk());
-                    return newTrade;
-                }
-
-                String newTradeStatus = null;
-                String bStatus = null;
-                double transaction_amt = 0.0;
-                int transaction_quantity = 0;
-                int bAvailQuantity = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
-                int bFilledQuantity = b.getFilled_quantity();
-                
-                int maxBuy = getMaxStock(bAvailQuantity, bBidPrice, b.getAccount().getAvailable_balance());
-                if(maxBuy == bAvailQuantity){
-                    if( (bAvailQuantity > currentTradeQty) ){
-                        bStatus = "partial-filled";
-                        newTradeStatus = "filled";
-                        transaction_quantity = currentTradeQty;
-                    } else if(bAvailQuantity < currentTradeQty){
-                        bStatus = "filled";
-                        newTradeStatus = "partial-filled";
-                        transaction_quantity = bAvailQuantity;
-
-                    } else if(bAvailQuantity == currentTradeQty){
-                        bStatus = "filled";
-                        newTradeStatus = "filled";
-                        transaction_quantity = currentTradeQty;
-
-                    }
-                } else{     // (maxBuy < bAvailQuantity)
-                    if(maxBuy >= currentTradeQty){
-                        bStatus = "partial-filled";
-                        newTradeStatus = "filled";
-                        transaction_quantity = currentTradeQty;
-                    } else if(maxBuy < currentTradeQty){
-                        bStatus = "partial-filled";
-                        newTradeStatus = "partial-filled";
-                        transaction_quantity = maxBuy;
-                    }
-                }
-                
-                System.out.println("i:  " + i);
-                i++;
-                tradeFilledQuantity += transaction_quantity;
-                currentTradeQty -= transaction_quantity;
-                transaction_amt = transaction_quantity * bBidPrice;
-                lastPrice = bBidPrice;
-
-                System.out.println("customerAcc: " + cusAcc.getId());
-                // Create transaction between buyer and seller
-                Trans t = new Trans();
-                t.setAmount(transaction_amt);
-                t.setFrom_account(b.getAccount());
-                t.setTo_account(cusAcc);
-
-                // can delete ?????
-                // if(b.getAccount() == null){
-                //     System.out.println("Bank account accessed");
-                //     t.setFrom_account(new Account(null, 1_000_000, 1_000_000)); //using an arbitary value for bank
-                // }
-                tradeRepo.save(newTrade);
-                accController.makeTransaction(t);
-                
-                // Update b trade status, filled quantity, avg_price
-                bFilledQuantity += transaction_quantity;
-                b.setStatus(bStatus);
-                updateAvg_Price(b, lastPrice, transaction_amt, transaction_quantity);
-                b.setFilled_quantity(bFilledQuantity);
-
-                // Update newTrade trade status, filled quantity, avg_price
-                newTrade.setStatus(newTradeStatus);
-                updateAvg_Price(newTrade, lastPrice, transaction_amt, transaction_quantity);
-                newTrade.setFilled_quantity(tradeFilledQuantity);
-                
-                // Check if new trade is filled
-                if(tradeFilledQuantity == initialTradeQty){
-                    tradeNotFilled = false;
-                }
-
-                printTrade(b);
-                printTrade(newTrade);
-                // Save trades
-                tradeRepo.save(b);
-                tradeRepo.save(newTrade);
-
-                //update assests and portfolio
-                updateBuyerAssets(buyer, newTrade, transaction_quantity, transaction_amt, lastPrice);
-                updateSellerAssets(customer, newTrade, transaction_quantity, transaction_amt, lastPrice);
-
-                stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
-            }
-        }
+        System.out.println("In sell");
+        double sellAsk = sellTrade.getAsk();
+        double lastPrice = 0.0;
+        int initialTradeQty = sellTrade.getQuantity() - sellTrade.getFilled_quantity();
+        int tradeFilledQuantity = 0;
+        int currentSellQty = initialTradeQty;
         
-        stockController.refreshStockPrice(newTrade.getSymbol(), lastPrice);
-        return newTrade;
-    } 
+        //if no trade to be matched, exit
+        if(!HaveMatchTrade(bTrades, sellTrade, sellAsk)){
+            return sellTrade;
+        }
+
+        Boolean tradeNotFilled = true;
+        int i = 0;
+        while(tradeNotFilled && i < bTrades.size()){
+            Trade b = bTrades.get(i);
+            Customer buyer = b.getAccount().getCustomer();
+            double buyBid = b.getBid();
+
+            // check would the trade is able to match, if null, means able to match
+            Trade trade =  checkHasMatching(buyBid, sellAsk, sellTrade);
+            if(trade != null){
+                return trade;
+            }
+
+            String sellStatus = null;
+            String buyStatus = null;
+            double transaction_amt = 0.0;
+            int transaction_qty = 0;
+            int buyAvailQty = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
+            int bFilledQuantity = b.getFilled_quantity();
+            
+            int maxBuy = getMaxStock(buyAvailQty, buyBid, b.getAccount().getAvailable_balance());
+            //----
+            String[] ans = update_Status_Qty(maxBuy, buyAvailQty, currentSellQty);         
+            buyStatus = ans[0];
+            sellStatus = ans[1];
+            transaction_qty =  Integer.parseInt(ans[2]);
+            
+            System.out.println("i:  " + i);
+            i++;
+            tradeFilledQuantity += transaction_qty ;
+            currentSellQty -= transaction_qty ;
+            transaction_amt = transaction_qty * buyBid;
+            lastPrice = buyBid;
+
+            // Create transaction between buyer and seller
+            makeTrans(sellTrade, b.getAccount(), cusAcc, transaction_amt);
+            
+            // Update b trade status, filled quantity, avg_price
+            bFilledQuantity += transaction_qty ;
+            b.setStatus(buyStatus);
+            updateAvg_Price(b, lastPrice, transaction_amt, transaction_qty );
+            b.setFilled_quantity(bFilledQuantity);
+
+            // Update newTrade trade status, filled quantity, avg_price
+            sellTrade.setStatus(sellStatus);
+            updateAvg_Price(sellTrade, lastPrice, transaction_amt, transaction_qty );
+            sellTrade.setFilled_quantity(tradeFilledQuantity);
+            
+            // Check if new trade is filled
+            if(tradeFilledQuantity == initialTradeQty){
+                tradeNotFilled = false;
+            }
+
+            printTrade(b);
+            printTrade(sellTrade);
+            // Save trades
+            tradeRepo.save(b);
+            tradeRepo.save(sellTrade);
+
+            //update assests and portfolio
+            updateBuyerAssets(buyer, sellTrade, transaction_qty , transaction_amt, lastPrice);
+            updateSellerAssets(customer, sellTrade, transaction_qty , transaction_amt, lastPrice);
+
+            stockController.refreshStockPrice(sellTrade.getSymbol(), lastPrice);
+        }
+    
+        stockController.refreshStockPrice(sellTrade.getSymbol(), lastPrice);
+        return sellTrade;
+    }
 
     //match for the trades created during market closing time
     @Override
@@ -702,9 +710,19 @@ public class TradeServiceImp implements TradeService {
         Sort sort = Sort.by("date").ascending();        //Sort by time
         List<Trade> openTrades = tradeRepo.findByStatusContaining("open", sort);
 
-        if(openTrades != null && openTrades.size() != 0){
-            for(Trade t: openTrades){
-                matching(t);
+        if(openTrades == null || openTrades.size() == 0){       //if no open trades, directly return
+            return;
+        }
+
+        for(Trade t: openTrades){       //match all open trades
+            Account cusAcc = t.getAccount();
+            Customer customer = cusAcc.getCustomer();   
+            int customerID = t.getAccount().getCustomer().getId();
+    
+            if(t.getAction().equals("buy")){
+                buyMatching(t, cusAcc, customer, customerID);
+            } else{
+                sellMatching(t, cusAcc, customer, customerID);
             }
         }
     }
@@ -719,21 +737,12 @@ public class TradeServiceImp implements TradeService {
     @Override
     public Trade TradeGenerate(TradeRecord tradeRecord){
         
-        boolean isValidSymbol = checkSymbol(tradeRecord.getSymbol());
-        boolean isValidQty = checkQuantity(tradeRecord.getQuantity());
-
-        //if stock symbol is invalid, throw InvalidInputException
-        if(!isValidSymbol){
-            throw new InvalidInputException(tradeRecord.getSymbol(), "Stock Symbol ");
-        }
-
-        //if the quantity is not multiple of 100, throw InvalidInputException
-        String qty = "" + tradeRecord.getQuantity();
-        if(!isValidQty){
-            throw new InvalidInputException(qty, "Input quantity. It should be multiiple of 100 and positive number");
-        }
+        checkSymbol(tradeRecord.getSymbol());       //if stock symbol is invalid, throw InvalidInputException (400)
+        checkQuantity(tradeRecord.getQuantity());   //if quantity is not multiple of 100 or is negative number, throw InvalidInputException (400)
 
         Account cusAcc = accRepo.findById(tradeRecord.getAccount_id()).get();
+        Customer customer = cusAcc.getCustomer();   
+        
         String action = tradeRecord.getAction();
         Trade trade = new Trade();
         trade.setAction(tradeRecord.getAction());
@@ -748,9 +757,8 @@ public class TradeServiceImp implements TradeService {
         trade.setFilled_quantity(tradeRecord.getFilled_quantity());
         trade.setDate(tradeRecord.getDate());
         trade.setAccount(cusAcc);
-        trade.setCustomer(cusAcc.getCustomer());
+        trade.setCustomer(customer);
         trade.setStatus("open");
-        // trade.setStatus(tradeRecord.getStatus());
 
         // check that customer has sufficient balance
         // U only need sufficient balance to buy not to sell
@@ -765,19 +773,25 @@ public class TradeServiceImp implements TradeService {
         if(trade.getAction().equals("sell")){
             checkAssets(customerID, trade.getSymbol(), trade.getQuantity());
         }
-
-        // Add a function to match all open trades
-        // if(checktiming()) -> match
         
         //if stock market is close, save the trade and throw InvalidTradeTiming
+        /*
         boolean isValidTime = checkTime();
         if(!isValidTime) {
             return tradeRepo.save(trade);
         }
+        */
+
+        // preMatch(cusAcc, customer, customerID);
         preMatch();
         
-        // Enter Create and Matching Function (return the latest trade info)
-        return matching(trade);
+        // Perform matching trade
+        if(trade.getAction().equals("buy")){
+            trade = buyMatching(trade, cusAcc, customer, customerID);
+        } else{
+            trade = sellMatching(trade, cusAcc, customer, customerID);
+        }
+        return trade;
     }
 
     private void printTrade(Trade trade){

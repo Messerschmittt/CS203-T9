@@ -64,10 +64,9 @@ public class TradeController {
     @GetMapping("/api/trades/{id}")
     public Trade getTrade(@PathVariable Integer id,Authentication auth){
         Trade trade = tradeService.getTrade(id);
-        
         // To handle "trade not found" error using proper HTTP status code: 404
         if(trade == null) throw new TradeNotFoundException(id);
-        //-> need to check is this specific trade belong to the login user?-------------
+        // check is this specific trade belong to the login user
         Account cusAcc = accRepo.findById(trade.getAccount().getId()).get();
         if(auth.getAuthorities().toString().equals("[ROLE_USER]")){
             if(!auth.getName().equals(cusAcc.getCustomer().getUsername())){
