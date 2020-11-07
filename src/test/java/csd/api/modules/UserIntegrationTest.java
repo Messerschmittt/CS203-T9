@@ -17,6 +17,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import csd.api.tables.*;
@@ -53,7 +54,8 @@ class UserIntegrationTest {
 		users.save(new ApplicationUser("NewManager", "newmanager123", "ROLE_MANAGER"));
 
 		users.save(new ApplicationUser("NewAnalyst", "newanalyst123", "ROLE_ANALYST"));
-		
+        
+
 	}
 
 
@@ -66,42 +68,32 @@ class UserIntegrationTest {
     
 
 
-	@Test
-	public void getUsers_Success() throws Exception {
-        URI uri = new URI(baseUrl + port + "/users");
-        		
-        // Need to use array with a ReponseEntity here
-        ResponseEntity<ApplicationUser[]> result = restTemplate
-										.exchange(uri, HttpMethod.GET, null, ApplicationUser[].class);
-		// ResponseEntity<ApplicationUser[]> result = restTemplate.getForEntity(uri, ApplicationUser[].class);
-		ApplicationUser[] userList = result.getBody();
-		
-		assertEquals(200, result.getStatusCode().value());
-        assertEquals(3, userList.length);
-	}
-
-
-
-
-    @Test
-	public void getCustomers_Success() throws Exception {
-        URI uri = new URI(baseUrl + port + "/customers");
+    // @Test
+	// public void getCustomers_Success() throws Exception {
+    //     URI uri = new URI(baseUrl + port + "/api/customers");
         
 		
-		// Need to use array with a ReponseEntity here
-        ResponseEntity<Customer[]> result = restTemplate.exchange(uri, HttpMethod.GET, null, Customer[].class);
-        Customer[] customerList = result.getBody();
+	// 	// Need to use array with a ReponseEntity here
+
+    //     // ResponseEntity<Customer[]> result = restTemplate.withBasicAuth("manager_1", "01_manager_01")
+    //     //                     .exchange(uri, HttpMethod.GET, null, Customer[].class);
+
+
+
+    //     ResponseEntity<Customer[]> result = restTemplate.withBasicAuth("manager_1", "01_manager_01")
+    //                         .getForEntity(uri, Customer[].class);
+    //     Customer[] customerList = result.getBody();
 		
-		assertEquals(200, result.getStatusCode().value());
-		assertEquals(1, customerList.length);
-    }
+	// 	assertEquals(200, result.getStatusCode().value());
+	// 	assertEquals(1, customerList.length);
+    // }
     
 
     @Test
 	public void getCustomerDetails_ValidCustomerId_Success() throws Exception {
 
 		Integer id = customers.findAll().get(0).getId();
-		URI uri = new URI(baseUrl + port + "/customers/" + id);
+		URI uri = new URI(baseUrl + port + "/api/customers/" + id);
 	
 		ResponseEntity<Customer> result = restTemplate.getForEntity(uri, Customer.class);
 			
@@ -111,7 +103,7 @@ class UserIntegrationTest {
     
     @Test
 	public void getCustomerDetails_InvalidCustomerId_Failure() throws Exception {
-		URI uri = new URI(baseUrl + port + "/customers/100");
+		URI uri = new URI(baseUrl + port + "/api/customers/100");
 		
 		ResponseEntity<Customer> result = restTemplate.getForEntity(uri, Customer.class);
 			
