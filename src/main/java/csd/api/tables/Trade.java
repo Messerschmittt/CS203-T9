@@ -31,8 +31,8 @@ public class Trade implements Comparable<Trade> {
     private String action;
     private String symbol;
     private int quantity;
-    private double bid = 0.0;
-    private double ask = 0.0;
+    private double bid = -1;
+    private double ask = -1;
     private double avg_price = 0.0;
     private int filled_quantity = 0;
     private String date;

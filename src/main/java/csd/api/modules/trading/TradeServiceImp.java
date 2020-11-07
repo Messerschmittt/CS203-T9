@@ -187,31 +187,29 @@ public class TradeServiceImp implements TradeService {
     @Override
     public boolean checkBalance(Trade trade, Account cusAcc){
         boolean valid = true;
-        // double marketPrice = stockRepo.findBySymbol(trade.getSymbol()).getBid();
-        // List<Trade> allSellTradesForStock = tradeRepo.findBySymbol(trade.getSymbol());
-        // allSellTradesForStock.removeIf(t -> t.getAsk() == 0.0);
-        // double marketCap = 0;
-        // for(Trade t : allSellTradesForStock){
-        //     marketCap += (t.getQuantity() - t.getFilled_quantity())*t.getAsk();
-        // }
 
         double available = cusAcc.getAvailable_balance();
         if(trade.getBid() == 0){
+            System.out.println("Market order available balance");
+            System.out.println("Symbol - " + trade.getSymbol() + " Quantity - " + trade.getQuantity());
             double marketAsk= stockRepo.findBySymbol(trade.getSymbol()).getAsk();
             double priceCheck = marketAsk * (trade.getQuantity()-trade.getFilled_quantity());
+            System.out.println("priceCheck - " + priceCheck + " AvailBal - " + cusAcc.getAvailable_balance());
             if(cusAcc.getAvailable_balance() < priceCheck){
                 return false;
             }
             cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - priceCheck);
             accRepo.save(cusAcc);
+            System.out.println("Sufficient Balance");
+            return valid;
         }
         if(trade.getBid() * trade.getQuantity() > available){
             return false;
-        }
-        // reduce avaialble balance of customer
-        
+        }        
         cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - trade.getBid() * trade.getQuantity());
         accRepo.save(cusAcc);
+
+        System.out.println("Sufficient Balance");
         return valid;
     }
 
@@ -223,9 +221,9 @@ public class TradeServiceImp implements TradeService {
             max = (int) ((availableBalance / price) / 100) * 100;        //ensure is multiple of 100
             System.out.println("max: " + max + ", original: " + qty);
         }
-        if(max == 0){
-            throw new InsufficientBalanceForTradeException();
-        }
+        // if(max == 0){
+        //     throw new InsufficientBalanceForTradeException();
+        // }
         return max;
     }
 
@@ -318,7 +316,7 @@ public class TradeServiceImp implements TradeService {
         List<Trade> sTrades = tradeRepo.findByActionAndSymbolAndStatus("sell", symbol, "open");
         sTrades.addAll(tradeRepo.findByActionAndSymbolAndStatus("sell", symbol, "partial-filled"));
         sTrades.sort((t1,t2) -> {
-            if(t1.getBid() == t2.getBid()){
+            if(t1.getAsk() == t2.getAsk()){
                 LocalDateTime t1_date = LocalDateTime.parse(t1.getDate());
                 LocalDateTime t2_date = LocalDateTime.parse(t2.getDate());
                 return t1_date.compareTo(t2_date);
@@ -355,11 +353,14 @@ public class TradeServiceImp implements TradeService {
     //update both side of sell and buy average price
     public void updateAvg_Price(Trade trade, double price, double transaction_amt, int transaction_qty ){
         double avg_price = trade.getAvg_price();
+        System.out.println("prior avg = " + trade.getAvg_price());
         if(avg_price == 0){
             trade.setAvg_price(price);
         } else{
             trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / (transaction_qty + trade.getFilled_quantity()));
         }
+        System.out.println("after avg = " + trade.getAvg_price());
+        tradeRepo.save(trade);
     }
 
     @Override
@@ -490,12 +491,12 @@ public class TradeServiceImp implements TradeService {
     // If it is not able to match -> save the trade and return it, else return null (able to match)
     public Trade checkHasMatching(double buyBid, double sellAsk, Trade currTrade){
         if(buyBid == 0 && currTrade.getAction().equals("buy")){ // if the trade is buy, and is market order, should skip checking price
-            System.out.println("Doing Market Order");
+            System.out.println("Doing Market Buy Order");
             return null;
         }
 
         if(sellAsk == 0 && currTrade.getAction().equals("sell")){ // sell market order
-            System.out.println("Doing Market Order");
+            System.out.println("Doing Market Sell Order");
             return null;
         } 
         
@@ -526,7 +527,6 @@ public class TradeServiceImp implements TradeService {
     public Trade buyMatching(Trade buyTrade, Account cusAcc, Customer customer, int cusId){
         List<Trade> sTrades = sellTradesSorting(buyTrade.getSymbol());  //sorted list of sellTrades
         sTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
-        sTrades.removeIf(t -> (t.getAsk() == 0));
 
         System.out.println("Trade Action - " + buyTrade.getAction() + " " + buyTrade.getSymbol());
 
@@ -546,6 +546,12 @@ public class TradeServiceImp implements TradeService {
             Trade s = sTrades.get(i);
             Customer seller = s.getAccount().getCustomer();
             double sellAsk = s.getAsk();
+            System.out.println("Buy trade - finding sellAsk = " + sellAsk);
+            // set sellAsk for market order to match bid price
+            if(sellAsk == 0){
+                sellAsk = buyBid;
+                System.out.println("Market order - sellAsk = " + sellAsk + " buyBid = " + buyBid);
+            }
         
             // check would the trade is able to match, if null, means able to match
             Trade trade = checkHasMatching(buyBid, sellAsk , buyTrade);
@@ -561,7 +567,7 @@ public class TradeServiceImp implements TradeService {
             int sellAvailQty = s.getQuantity() - s.getFilled_quantity();   //available selling quantity
             int sFilledQuantity = s.getFilled_quantity();
             
-            int maxBuy = getMaxStock(currentBuyQty, sellAsk, cusAcc.getAvailable_balance());
+            int maxBuy = getMaxStock(currentBuyQty, sellAsk, cusAcc.getBalance());
             //----
             String[] ans = update_Status_Qty(maxBuy, currentBuyQty, sellAvailQty);         
             buyStatus = ans[0];
@@ -574,6 +580,8 @@ public class TradeServiceImp implements TradeService {
             currentBuyQty -= transaction_qty ;
             transaction_amt = transaction_qty * sellAsk;
             lastPrice = sellAsk;
+
+            System.out.println("Transaction qty - " + transaction_qty + " Transaction amt - " + transaction_amt);
 
             // Create transaction between buyer and seller
             makeTrans(buyTrade, cusAcc, s.getAccount(), transaction_amt);
@@ -617,7 +625,6 @@ public class TradeServiceImp implements TradeService {
     public Trade sellMatching(Trade sellTrade, Account cusAcc, Customer customer, int cusId){
         List<Trade> bTrades = buyTradesSorting(sellTrade.getSymbol());   //sorted list of buyTrades
         bTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
-        bTrades.removeIf(t -> (t.getBid() == 0));
         
         System.out.println("\nTrade Action - " + sellTrade.getAction() + " " + sellTrade.getSymbol());
 
@@ -640,6 +647,11 @@ public class TradeServiceImp implements TradeService {
             Trade b = bTrades.get(i);
             Customer buyer = b.getAccount().getCustomer();
             double buyBid = b.getBid();
+            System.out.println("Sell trade - finding buyBid = " + buyBid);
+            if(buyBid == 0){
+                buyBid = sellAsk;
+                System.out.println("Market order - buyBid = " + buyBid + " buyBid = " + sellAsk);
+            }
 
             // check would the trade is able to match, if null, means able to match
             Trade trade =  checkHasMatching(buyBid, sellAsk, sellTrade);
@@ -654,7 +666,7 @@ public class TradeServiceImp implements TradeService {
             int buyAvailQty = b.getQuantity() - b.getFilled_quantity();   //available selling quantity
             int bFilledQuantity = b.getFilled_quantity();
             
-            int maxBuy = getMaxStock(buyAvailQty, buyBid, b.getAccount().getAvailable_balance());
+            int maxBuy = getMaxStock(buyAvailQty, buyBid, b.getAccount().getBalance());
             //----
             String[] ans = update_Status_Qty(maxBuy, buyAvailQty, currentSellQty);         
             buyStatus = ans[0];

@@ -6,7 +6,7 @@ User1: Basic good_user_1:01_user_01
 User2: Basic good_user_2:02_user_02
 
 ###
-GET https://34.126.83.201/api/trades
+GET https://localhost:8443/api/trades
 Authorization: Basic manager_1:01_manager_01
 
 ###

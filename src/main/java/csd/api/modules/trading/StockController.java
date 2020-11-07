@@ -205,8 +205,8 @@ public class StockController {
         
 
         stocks.save(s);
-        System.out.println("Refreshed Stock: " + s.getSymbol());
-        System.out.println("Bidvol " + s.getBid_volume() + " Bidprice " + s.getBid());
-        System.out.println("Askvol " + s.getAsk_volume() + " Askprice " + s.getAsk());
+        // System.out.println("Refreshed Stock: " + s.getSymbol());
+        // System.out.println("Bidvol " + s.getBid_volume() + " Bidprice " + s.getBid());
+        // System.out.println("Askvol " + s.getAsk_volume() + " Askprice " + s.getAsk());
     }
 }

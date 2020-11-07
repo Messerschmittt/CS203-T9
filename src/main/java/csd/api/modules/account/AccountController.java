@@ -162,9 +162,9 @@ public class AccountController {
         Account to_acc = newTrans.getTo_account();
 
         double amt = newTrans.getAmount();
-        if(amt > from_acc.getAvailable_balance()){
-            throw new ExceedAvailableBalanceException(from_acc.getId());
-        }
+        // if(amt > from_acc.getAvailable_balance()){
+        //     throw new ExceedAvailableBalanceException(from_acc.getId());
+        // }
 
         System.out.println("PRIOR from_acc - B: " + from_acc.getBalance() + " AB: " + from_acc.getAvailable_balance());
         System.out.println("PRIOR to_acc - B: " + to_acc.getBalance() + " AB: " + to_acc.getAvailable_balance());
