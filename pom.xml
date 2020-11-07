@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>csd203-t9</groupId>
 	<artifactId>csd203-t9</artifactId>
-	<version>6.0.0-SNAPSHOT</version>
+	<version>7.0.0-SNAPSHOT</version>
 	<name>ryverbankT9</name>
 	<description>CS203 T9 RyverBank Application</description>
 

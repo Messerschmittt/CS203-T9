@@ -786,12 +786,11 @@ public class TradeServiceImp implements TradeService {
         }
         
         //if stock market is close, save the trade and throw InvalidTradeTiming
-        /*
         boolean isValidTime = checkTime();
         if(!isValidTime) {
             return tradeRepo.save(trade);
         }
-        */
+        
 
         // preMatch(cusAcc, customer, customerID);
         preMatch();
