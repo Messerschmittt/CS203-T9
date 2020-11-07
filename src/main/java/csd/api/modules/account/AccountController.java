@@ -94,14 +94,18 @@ public class AccountController {
             throw new InvalidInputException();
         }
 
-        // System.out.println("----------");
-
-        // System.out.println(customers.findById(accountRecord.getCustomer_id()).get().getUsername());
         Account newAcc = new Account(customers.findById(accountRecord.getCustomer_id()).get()
                         , accountRecord.getBalance(), accountRecord.getBalance());
         return accounts.save(newAcc);
         
     }
+
+    /**
+     * Function to facilitate the transaction between 2 accounts.
+     * @param newTransRecord
+     * @param auth
+     * @return the successful transaction object
+     */
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/accounts/{account_id}/transactions")

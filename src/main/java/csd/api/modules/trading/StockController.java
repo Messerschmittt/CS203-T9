@@ -122,7 +122,7 @@ public class StockController {
         ArrayList<String> SGX_top30 = new ArrayList<>(
             Arrays.asList("A17U.SI", "C61U.SI", "C31.SI", "C38U.SI","C09.SI", "C52.SI", "D01.SI", "D05.SI", 
             "G13.SI", "H78.SI", "C07.SI", "J36.SI", "J37.SI", "BN4.SI", "N2IU.SI", "ME8U.SI", "M44U.SI", "O39.SI",
-            "S58.SI", "S68.SI", "C6L.SI", "Z74.SI", "S63.SI", "Y92.SI", "U11.SI", "U14.SI", "V03.SI", "F34.SI", "BS6.SI"));
+            "S58.SI", "S68.SI", "C6L.SI", "Z74.SI", "S63.SI", "Y92.SI", "U11.SI", "U14.SI", "V03.SI", "F34.SI", "BS6.SI", "U96.SI"));
         
         int counter = 0;
         HashSet<Stock> initialisedStock = new HashSet<>();

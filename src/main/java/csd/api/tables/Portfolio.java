@@ -33,7 +33,9 @@ public class Portfolio {
     private Customer customer;
     
     private double unrealized_gain_loss = 0.0;
+    private double realized_gain_loss = 0.0;
     private double total_gain_loss = 0.0;
+
 
     public Portfolio(Customer customer) {
         this.customer = customer;
@@ -53,8 +55,10 @@ public class Portfolio {
         return unrealized_gain_loss;
     }
 
-    public double updateTotal_gain_loss(double gain_loss){
-        total_gain_loss += gain_loss;
-        return total_gain_loss;
+    public double updateTotal_gain_loss(double realised_gain_loss){
+        updateUnrealised();
+        this.realized_gain_loss += realised_gain_loss;
+        this.total_gain_loss = this.realized_gain_loss + this.unrealized_gain_loss;
+        return this.total_gain_loss;
     }
 }

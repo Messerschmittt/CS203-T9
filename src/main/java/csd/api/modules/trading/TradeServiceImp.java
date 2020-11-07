@@ -1,22 +1,13 @@
 package csd.api.modules.trading;
 
-import java.util.List;
+import java.util.*;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
 
-import javax.validation.Valid;
-
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import csd.api.tables.*;
 import csd.api.tables.templates.*;
@@ -108,18 +99,11 @@ public class TradeServiceImp implements TradeService {
             tradeRepo.save(trade);
         }
 
-        ///need to check again ---------
-        Account cusAcc = trade.getAccount();
-        if(trade.getBid() == 0){
-            double marketAsk = stockRepo.findBySymbol(trade.getSymbol()).getAsk();
-            double priceCheck = marketAsk * (trade.getQuantity()-trade.getFilled_quantity());
-            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
-        }else{
-            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(trade.getBid()*trade.getQuantity()));
-        }
-        accRepo.save(cusAcc);   
+        reverseAvalBalForTrade(trade);  
         return trade;
     }
+
+    
 
     /**
      * Check the validation of input stock symbol
@@ -145,7 +129,6 @@ public class TradeServiceImp implements TradeService {
         }
     }
 
-    //check -------------------
     /**
      * Check does stock market open or not. Market open on Weekdays 9am tp 5pm.
      * If now is past 5pm of the day, expire all trades before 5pm that day
@@ -172,6 +155,7 @@ public class TradeServiceImp implements TradeService {
                 } else if( nowtime >= 17){
                     //check if the date of open or partial-filled trades is same with the date of current trade
                     List<Trade> trades = tradeRepo.findByStatusContainingOrStatusContaining("open", "partial-filled");
+                    //expire all currently open trades
                     if(trades != null && !trades.isEmpty()){
                         updateStatusToExpired();
                     }
@@ -183,42 +167,39 @@ public class TradeServiceImp implements TradeService {
         return isValid;
     }
 
-    //check the quantity of stock the customer can buy based on available balance
+    /**
+     * Check that the customer has sufficent available balance before creating the trade
+     */
     @Override
     public boolean checkBalance(Trade trade, Account cusAcc){
         boolean valid = true;
 
         double available = cusAcc.getAvailable_balance();
         if(trade.getBid() == 0){
-            System.out.println("Market order available balance");
-            System.out.println("Symbol - " + trade.getSymbol() + " Quantity - " + trade.getQuantity());
             double marketAsk= stockRepo.findBySymbol(trade.getSymbol()).getAsk();
             double priceCheck = marketAsk * (trade.getQuantity()-trade.getFilled_quantity());
-            System.out.println("priceCheck - " + priceCheck + " AvailBal - " + cusAcc.getAvailable_balance());
             if(cusAcc.getAvailable_balance() < priceCheck){
                 return false;
             }
             cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - priceCheck);
             accRepo.save(cusAcc);
-            System.out.println("Sufficient Balance");
             return valid;
         }
+
         if(trade.getBid() * trade.getQuantity() > available){
             return false;
-        }        
+        }
         cusAcc.setAvailable_balance(cusAcc.getAvailable_balance() - trade.getBid() * trade.getQuantity());
         accRepo.save(cusAcc);
-
-        System.out.println("Sufficient Balance");
         return valid;
     }
 
-    //during matching should be able to buy the stock quantity as much as possible
+    /** Helper function for trade matching. Return the maximum qty to buy based on the cusAcc balance (in multiples of 100) for the trade */
     @Override
-    public int getMaxStock(int qty, double price, double availableBalance){        //qty want to buy, price of stock
+    public int getMaxStock(int qty, double price, double balance){        //qty want to buy, price of stock
         int max = qty;
-        if(availableBalance < qty * price){
-            max = (int) ((availableBalance / price) / 100) * 100;        //ensure is multiple of 100
+        if(balance < qty * price){
+            max = (int) ((balance / price) / 100) * 100;        //ensure is multiple of 100
             System.out.println("max: " + max + ", original: " + qty);
         }
         // if(max == 0){
@@ -246,32 +227,30 @@ public class TradeServiceImp implements TradeService {
             String t_day = t.getDate().substring(0, 9);
             int hr = Integer.parseInt(time);
             if(hr >= 9 && hr < 17 || !day.equals(t_day)){ // check for nt same day or trades done in trading hours of same day
-                t.setStatus("expired");
+                t.setStatus("expired"); // expire the trade
                 tradeRepo.save(t);
 
-                Account cusAcc = t.getAccount();
-                if(t.getBid() == 0){
-                    double marketAsk = stockRepo.findBySymbol(t.getSymbol()).getAsk();
-                    double priceCheck = marketAsk * (t.getQuantity()-t.getFilled_quantity());
-                    cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
-                }else{
-                    cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(t.getBid()*(t.getQuantity()-t.getFilled_quantity())));
-                }
-                accRepo.save(cusAcc);
+                // reverse available balance allocated for the trade
+                reverseAvalBalForTrade(t);
             }
         }
     }
 
-    // /**
-    //  * Check the validation of input bid and sell price. Should not be negative
-    //  * @param price
-    //  */
-    // @Override
-    // public void checkValidPrice(int price){
-    //     if(price < 0){
-    //         throw new InvalidInputException(""+ price, "input price. It should not be negative");
-    //     }
-    // }
+    /**
+     * Reverse the available balance allocated for the trade when the trade is cancelled or expired.
+     * @param t
+     */
+    private void reverseAvalBalForTrade(Trade t) {
+        Account cusAcc = t.getAccount();
+        if(t.getBid() == 0){
+            double marketAsk = stockRepo.findBySymbol(t.getSymbol()).getAsk();
+            double priceCheck = marketAsk * (t.getQuantity()-t.getFilled_quantity());
+            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+priceCheck);
+        }else{
+            cusAcc.setAvailable_balance(cusAcc.getAvailable_balance()+(t.getBid()*(t.getQuantity()-t.getFilled_quantity())));
+        }
+        accRepo.save(cusAcc);
+    }
 
     
     // check is the customer has enough stock to sell
@@ -349,20 +328,21 @@ public class TradeServiceImp implements TradeService {
         return bTrades;
     }
 
-    //--check ------------------------------
     //update both side of sell and buy average price
     public void updateAvg_Price(Trade trade, double price, double transaction_amt, int transaction_qty ){
         double avg_price = trade.getAvg_price();
-        System.out.println("prior avg = " + trade.getAvg_price());
+
         if(avg_price == 0){
             trade.setAvg_price(price);
         } else{
             trade.setAvg_price((avg_price * trade.getFilled_quantity() + transaction_amt) / (transaction_qty + trade.getFilled_quantity()));
         }
-        System.out.println("after avg = " + trade.getAvg_price());
+        
         tradeRepo.save(trade);
     }
 
+
+    /** Helper function to update the assets of the buyer in a trade */
     @Override
     public Assets updateBuyerAssets(Customer customer, Trade newTrade, int transaction_qty , 
                 double transaction_amt, double currentPrice){
@@ -393,16 +373,15 @@ public class TradeServiceImp implements TradeService {
 
         //update Portfolio also
         Portfolio cusPortfolio = customer.getPortfolio();
-        double gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
         a.setCustomer(customer);
         a.setPortfolio(cusPortfolio);
-        cusPortfolio.updateTotal_gain_loss(gain_loss); 
-        cusPortfolio.updateUnrealised();
+        cusPortfolio.updateTotal_gain_loss(0); // No realised gain/loss when buying
         portfolioRepo.save(cusPortfolio);
 
         return a;
     }
     
+    /** Helper function to update the assets of the seller in a trade */
     @Override
     public Assets updateSellerAssets(Customer customer, Trade newTrade, int transaction_qty , 
     double transaction_amt, double currentPrice){
@@ -412,7 +391,7 @@ public class TradeServiceImp implements TradeService {
         // Create/Update asset record
         Assets a = assetsRepo.findByCustomer_IdAndCode(customer.getId(), newTrade.getSymbol());
         int priorQuantity = a.getQuantity();
-        double priorAvgPrice = a.getAvg_price();
+        double priorAvgPrice = a.getAvg_price(); // No need to update avg price since cost does not change upon sale
         int newQuantity = priorQuantity - transaction_qty ;
         
         a.setQuantity(newQuantity);
@@ -423,11 +402,10 @@ public class TradeServiceImp implements TradeService {
 
         //update Portfolio also
         Portfolio cusPortfolio = customer.getPortfolio();
-        double gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_amt;
+        double gain_loss = (a.getCurrent_price() - a.getAvg_price()) * transaction_qty;
         a.setCustomer(customer);
         a.setPortfolio(cusPortfolio);
         cusPortfolio.updateTotal_gain_loss(gain_loss); 
-        cusPortfolio.updateUnrealised();
         portfolioRepo.save(cusPortfolio);
 
         if(newQuantity == 0){       //remove assests from repo
@@ -437,7 +415,13 @@ public class TradeServiceImp implements TradeService {
         return a;
     }
 
-    // During matching, compare buyqty and sellqty, update the status and transaction qt 
+    /**
+     * Helper function for trade matching. Compare buyqty and sellqty to return the status and transaction qty
+     * @param maxBuy
+     * @param buyQty
+     * @param sellQty
+     * @return Array in the order [sellStatus, buyStatus, transactionQty]
+     */ 
     public String[] update_Status_Qty(int maxBuy, int buyQty, int sellQty){
         //Trade buyTrade, Trade sellTrade
         String[] ans = new String[3];
@@ -510,7 +494,11 @@ public class TradeServiceImp implements TradeService {
     }
 
     /**
-     * 
+     * Helper function to perform the transaction for the trade
+     * @param currTrade
+     * @param fromAcc
+     * @param toAcc
+     * @param transaction_amt
      */
     public void makeTrans(Trade currTrade, Account fromAcc, Account toAcc, double transaction_amt) {
         Trans t = new Trans();
@@ -523,7 +511,14 @@ public class TradeServiceImp implements TradeService {
     }
 
 
-    
+    /**
+     * Function to perform trade matching for a new buy trade
+     * @param buyTrade
+     * @param cusAcc
+     * @param customer
+     * @param cusId
+     * @return the new buy trade with the updated values
+     */
     public Trade buyMatching(Trade buyTrade, Account cusAcc, Customer customer, int cusId){
         List<Trade> sTrades = sellTradesSorting(buyTrade.getSymbol());  //sorted list of sellTrades
         sTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
@@ -574,7 +569,6 @@ public class TradeServiceImp implements TradeService {
             sellStatus = ans[1];
             transaction_qty =  Integer.parseInt(ans[2]);
 
-            System.out.println("i:  " + i);
             i++;
             tradeFilledQuantity += transaction_qty ;
             currentBuyQty -= transaction_qty ;
@@ -612,16 +606,23 @@ public class TradeServiceImp implements TradeService {
             //update assests and portfolio
             updateBuyerAssets(customer, buyTrade, transaction_qty , transaction_amt, lastPrice);
             updateSellerAssets(seller, buyTrade, transaction_qty , transaction_amt, lastPrice);
-            System.out.println("\nEntering update stock price");
+            
             stockController.refreshStockPrice(buyTrade.getSymbol(), lastPrice);
-            System.out.println("Finish update stock price");
+            
         }
 
         stockController.refreshStockPrice(buyTrade.getSymbol(), lastPrice);
         return buyTrade;
     }
 
-
+    /**
+     * Function to perform trade matching for a new sell trade.
+     * @param sellTrade
+     * @param cusAcc
+     * @param customer
+     * @param cusId
+     * @return the new sell trade updated with the values
+     */
     public Trade sellMatching(Trade sellTrade, Account cusAcc, Customer customer, int cusId){
         List<Trade> bTrades = buyTradesSorting(sellTrade.getSymbol());   //sorted list of buyTrades
         bTrades.removeIf(t -> (t.getAccount().getCustomer().getId() == cusId));
@@ -629,7 +630,6 @@ public class TradeServiceImp implements TradeService {
         System.out.println("\nTrade Action - " + sellTrade.getAction() + " " + sellTrade.getSymbol());
 
         //for sell action
-        System.out.println("In sell");
         double sellAsk = sellTrade.getAsk();
         double lastPrice = 0.0;
         int initialTradeQty = sellTrade.getQuantity() - sellTrade.getFilled_quantity();
@@ -647,7 +647,6 @@ public class TradeServiceImp implements TradeService {
             Trade b = bTrades.get(i);
             Customer buyer = b.getAccount().getCustomer();
             double buyBid = b.getBid();
-            System.out.println("Sell trade - finding buyBid = " + buyBid);
             if(buyBid == 0){
                 buyBid = sellAsk;
                 System.out.println("Market order - buyBid = " + buyBid + " buyBid = " + sellAsk);

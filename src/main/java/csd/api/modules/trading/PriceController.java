@@ -47,9 +47,9 @@ public class PriceController{
 
             HashMap<String, String> info = new HashMap<>();
             info.put("ask" , ask.toString());
-            info.put("askVol" , askVol.toString());
+            // info.put("askVol" , askVol.toString());
             info.put("bid" , bid.toString());
-            info.put("bidVol" , bidVol.toString());
+            // info.put("bidVol" , bidVol.toString());
             info.put("price" , price.toString());
             info.put("date", now.toString());
             info.put("symbol", symbol);
